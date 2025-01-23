@@ -1,25 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:logger/logger.dart';
+
 
 void main() {
-  runApp(SalateBrowser());
+  runApp(const SalateBrowser());
 }
 
 class SalateBrowser extends StatelessWidget {
+  const SalateBrowser({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Salate Browser',
       theme: ThemeData.dark().copyWith(
-        primaryColor: Color(0xFF1E1E1E), // Dark background color
-        scaffoldBackgroundColor: Color(0xFF1E1E1E), // Dark background for the whole app
-        appBarTheme: AppBarTheme(
+        primaryColor: const Color(0xFF1E1E1E), // Dark background color
+        scaffoldBackgroundColor: const Color(0xFF1E1E1E), // Dark background for the whole app
+        appBarTheme: const AppBarTheme(
           color: Color(0xFF2C2C2C), // Darker app bar
           iconTheme: IconThemeData(color: Colors.white), // White icons in app bar
         ),
-        iconTheme: IconThemeData(color: Colors.amber), // Amber for icons globally
-        textTheme: TextTheme(
+        iconTheme: const IconThemeData(color: Colors.amber), // Amber for icons globally
+        textTheme: const TextTheme(
           //bodyText1: TextStyle(color: Colors.white), // White text color
           //bodyText2: TextStyle(color: Colors.grey), // Light grey text for minor elements
           bodyLarge: TextStyle(color: Colors.white), // White text color for large body text
@@ -27,25 +31,29 @@ class SalateBrowser extends StatelessWidget {
           bodySmall: TextStyle(color: Colors.grey), // Light grey text for smaller elements
         ),
       ),
-      home: BrowserHomePage(),
+      home: const BrowserHomePage(),
     );
   }
 }
 
 class BrowserHomePage extends StatefulWidget {
+  const BrowserHomePage({super.key});
+
   @override
-  _BrowserHomePageState createState() => _BrowserHomePageState();
+  BrowserHomePageState createState() => BrowserHomePageState();
 }
 
-class _BrowserHomePageState extends State<BrowserHomePage> {
+class BrowserHomePageState extends State<BrowserHomePage> {
   final TextEditingController _urlController = TextEditingController();
   late WebViewController _webViewController;
-  List<String> _tabs = ["https://google.com"]; // List to track open tabs
+  final List<String> _tabs = ["https://google.com"]; // List to track open tabs
   int _currentTabIndex = 0; // Tracks the currently active tab
 
   @override
   void initState() {
     super.initState();
+
+    final Logger logger = Logger();
 
     // Initialize WebViewController
     _webViewController = WebViewController()
@@ -53,20 +61,20 @@ class _BrowserHomePageState extends State<BrowserHomePage> {
       ..setNavigationDelegate(
         NavigationDelegate(
           onProgress: (progress) {
-            print("Loading progress: $progress%");
+            logger.d("Loading progress: $progress%");
           },
           onPageStarted: (url) {
-            print("Page started loading: $url");
+            logger.i("Page started loading: $url");
           },
           onPageFinished: (url) {
             // Update the text field with the current URL
             setState(() {
               _urlController.text = url;
             });
-            print("Page finished loading: $url");
+            logger.i("Page finished loading: $url");
           },
           onWebResourceError: (error) {
-            print("Web resource error: $error");
+            logger.e("Web resource error: $error");
           },
         ),
       )
@@ -80,7 +88,7 @@ class _BrowserHomePageState extends State<BrowserHomePage> {
         title: Row(
           children: [
             IconButton(
-              icon: Icon(Icons.home),
+              icon: const Icon(Icons.home),
               onPressed: () {
                 _webViewController.loadRequest(Uri.parse("https://google.com"));
               },
@@ -92,16 +100,16 @@ class _BrowserHomePageState extends State<BrowserHomePage> {
                 textInputAction: TextInputAction.go,
                 decoration: InputDecoration(
                   hintText: 'Enter URL or search query',
-                  hintStyle: TextStyle(color: Colors.grey),
-                  contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+                  hintStyle: const TextStyle(color: Colors.grey),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
                   filled: true,
-                  fillColor: Colors.grey.withOpacity(0.15), // Light transparent gray
+                  fillColor: Colors.grey.withAlpha((0.15 * 255).toInt()), // Light transparent gray
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12), // Slightly rounded corners
                     borderSide: BorderSide.none,
                   ),
                   suffixIcon: IconButton(
-                    icon: Icon(Icons.search),
+                    icon: const Icon(Icons.search),
                     onPressed: () => _handleNavigation(_urlController.text),
                   ),
                 ),
@@ -116,7 +124,7 @@ class _BrowserHomePageState extends State<BrowserHomePage> {
               ),
             ),
             IconButton(
-              icon: Icon(Icons.add),
+              icon: const Icon(Icons.add),
               onPressed: _addNewTab,
               tooltip: 'New Tab',
             ),
@@ -124,11 +132,11 @@ class _BrowserHomePageState extends State<BrowserHomePage> {
               alignment: Alignment.center,
               children: [
                 IconButton(
-                  icon: Icon(Icons.tab),
+                  icon: const Icon(Icons.tab),
                   onPressed: _showAllTabs,
                   tooltip: 'Show All Tabs',
                 ),
-                if (_tabs.length > 0)
+                if (_tabs.isNotEmpty)
                   Positioned(
                     //right: 8,
                     //top: 8,
@@ -184,59 +192,103 @@ class _BrowserHomePageState extends State<BrowserHomePage> {
               _webViewController.loadRequest(Uri.parse(_tabs[_currentTabIndex]));
             });
           },
+          onTabRemoved: (index) {
+            setState(() {
+              _tabs.removeAt(index);
+
+              // Handle the case where the last tab is removed
+              if (_tabs.isEmpty) {
+                _tabs.add("https://google.com"); // Add a default tab
+              }
+
+              // Adjust the current tab index to stay within bounds
+              _currentTabIndex = (_currentTabIndex >= _tabs.length)
+                  ? _tabs.length - 1
+                  : _currentTabIndex;
+
+              // Load the current tab
+              _webViewController.loadRequest(Uri.parse(_tabs[_currentTabIndex]));
+            });
+          },
         ),
       ),
     );
   }
+
+
+
 }
 
 class AllTabsPage extends StatelessWidget {
   final List<String> tabs;
   final ValueChanged<int> onTabSelected;
+  final ValueChanged<int> onTabRemoved; // Callback for removing tabs
 
-  AllTabsPage({required this.tabs, required this.onTabSelected});
+  const AllTabsPage({super.key,
+    required this.tabs,
+    required this.onTabSelected,
+    required this.onTabRemoved,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("All Tabs")),
+      appBar: AppBar(title: const Text("All Tabs")),
       body: GridView.builder(
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2, // Number of columns
-          childAspectRatio: 9 / 16, // Aspect ratio of each tile
+          childAspectRatio: 9 / 12, // Aspect ratio of each tile
           crossAxisSpacing: 8.0, // Space between columns
           mainAxisSpacing: 8.0, // Space between rows
         ),
-        padding: EdgeInsets.all(8.0),
+        padding: const EdgeInsets.all(8.0),
         itemCount: tabs.length,
         itemBuilder: (context, index) {
-          return GestureDetector(
-            onTap: () {
-              onTabSelected(index);
-              Navigator.pop(context);
-            },
-            child: Card(
-              elevation: 4,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Expanded(
-                    child: WebViewWidget(
-                      controller: WebViewController()
-                        ..setJavaScriptMode(JavaScriptMode.unrestricted)
-                        ..loadRequest(Uri.parse(tabs[index])),
-                    ),
+          return Stack(
+            children: [
+              GestureDetector(
+                onTap: () {
+                  onTabSelected(index);
+                  Navigator.pop(context);
+                },
+                child: Card(
+                  elevation: 4,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        child: WebViewWidget(
+                          controller: WebViewController()
+                            ..setJavaScriptMode(JavaScriptMode.unrestricted)
+                            ..loadRequest(Uri.parse(tabs[index])),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        tabs[index],
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
                   ),
-                  SizedBox(height: 8),
-                  Text(
-                    tabs[index],
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                  ),
-                ],
+                ),
               ),
-            ),
+              Positioned(
+                top: 4,
+                right: 4,
+                child: GestureDetector(
+                  onTap: () {
+                    onTabRemoved(index);
+                  },
+                  child: CircleAvatar(
+                    radius: 12,
+                    backgroundColor: Colors.transparent,
+                    child: Icon(Icons.close, size: 16, color: Theme.of(context).iconTheme.color),
+                  ),
+                ),
+              ),
+            ],
           );
         },
       ),

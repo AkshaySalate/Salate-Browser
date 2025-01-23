@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'SalateBrowser.dart';
+import 'salate_browser.dart';
 
 void main() {
   runApp(const MyApp());
