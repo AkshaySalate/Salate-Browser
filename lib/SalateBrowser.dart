@@ -130,14 +130,15 @@ class _BrowserHomePageState extends State<BrowserHomePage> {
                 ),
                 if (_tabs.length > 0)
                   Positioned(
-                    right: 8,
-                    top: 8,
+                    //right: 8,
+                    //top: 8,
                     child: CircleAvatar(
                       radius: 10,
-                      backgroundColor: Colors.red,
+                      //backgroundColor: Theme.of(context).iconTheme.color,
+                      backgroundColor: Colors.transparent,
                       child: Text(
                         '${_tabs.length}',
-                        style: TextStyle(color: Colors.white, fontSize: 12),
+                        style: TextStyle(color: Theme.of(context).iconTheme.color, fontSize: 10),
                       ),
                     ),
                   ),
@@ -199,20 +200,43 @@ class AllTabsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text("All Tabs")),
-      body: ListView.builder(
+      body: GridView.builder(
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2, // Number of columns
+          childAspectRatio: 9 / 16, // Aspect ratio of each tile
+          crossAxisSpacing: 8.0, // Space between columns
+          mainAxisSpacing: 8.0, // Space between rows
+        ),
+        padding: EdgeInsets.all(8.0),
         itemCount: tabs.length,
         itemBuilder: (context, index) {
-          return ListTile(
-            leading: Icon(Icons.web),
-            title: Text(
-              tabs[index],
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
+          return GestureDetector(
             onTap: () {
               onTabSelected(index);
               Navigator.pop(context);
             },
+            child: Card(
+              elevation: 4,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: WebViewWidget(
+                      controller: WebViewController()
+                        ..setJavaScriptMode(JavaScriptMode.unrestricted)
+                        ..loadRequest(Uri.parse(tabs[index])),
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    tabs[index],
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
           );
         },
       ),
