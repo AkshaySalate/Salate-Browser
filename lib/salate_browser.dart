@@ -33,7 +33,7 @@ class SalateBrowser extends StatelessWidget {
         ),
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
-          fillColor: Color(0xFF333333), // Slightly lighter background for text fields
+          fillColor: const Color(0xFF333333), // Slightly lighter background for text fields
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
             borderSide: BorderSide.none,
@@ -41,7 +41,7 @@ class SalateBrowser extends StatelessWidget {
           hintStyle: const TextStyle(color: Colors.white60),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide(color: Colors.blueAccent, width: 1.5),
+            borderSide: const BorderSide(color: Colors.blueAccent, width: 1.5),
           ),
         ),
         buttonTheme: ButtonThemeData(
@@ -50,20 +50,20 @@ class SalateBrowser extends StatelessWidget {
         ),
         cardTheme: CardTheme(
           elevation: 5, // Elevation for cards to give a floating effect
-          color: Color(0xFF2C2C2C), // Slightly lighter card color
+          color: const Color(0xFF2C2C2C), // Slightly lighter card color
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
-        chipTheme: ChipThemeData(
+        chipTheme: const ChipThemeData(
           backgroundColor: Color(0xFF2C2C2C),
           selectedColor: Colors.blueAccent,
-          labelStyle: const TextStyle(color: Colors.white),
+          labelStyle: TextStyle(color: Colors.white),
         ),
-        floatingActionButtonTheme: FloatingActionButtonThemeData(
+        floatingActionButtonTheme: const FloatingActionButtonThemeData(
           backgroundColor: Colors.blueAccent, // Floating action button color
         ),
-        snackBarTheme: SnackBarThemeData(
+        snackBarTheme: const SnackBarThemeData(
           backgroundColor: Colors.blueAccent, // SnackBar background
-          contentTextStyle: const TextStyle(color: Colors.white),
+          contentTextStyle: TextStyle(color: Colors.white),
         ),
       ),
       home: const BrowserHomePage(),
@@ -108,7 +108,7 @@ class BrowserHomePageState extends State<BrowserHomePage> {
           itemCount: _history.length,
           itemBuilder: (context, index) {
             return ListTile(
-              title: Text(_history[index], style: TextStyle(color: Colors.white),),
+              title: Text(_history[index], style: const TextStyle(color: Colors.white),),
               onTap: () {
                 // Load the selected URL from history
                 Navigator.pop(context);  // Close the history modal
@@ -171,35 +171,40 @@ class BrowserHomePageState extends State<BrowserHomePage> {
               },
             ),
             Expanded(
-              child: TextField(
-                controller: _urlController,
-                keyboardType: TextInputType.url,
-                textInputAction: TextInputAction.go,
-                decoration: InputDecoration(
-                  hintText: 'Enter URL or search query',
-                  hintStyle: const TextStyle(color: Colors.white60),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-                  filled: true,
-                  fillColor: Colors.grey.withAlpha((0.15 * 255).toInt()), // Light transparent gray
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12), // Slightly rounded corners
-                    borderSide: BorderSide.none,
-                  ),
-                  suffixIcon: IconButton(
-                    icon: const Icon(Icons.search),
-                    onPressed: () => _handleNavigation(_urlController.text),
-                  ),
+              child: Container(
+                //padding: const EdgeInsets.symmetric(horizontal: 10), // Horizontal padding for width
+                width: double.infinity,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: Colors.grey.withAlpha((0.15 * 255).toInt()), // Grey background
+                  borderRadius: BorderRadius.circular(12), // Rounded corners for the box
                 ),
-                onSubmitted: (value) => _handleNavigation(value),
-                onTap: () {
-                  // Select all text in the TextField when tapped
-                  _urlController.selection = TextSelection(
-                    baseOffset: 0,
-                    extentOffset: _urlController.text.length,
-                  );
-                },
+                child: TextField(
+                  controller: _urlController,
+                  keyboardType: TextInputType.url,
+                  textInputAction: TextInputAction.go,
+                  decoration: InputDecoration(
+                    hintText: 'Enter URL or search query',
+                    hintStyle: const TextStyle(color: Colors.grey),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10), // This is for the text inside the box
+                    border: InputBorder.none, // Remove the border since we are using the container's decoration
+                    suffixIcon: IconButton(
+                      icon: const Icon(Icons.search),
+                      onPressed: () => _handleNavigation(_urlController.text),
+                    ),
+                  ),
+                  onSubmitted: (value) => _handleNavigation(value),
+                  onTap: () {
+                    // Select all text in the TextField when tapped
+                    _urlController.selection = TextSelection(
+                      baseOffset: 0,
+                      extentOffset: _urlController.text.length,
+                    );
+                  },
+                ),
               ),
             ),
+
             IconButton(
               icon: const Icon(Icons.add),
               onPressed: _addNewTab,
