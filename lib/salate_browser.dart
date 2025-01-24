@@ -16,10 +16,10 @@ class SalateBrowser extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Salate Browser',
       theme: ThemeData.dark().copyWith(
-        primaryColor: const Color(0xFF1E1E1E), // Dark background color
-        scaffoldBackgroundColor: const Color(0xFF1E1E1E), // Dark background for the whole app
+        primaryColor: const Color(0xFF212121), // Dark background color
+        scaffoldBackgroundColor: const Color(0xFF181818), // Dark background for the whole app
         appBarTheme: const AppBarTheme(
-          color: Color(0xFF2C2C2C), // Darker app bar
+          color: Color(0xFF121212), // Darker app bar
           iconTheme: IconThemeData(color: Colors.white), // White icons in app bar
         ),
         iconTheme: const IconThemeData(color: Colors.amber), // Amber for icons globally
@@ -27,8 +27,43 @@ class SalateBrowser extends StatelessWidget {
           //bodyText1: TextStyle(color: Colors.white), // White text color
           //bodyText2: TextStyle(color: Colors.grey), // Light grey text for minor elements
           bodyLarge: TextStyle(color: Colors.white), // White text color for large body text
-          bodyMedium: TextStyle(color: Colors.grey), // Light grey text for medium elements
-          bodySmall: TextStyle(color: Colors.grey), // Light grey text for smaller elements
+          bodyMedium: TextStyle(color: Colors.white70), // Light grey text for medium elements
+          bodySmall: TextStyle(color: Colors.white54), // Light grey text for smaller elements
+          titleLarge: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w500), // Title style
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: Color(0xFF333333), // Slightly lighter background for text fields
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide.none,
+          ),
+          hintStyle: const TextStyle(color: Colors.white60),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide(color: Colors.blueAccent, width: 1.5),
+          ),
+        ),
+        buttonTheme: ButtonThemeData(
+          buttonColor: Colors.blueAccent, // Blue buttons for interaction
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+        cardTheme: CardTheme(
+          elevation: 5, // Elevation for cards to give a floating effect
+          color: Color(0xFF2C2C2C), // Slightly lighter card color
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+        chipTheme: ChipThemeData(
+          backgroundColor: Color(0xFF2C2C2C),
+          selectedColor: Colors.blueAccent,
+          labelStyle: const TextStyle(color: Colors.white),
+        ),
+        floatingActionButtonTheme: FloatingActionButtonThemeData(
+          backgroundColor: Colors.blueAccent, // Floating action button color
+        ),
+        snackBarTheme: SnackBarThemeData(
+          backgroundColor: Colors.blueAccent, // SnackBar background
+          contentTextStyle: const TextStyle(color: Colors.white),
         ),
       ),
       home: const BrowserHomePage(),
@@ -48,7 +83,6 @@ class BrowserHomePageState extends State<BrowserHomePage> {
   late WebViewController _webViewController;
   final List<String> _tabs = ["https://google.com"]; // List to track open tabs
   int _currentTabIndex = 0; // Tracks the currently active tab
-
   final List<String> _history = [];
 
   void _showHistory(BuildContext context) {
@@ -74,7 +108,7 @@ class BrowserHomePageState extends State<BrowserHomePage> {
           itemCount: _history.length,
           itemBuilder: (context, index) {
             return ListTile(
-              title: Text(_history[index]),
+              title: Text(_history[index], style: TextStyle(color: Colors.white),),
               onTap: () {
                 // Load the selected URL from history
                 Navigator.pop(context);  // Close the history modal
@@ -92,9 +126,7 @@ class BrowserHomePageState extends State<BrowserHomePage> {
   @override
   void initState() {
     super.initState();
-
     final Logger logger = Logger();
-
     // Initialize WebViewController
     _webViewController = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
@@ -113,11 +145,9 @@ class BrowserHomePageState extends State<BrowserHomePage> {
               if (!_history.contains(url) && url.isNotEmpty) {
                   _history.add(url); //only add unique, non-empty urls
                   logger.i("history added: $url");
-
               }
             });
             // Add to history if not already present
-
             logger.i("Page finished loading: $url");
           },
           onWebResourceError: (error) {
@@ -147,7 +177,7 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                 textInputAction: TextInputAction.go,
                 decoration: InputDecoration(
                   hintText: 'Enter URL or search query',
-                  hintStyle: const TextStyle(color: Colors.grey),
+                  hintStyle: const TextStyle(color: Colors.white60),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
                   filled: true,
                   fillColor: Colors.grey.withAlpha((0.15 * 255).toInt()), // Light transparent gray
