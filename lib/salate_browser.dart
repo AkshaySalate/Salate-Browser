@@ -196,17 +196,18 @@ class BrowserHomePageState extends State<BrowserHomePage> {
             setState(() {
               _tabs.removeAt(index);
 
-              // Handle the case where the last tab is removed
+              // Ensure the current tab index is within valid bounds
               if (_tabs.isEmpty) {
-                _tabs.add("https://google.com"); // Add a default tab
+                _tabs.add("https://google.com"); // Add a default tab if empty
+                _currentTabIndex = 0; // Reset to the first tab
+              } else {
+                // Adjust the current tab index if necessary
+                if (_currentTabIndex >= _tabs.length) {
+                  _currentTabIndex = _tabs.length - 1;
+                }
               }
 
-              // Adjust the current tab index to stay within bounds
-              _currentTabIndex = (_currentTabIndex >= _tabs.length)
-                  ? _tabs.length - 1
-                  : _currentTabIndex;
-
-              // Load the current tab
+              // Reload the current tab after removal
               _webViewController.loadRequest(Uri.parse(_tabs[_currentTabIndex]));
             });
           },
@@ -217,14 +218,17 @@ class BrowserHomePageState extends State<BrowserHomePage> {
 
 
 
+
+
 }
 
 class AllTabsPage extends StatelessWidget {
   final List<String> tabs;
   final ValueChanged<int> onTabSelected;
-  final ValueChanged<int> onTabRemoved; // Callback for removing tabs
+  final ValueChanged<int> onTabRemoved;
 
-  const AllTabsPage({super.key,
+  const AllTabsPage({
+    super.key,
     required this.tabs,
     required this.onTabSelected,
     required this.onTabRemoved,
@@ -244,54 +248,74 @@ class AllTabsPage extends StatelessWidget {
         padding: const EdgeInsets.all(8.0),
         itemCount: tabs.length,
         itemBuilder: (context, index) {
-          return Stack(
-            children: [
-              GestureDetector(
-                onTap: () {
-                  onTabSelected(index);
-                  Navigator.pop(context);
-                },
-                child: Card(
-                  elevation: 4,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Expanded(
-                        child: WebViewWidget(
-                          controller: WebViewController()
-                            ..setJavaScriptMode(JavaScriptMode.unrestricted)
-                            ..loadRequest(Uri.parse(tabs[index])),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        tabs[index],
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              Positioned(
-                top: 4,
-                right: 4,
-                child: GestureDetector(
+          return Dismissible(
+            key: Key(tabs[index]), // Unique key for each tab
+            direction: DismissDirection.horizontal, // Allow swipe left or right
+            onDismissed: (direction) {
+              onTabRemoved(index); // Remove tab when dismissed
+            },
+            background: Container(
+              color: Colors.red.withOpacity(0.8), // Background when swiping
+              alignment: Alignment.centerLeft,
+              padding: const EdgeInsets.only(left: 20),
+              child: const Icon(Icons.delete, color: Colors.white),
+            ),
+            secondaryBackground: Container(
+              color: Colors.red.withOpacity(0.8), // Background for swipe in opposite direction
+              alignment: Alignment.centerRight,
+              padding: const EdgeInsets.only(right: 20),
+              child: const Icon(Icons.delete, color: Colors.white),
+            ),
+            child: Stack(
+              children: [
+                GestureDetector(
                   onTap: () {
-                    onTabRemoved(index);
+                    onTabSelected(index);
+                    Navigator.pop(context);
                   },
-                  child: CircleAvatar(
-                    radius: 12,
-                    backgroundColor: Colors.transparent,
-                    child: Icon(Icons.close, size: 16, color: Theme.of(context).iconTheme.color),
+                  child: Card(
+                    elevation: 4,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Expanded(
+                          child: WebViewWidget(
+                            controller: WebViewController()
+                              ..setJavaScriptMode(JavaScriptMode.unrestricted)
+                              ..loadRequest(Uri.parse(tabs[index])),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          tabs[index],
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+                Positioned(
+                  top: 4,
+                  right: 4,
+                  child: GestureDetector(
+                    onTap: () {
+                      onTabRemoved(index);
+                    },
+                    child: CircleAvatar(
+                      radius: 12,
+                      backgroundColor: Colors.transparent,
+                      child: Icon(Icons.close, size: 26, color: Theme.of(context).iconTheme.color),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           );
         },
       ),
     );
   }
 }
+
