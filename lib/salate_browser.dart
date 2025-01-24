@@ -196,10 +196,10 @@ class BrowserHomePageState extends State<BrowserHomePage> {
             setState(() {
               _tabs.removeAt(index);
 
-              // Ensure the current tab index is within valid bounds
+              // Ensure there is always at least one tab
               if (_tabs.isEmpty) {
-                _tabs.add("https://google.com"); // Add a default tab if empty
-                _currentTabIndex = 0; // Reset to the first tab
+                _tabs.add("https://google.com"); // Default tab
+                _currentTabIndex = 0;
               } else {
                 // Adjust the current tab index if necessary
                 if (_currentTabIndex >= _tabs.length) {
@@ -215,10 +215,6 @@ class BrowserHomePageState extends State<BrowserHomePage> {
       ),
     );
   }
-
-
-
-
 
 }
 
@@ -252,65 +248,53 @@ class AllTabsPage extends StatelessWidget {
             key: Key(tabs[index]), // Unique key for each tab
             direction: DismissDirection.horizontal, // Allow swipe left or right
             onDismissed: (direction) {
-              onTabRemoved(index); // Remove tab when dismissed
+              // Immediately remove the tab and update state
+              onTabRemoved(index);
+            },
+            confirmDismiss: (direction) async {
+              //confirm the dismissal before proceeding
+              await Future.delayed(const Duration(milliseconds: 300));
+              return true;
             },
             background: Container(
-              color: Colors.red.withOpacity(0.8), // Background when swiping
+              color: Colors.red.withAlpha((0.8 * 255).toInt()), // Background when swiping
               alignment: Alignment.centerLeft,
               padding: const EdgeInsets.only(left: 20),
               child: const Icon(Icons.delete, color: Colors.white),
             ),
             secondaryBackground: Container(
-              color: Colors.red.withOpacity(0.8), // Background for swipe in opposite direction
+              color: Colors.red.withAlpha((0.8 * 255).toInt()), // Background for swipe in opposite direction
               alignment: Alignment.centerRight,
               padding: const EdgeInsets.only(right: 20),
               child: const Icon(Icons.delete, color: Colors.white),
             ),
-            child: Stack(
-              children: [
-                GestureDetector(
-                  onTap: () {
-                    onTabSelected(index);
-                    Navigator.pop(context);
-                  },
-                  child: Card(
-                    elevation: 4,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Expanded(
-                          child: WebViewWidget(
-                            controller: WebViewController()
-                              ..setJavaScriptMode(JavaScriptMode.unrestricted)
-                              ..loadRequest(Uri.parse(tabs[index])),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          tabs[index],
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
+            child: GestureDetector(
+              onTap: () {
+                onTabSelected(index);
+                Navigator.pop(context); // Go back to the previous screen
+              },
+              child: Card(
+                elevation: 4,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: WebViewWidget(
+                        controller: WebViewController()
+                          ..setJavaScriptMode(JavaScriptMode.unrestricted)
+                          ..loadRequest(Uri.parse(tabs[index])),
+                      ),
                     ),
-                  ),
-                ),
-                Positioned(
-                  top: 4,
-                  right: 4,
-                  child: GestureDetector(
-                    onTap: () {
-                      onTabRemoved(index);
-                    },
-                    child: CircleAvatar(
-                      radius: 12,
-                      backgroundColor: Colors.transparent,
-                      child: Icon(Icons.close, size: 26, color: Theme.of(context).iconTheme.color),
+                    const SizedBox(height: 8),
+                    Text(
+                      tabs[index],
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
                     ),
-                  ),
+                  ],
                 ),
-              ],
+              ),
             ),
           );
         },
@@ -318,4 +302,3 @@ class AllTabsPage extends StatelessWidget {
     );
   }
 }
-
