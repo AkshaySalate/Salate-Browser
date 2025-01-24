@@ -49,6 +49,46 @@ class BrowserHomePageState extends State<BrowserHomePage> {
   final List<String> _tabs = ["https://google.com"]; // List to track open tabs
   int _currentTabIndex = 0; // Tracks the currently active tab
 
+  final List<String> _history = [];
+
+  void _showHistory(BuildContext context) {
+    // Ensure history is passed and visible in the modal
+    if (_history.isEmpty) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('No History'),
+          content: const Text('You have not visited any pages yet.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+    } else {
+      showModalBottomSheet(
+        context: context,
+        builder: (context) => ListView.builder(
+          itemCount: _history.length,
+          itemBuilder: (context, index) {
+            return ListTile(
+              title: Text(_history[index]),
+              onTap: () {
+                // Load the selected URL from history
+                Navigator.pop(context);  // Close the history modal
+                _handleNavigation(_history[index]);  // Navigate to the selected URL
+              },
+            );
+          },
+        ),
+      );
+    }
+  }
+
+
+
   @override
   void initState() {
     super.initState();
@@ -70,7 +110,14 @@ class BrowserHomePageState extends State<BrowserHomePage> {
             // Update the text field with the current URL
             setState(() {
               _urlController.text = url;
+              if (!_history.contains(url) && url.isNotEmpty) {
+                  _history.add(url); //only add unique, non-empty urls
+                  logger.i("history added: $url");
+
+              }
             });
+            // Add to history if not already present
+
             logger.i("Page finished loading: $url");
           },
           onWebResourceError: (error) {
@@ -152,6 +199,17 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                   ),
               ],
             ),
+            PopupMenuButton<String>(
+              onSelected: (value) {
+                if (value == 'history') _showHistory(context);
+              },
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'history',
+                  child: Text('History'),
+                ),
+              ]
+            )
           ],
         ),
       ),
