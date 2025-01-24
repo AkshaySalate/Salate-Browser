@@ -41,6 +41,7 @@ dependencies:
   webview_flutter_android: ^4.3.1
   webview_flutter_wkwebview: ^3.17.0
   logger: ^2.5.0
+  url_launcher: ^6.3.1
 
 dev_dependencies:
   flutter_test:

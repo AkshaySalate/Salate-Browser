@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:logger/logger.dart';
-
+import 'package:url_launcher/url_launcher.dart';
 
 void main() {
   runApp(const SalateBrowser());
@@ -79,12 +79,14 @@ class BrowserHomePage extends StatefulWidget {
 }
 
 class BrowserHomePageState extends State<BrowserHomePage> {
+  List<String> installedExtensions = ["AdBlocker", "Dark Mode", "Language Translator"];
+  final Uri chromeWebStoreUrl = Uri.parse('https://chrome.google.com/webstore/category/extensions');
+  //final Uri chromeWebStoreUrl = Uri.parse('https://chromewebstore.google.com/');
   final TextEditingController _urlController = TextEditingController();
   late WebViewController _webViewController;
   final List<String> _tabs = ["https://google.com"]; // List to track open tabs
   int _currentTabIndex = 0; // Tracks the currently active tab
   final List<String> _history = [];
-
   void _showHistory(BuildContext context) {
     // Ensure history is passed and visible in the modal
     if (_history.isEmpty) {
@@ -121,7 +123,39 @@ class BrowserHomePageState extends State<BrowserHomePage> {
     }
   }
 
-
+  void _showExtensions(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Extensions'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Installed extensions will be listed here.'),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () async {
+                try {
+                  if (!await launchUrl(
+                    chromeWebStoreUrl,
+                    //mode: LaunchMode.externalApplication,
+                    mode: LaunchMode.inAppWebView,
+                  )) {
+                    throw Exception('Could not launch $chromeWebStoreUrl');
+                  }
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(e.toString())),
+                  );
+                }
+              },
+              child: Text('Add Extension'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   void initState() {
@@ -236,15 +270,24 @@ class BrowserHomePageState extends State<BrowserHomePage> {
             ),
             PopupMenuButton<String>(
               onSelected: (value) {
-                if (value == 'history') _showHistory(context);
+                if (value == 'history') {
+                  _showHistory(context);
+                } else if (value == 'extensions') {
+                  _showExtensions(context);
+                }
               },
               itemBuilder: (context) => [
                 const PopupMenuItem(
                   value: 'history',
                   child: Text('History'),
                 ),
-              ]
-            )
+                const PopupMenuItem(
+                  value: 'extensions',
+                  child: Text('Extensions'),
+                ),
+              ],
+            ),
+
           ],
         ),
       ),
@@ -309,6 +352,23 @@ class BrowserHomePageState extends State<BrowserHomePage> {
     );
   }
 
+}
+
+class WebViewPage extends StatelessWidget {
+  final String url;
+
+  const WebViewPage({super.key, required this.url});
+
+  @override
+  Widget build(BuildContext context) {
+    // Here you could load the URL in a WebView (for actual web browsing functionality).
+    return Scaffold(
+      appBar: AppBar(title: Text("Chrome Web Store")),
+      body: Center(
+        child: Text('Redirecting to $url...'),
+      ),
+    );
+  }
 }
 
 class AllTabsPage extends StatelessWidget {
