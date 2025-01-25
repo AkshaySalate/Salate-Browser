@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-import 'package:logger/logger.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 void main() {
@@ -16,24 +15,22 @@ class SalateBrowser extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Salate Browser',
       theme: ThemeData.dark().copyWith(
-        primaryColor: const Color(0xFF212121), // Dark background color
-        scaffoldBackgroundColor: const Color(0xFF181818), // Dark background for the whole app
+        primaryColor: const Color(0xFF212121),
+        scaffoldBackgroundColor: const Color(0xFF181818),
         appBarTheme: const AppBarTheme(
-          color: Color(0xFF121212), // Darker app bar
-          iconTheme: IconThemeData(color: Colors.white), // White icons in app bar
+          color: Color(0xFF121212),
+          iconTheme: IconThemeData(color: Colors.white),
         ),
-        iconTheme: const IconThemeData(color: Colors.amber), // Amber for icons globally
+        iconTheme: const IconThemeData(color: Colors.amber),
         textTheme: const TextTheme(
-          //bodyText1: TextStyle(color: Colors.white), // White text color
-          //bodyText2: TextStyle(color: Colors.grey), // Light grey text for minor elements
-          bodyLarge: TextStyle(color: Colors.white), // White text color for large body text
-          bodyMedium: TextStyle(color: Colors.white70), // Light grey text for medium elements
-          bodySmall: TextStyle(color: Colors.white54), // Light grey text for smaller elements
-          titleLarge: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w500), // Title style
+          bodyLarge: TextStyle(color: Colors.white),
+          bodyMedium: TextStyle(color: Colors.white70),
+          bodySmall: TextStyle(color: Colors.white54),
+          titleLarge: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w500),
         ),
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
-          fillColor: const Color(0xFF333333), // Slightly lighter background for text fields
+          fillColor: const Color(0xFF333333),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
             borderSide: BorderSide.none,
@@ -43,27 +40,6 @@ class SalateBrowser extends StatelessWidget {
             borderRadius: BorderRadius.circular(8),
             borderSide: const BorderSide(color: Colors.blueAccent, width: 1.5),
           ),
-        ),
-        buttonTheme: ButtonThemeData(
-          buttonColor: Colors.blueAccent, // Blue buttons for interaction
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-        cardTheme: CardTheme(
-          elevation: 5, // Elevation for cards to give a floating effect
-          color: const Color(0xFF2C2C2C), // Slightly lighter card color
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-        chipTheme: const ChipThemeData(
-          backgroundColor: Color(0xFF2C2C2C),
-          selectedColor: Colors.blueAccent,
-          labelStyle: TextStyle(color: Colors.white),
-        ),
-        floatingActionButtonTheme: const FloatingActionButtonThemeData(
-          backgroundColor: Colors.blueAccent, // Floating action button color
-        ),
-        snackBarTheme: const SnackBarThemeData(
-          backgroundColor: Colors.blueAccent, // SnackBar background
-          contentTextStyle: TextStyle(color: Colors.white),
         ),
       ),
       home: const BrowserHomePage(),
@@ -79,13 +55,18 @@ class BrowserHomePage extends StatefulWidget {
 }
 
 class BrowserHomePageState extends State<BrowserHomePage> {
+  final List<Map<String, dynamic>> _tabs = [
+    {"isHomepage": true, "url": ""},
+  ];
   List<String> installedExtensions = ["AdBlocker", "Dark Mode", "Language Translator"];
   final Uri chromeWebStoreUrl = Uri.parse('https://chrome.google.com/webstore/category/extensions');
   //final Uri chromeWebStoreUrl = Uri.parse('https://chromewebstore.google.com/');
   final TextEditingController _urlController = TextEditingController();
+
   late WebViewController _webViewController;
-  final List<String> _tabs = ["https://google.com"]; // List to track open tabs
+  //final List<String> _tabs = ["https://google.com"]; // List to track open tabs
   int _currentTabIndex = 0; // Tracks the currently active tab
+
   final List<String> _history = [];
   void _showHistory(BuildContext context) {
     // Ensure history is passed and visible in the modal
@@ -110,7 +91,7 @@ class BrowserHomePageState extends State<BrowserHomePage> {
           itemCount: _history.length,
           itemBuilder: (context, index) {
             return ListTile(
-              title: Text(_history[index], style: const TextStyle(color: Colors.white),),
+              title: Text(_history[index], style: const TextStyle(color: Colors.black),),
               onTap: () {
                 // Load the selected URL from history
                 Navigator.pop(context);  // Close the history modal
@@ -127,12 +108,12 @@ class BrowserHomePageState extends State<BrowserHomePage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Extensions'),
+        title: const Text('Extensions'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Installed extensions will be listed here.'),
-            SizedBox(height: 20),
+            const Text('Installed extensions will be listed here.'),
+            const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () async {
                 try {
@@ -149,7 +130,7 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                   );
                 }
               },
-              child: Text('Add Extension'),
+              child: const Text('Add Extension'),
             ),
           ],
         ),
@@ -160,36 +141,24 @@ class BrowserHomePageState extends State<BrowserHomePage> {
   @override
   void initState() {
     super.initState();
-    final Logger logger = Logger();
     // Initialize WebViewController
     _webViewController = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setNavigationDelegate(
         NavigationDelegate(
-          onProgress: (progress) {
-            logger.d("Loading progress: $progress%");
-          },
-          onPageStarted: (url) {
-            logger.i("Page started loading: $url");
-          },
           onPageFinished: (url) {
-            // Update the text field with the current URL
             setState(() {
-              _urlController.text = url;
               if (!_history.contains(url) && url.isNotEmpty) {
-                  _history.add(url); //only add unique, non-empty urls
-                  logger.i("history added: $url");
+                _history.add(url); // Add unique, non-empty URLs to the history
               }
             });
-            // Add to history if not already present
-            logger.i("Page finished loading: $url");
-          },
-          onWebResourceError: (error) {
-            logger.e("Web resource error: $error");
           },
         ),
-      )
-      ..loadRequest(Uri.parse(_tabs[_currentTabIndex])); // Load the initial tab
+      );
+      //..loadRequest(Uri.parse(_tabs[_currentTabIndex])); // Load the initial tab
+      // Load the initial tab's URL
+      //final String initialUrl = _tabs[_currentTabIndex]["url"] ?? "https://google.com"; // Default to Google if no URL
+      //_webViewController.loadRequest(Uri.parse(initialUrl));
   }
 
   @override
@@ -201,7 +170,9 @@ class BrowserHomePageState extends State<BrowserHomePage> {
             IconButton(
               icon: const Icon(Icons.home),
               onPressed: () {
-                _webViewController.loadRequest(Uri.parse("https://google.com"));
+                setState(() {
+                  _tabs[_currentTabIndex] = {"isHomepage": true, "url": ""};
+                });
               },
             ),
             Expanded(
@@ -218,7 +189,7 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                   keyboardType: TextInputType.url,
                   textInputAction: TextInputAction.go,
                   decoration: InputDecoration(
-                    hintText: 'Enter URL or search query',
+                    hintText: 'Search or enter URL',
                     hintStyle: const TextStyle(color: Colors.grey),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10), // This is for the text inside the box
                     border: InputBorder.none, // Remove the border since we are using the container's decoration
@@ -291,29 +262,44 @@ class BrowserHomePageState extends State<BrowserHomePage> {
           ],
         ),
       ),
-      body: WebViewWidget(controller: _webViewController),
+      body: _tabs[_currentTabIndex]["isHomepage"]
+          ? BrowserHomepage(onSearch: _handleNavigation)
+          : WebViewWidget(controller: _webViewController),
     );
   }
 
   void _handleNavigation(String input) {
     if (input.startsWith("http://") || input.startsWith("https://")) {
-      // If it's a URL, navigate directly
-      _tabs[_currentTabIndex] = input;
+      setState(() {
+        _tabs[_currentTabIndex] = {"isHomepage": false, "url": input};
+      });
       _webViewController.loadRequest(Uri.parse(input));
+
+      if (!_history.contains(input) && input.isNotEmpty) {
+        setState(() {
+          _history.add(input); // Add to history if unique and non-empty
+        });
+      }
     } else {
-      // If it's a search query, perform a Google search
-      String googleSearchUrl = "https://www.google.com/search?q=${Uri.encodeQueryComponent(input)}";
-      _tabs[_currentTabIndex] = googleSearchUrl;
-      _webViewController.loadRequest(Uri.parse(googleSearchUrl));
+      String searchUrl = "https://www.google.com/search?q=${Uri.encodeQueryComponent(input)}";
+      setState(() {
+        _tabs[_currentTabIndex] = {"isHomepage": false, "url": searchUrl};
+      });
+      _webViewController.loadRequest(Uri.parse(searchUrl));
+
+      if (!_history.contains(searchUrl) && searchUrl.isNotEmpty) {
+        setState(() {
+          _history.add(searchUrl); // Add to history if unique and non-empty
+        });
+      }
     }
   }
 
   void _addNewTab() {
     setState(() {
-      _tabs.add("https://google.com");
+      _tabs.add({"isHomepage": true, "url": ""});
       _currentTabIndex = _tabs.length - 1;
     });
-    _webViewController.loadRequest(Uri.parse(_tabs[_currentTabIndex]));
   }
 
   void _showAllTabs() {
@@ -325,7 +311,8 @@ class BrowserHomePageState extends State<BrowserHomePage> {
           onTabSelected: (index) {
             setState(() {
               _currentTabIndex = index;
-              _webViewController.loadRequest(Uri.parse(_tabs[_currentTabIndex]));
+              final String url = _tabs[_currentTabIndex]["url"] ?? "https://google.com";
+              _webViewController.loadRequest(Uri.parse(url));
             });
           },
           onTabRemoved: (index) {
@@ -334,7 +321,7 @@ class BrowserHomePageState extends State<BrowserHomePage> {
 
               // Ensure there is always at least one tab
               if (_tabs.isEmpty) {
-                _tabs.add("https://google.com"); // Default tab
+                _tabs.add({"isHomepage": true, "url": "https://google.com"}); // Default tab
                 _currentTabIndex = 0;
               } else {
                 // Adjust the current tab index if necessary
@@ -344,7 +331,8 @@ class BrowserHomePageState extends State<BrowserHomePage> {
               }
 
               // Reload the current tab after removal
-              _webViewController.loadRequest(Uri.parse(_tabs[_currentTabIndex]));
+              final String url = _tabs[_currentTabIndex]["url"] ?? "https://google.com";
+              _webViewController.loadRequest(Uri.parse(url));
             });
           },
         ),
@@ -353,6 +341,82 @@ class BrowserHomePageState extends State<BrowserHomePage> {
   }
 
 }
+
+class BrowserHomepage extends StatelessWidget {
+  final Function(String url) onSearch;
+
+  const BrowserHomepage({super.key, required this.onSearch});
+
+  @override
+  Widget build(BuildContext context) {
+    final DateTime now = DateTime.now();
+    final String time = "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}";
+
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text(
+              time,
+              style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: TextField(
+              onSubmitted: onSearch,
+              decoration: InputDecoration(
+                hintText: "Search or enter URL",
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                prefixIcon: const Icon(Icons.search),
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          GridView.count(
+            crossAxisCount: 4,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            children: [
+              _buildShortcut(Icons.mail, "Gmail", "https://mail.google.com/"),
+              _buildShortcut(Icons.map, "Maps", "https://maps.google.com/"),
+              _buildShortcut(Icons.drive_file_move, "Drive", "https://drive.google.com/"),
+              _buildShortcut(Icons.video_library, "YouTube", "https://www.youtube.com/"),
+            ],
+          ),
+          const SizedBox(height: 20),
+          const Text("To-Do List", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: TextField(
+              decoration: InputDecoration(
+                hintText: "Add a task...",
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                suffixIcon: const Icon(Icons.add),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildShortcut(IconData icon, String label, String url) {
+    return GestureDetector(
+      onTap: () => onSearch(url),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 40, color: Colors.blue),
+          const SizedBox(height: 8),
+          Text(label, style: const TextStyle(fontSize: 12)),
+        ],
+      ),
+    );
+  }
+}
+
 
 class WebViewPage extends StatelessWidget {
   final String url;
@@ -363,7 +427,7 @@ class WebViewPage extends StatelessWidget {
   Widget build(BuildContext context) {
     // Here you could load the URL in a WebView (for actual web browsing functionality).
     return Scaffold(
-      appBar: AppBar(title: Text("Chrome Web Store")),
+      appBar: AppBar(title: const Text("Chrome Web Store")),
       body: Center(
         child: Text('Redirecting to $url...'),
       ),
@@ -372,7 +436,7 @@ class WebViewPage extends StatelessWidget {
 }
 
 class AllTabsPage extends StatelessWidget {
-  final List<String> tabs;
+  final List<Map<String, dynamic>> tabs;
   final ValueChanged<int> onTabSelected;
   final ValueChanged<int> onTabRemoved;
 
@@ -389,42 +453,24 @@ class AllTabsPage extends StatelessWidget {
       appBar: AppBar(title: const Text("All Tabs")),
       body: GridView.builder(
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2, // Number of columns
-          childAspectRatio: 9 / 12, // Aspect ratio of each tile
-          crossAxisSpacing: 8.0, // Space between columns
-          mainAxisSpacing: 8.0, // Space between rows
+          crossAxisCount: 2,
+          childAspectRatio: 9 / 12,
+          crossAxisSpacing: 8.0,
+          mainAxisSpacing: 8.0,
         ),
         padding: const EdgeInsets.all(8.0),
         itemCount: tabs.length,
         itemBuilder: (context, index) {
           return Dismissible(
-            key: Key(tabs[index]), // Unique key for each tab
-            direction: DismissDirection.horizontal, // Allow swipe left or right
+            key: Key(tabs[index]["url"] ?? index.toString()),
+            direction: DismissDirection.horizontal,
             onDismissed: (direction) {
-              // Immediately remove the tab and update state
               onTabRemoved(index);
             },
-            confirmDismiss: (direction) async {
-              //confirm the dismissal before proceeding
-              await Future.delayed(const Duration(milliseconds: 300));
-              return true;
-            },
-            background: Container(
-              color: Colors.red.withAlpha((0.8 * 255).toInt()), // Background when swiping
-              alignment: Alignment.centerLeft,
-              padding: const EdgeInsets.only(left: 20),
-              child: const Icon(Icons.delete, color: Colors.white),
-            ),
-            secondaryBackground: Container(
-              color: Colors.red.withAlpha((0.8 * 255).toInt()), // Background for swipe in opposite direction
-              alignment: Alignment.centerRight,
-              padding: const EdgeInsets.only(right: 20),
-              child: const Icon(Icons.delete, color: Colors.white),
-            ),
             child: GestureDetector(
               onTap: () {
                 onTabSelected(index);
-                Navigator.pop(context); // Go back to the previous screen
+                Navigator.pop(context);
               },
               child: Card(
                 elevation: 4,
@@ -432,15 +478,17 @@ class AllTabsPage extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Expanded(
-                      child: WebViewWidget(
+                      child: tabs[index]["isHomepage"]
+                          ? const Center(child: Text("Homepage"))
+                          : WebViewWidget(
                         controller: WebViewController()
                           ..setJavaScriptMode(JavaScriptMode.unrestricted)
-                          ..loadRequest(Uri.parse(tabs[index])),
+                          ..loadRequest(Uri.parse(tabs[index]["url"] ?? "https://google.com")),
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      tabs[index],
+                      tabs[index]["url"] ?? "Homepage",
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.center,
