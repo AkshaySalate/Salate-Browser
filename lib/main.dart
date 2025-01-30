@@ -14,30 +14,29 @@ class SalateBrowser extends StatefulWidget {
 }
 
 class _SalateBrowserState extends State<SalateBrowser> {
-  // Initial theme mode is dark
-  ThemeMode _themeMode = ThemeMode.dark;
-
-  void toggleTheme(bool isDarkMode) {
-    setState(() {
-      _themeMode = isDarkMode ? ThemeMode.dark : ThemeMode.light;
-    });
-  }
+  bool _isDarkMode = false;
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Salate Browser',
-      theme: ThemeData.light().copyWith(
+      theme: _isDarkMode
+          ? ThemeData.dark().copyWith(
         primaryColor: const Color(0xFF212121),
         scaffoldBackgroundColor: const Color(0xFF181818),
+      )
+          : ThemeData.light(),
+      home: BrowserHomePage(
+        onThemeToggle: _toggleTheme,
+        isDarkMode: _isDarkMode, // Pass the current theme state
       ),
-      darkTheme: ThemeData.dark().copyWith(
-        primaryColor: const Color(0xFF212121),
-        scaffoldBackgroundColor: const Color(0xFF181818),
-      ),
-      themeMode: _themeMode, // Apply theme mode based on the state
-      home: BrowserHomePage(onThemeToggle: toggleTheme), // Pass toggle function
     );
+  }
+
+  void _toggleTheme(bool isDarkMode) {
+    setState(() {
+      _isDarkMode = isDarkMode;
+    });
   }
 }

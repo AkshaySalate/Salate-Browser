@@ -8,8 +8,9 @@ import 'package:salate_browser/utils/desktop_mode_manager.dart';
 
 class BrowserHomePage extends StatefulWidget {
   final Function(bool) onThemeToggle; // Accept onThemeToggle
+  final bool isDarkMode; // Accept isDarkMode
 
-  const BrowserHomePage({super.key, required this.onThemeToggle}); // Constructor accepts the onThemeToggle
+  const BrowserHomePage({super.key, required this.onThemeToggle, required this.isDarkMode}); // Constructor accepts the onThemeToggle
 
   @override
   BrowserHomePageState createState() => BrowserHomePageState();
