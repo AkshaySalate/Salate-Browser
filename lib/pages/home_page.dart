@@ -4,6 +4,7 @@ import 'package:salate_browser/pages/browser_homepage.dart';
 import 'package:salate_browser/pages/extension_manager.dart';
 import 'package:salate_browser/pages/all_tabs_page.dart';
 import 'package:salate_browser/models/tab_model.dart';
+import 'package:salate_browser/utils/desktop_mode_manager.dart';
 
 class BrowserHomePage extends StatefulWidget {
   const BrowserHomePage({super.key});
@@ -15,6 +16,7 @@ class BrowserHomePage extends StatefulWidget {
 class BrowserHomePageState extends State<BrowserHomePage> {
   final List<TabModel> _tabs = [TabModel(url: "https://google.com", isHomepage: true)];
   final List<String> _history = [];
+  final DesktopModeManager _desktopModeManager = DesktopModeManager(); // Instance of DesktopModeManager
   int _currentTabIndex = 0;
   late InAppWebViewController _webViewController;
 
@@ -48,10 +50,14 @@ class BrowserHomePageState extends State<BrowserHomePage> {
               if (value == 'extensions') {
                 Navigator.push(context, MaterialPageRoute(builder: (_) => ExtensionManager()));
               }
+              if (value == 'desktop_mode') {
+                _toggleDesktopMode();
+              }
             },
             itemBuilder: (context) => const [
               PopupMenuItem(value: 'history', child: Text('History')),
               PopupMenuItem(value: 'extensions', child: Text('Extensions')),
+              PopupMenuItem(value: 'desktop_mode', child: Text('Desktop Mode')),
             ],
           ),
         ],
@@ -59,14 +65,17 @@ class BrowserHomePageState extends State<BrowserHomePage> {
       body: _tabs[_currentTabIndex].isHomepage
           ? BrowserHomepage(onSearch: _handleNavigation)
           : InAppWebView(
-        initialUrlRequest: URLRequest(url: WebUri(_tabs[_currentTabIndex].url)),
-        onWebViewCreated: (controller) => _webViewController = controller,
-        onLoadStop: (controller, url) {
-          if (url != null && !_history.contains(url.toString())) {
-            setState(() => _history.add(url.toString()));
-          }
-        },
-      ),
+            initialUrlRequest: URLRequest(url: WebUri(_tabs[_currentTabIndex].url)),
+            onWebViewCreated: (controller) {
+              _webViewController = controller;
+              _desktopModeManager.setWebViewController(controller); // Set WebView Controller
+            },
+            onLoadStop: (controller, url) {
+              if (url != null && !_history.contains(url.toString())) {
+                setState(() => _history.add(url.toString()));
+              }
+            },
+          ),
     );
   }
 
@@ -109,6 +118,12 @@ class BrowserHomePageState extends State<BrowserHomePage> {
       _tabs[_currentTabIndex] = TabModel(url: "https://google.com", isHomepage: true);
     });
     _webViewController.loadUrl(urlRequest: URLRequest(url: WebUri("https://google.com")));
+  }
+
+  void _toggleDesktopMode() {
+    setState(() {
+      _desktopModeManager.toggleDesktopMode();
+    });
   }
 }
 
