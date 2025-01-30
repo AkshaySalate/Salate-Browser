@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:webview_flutter/webview_flutter.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
 void main() {
   runApp(const SalateBrowser());
@@ -56,110 +55,12 @@ class BrowserHomePage extends StatefulWidget {
 
 class BrowserHomePageState extends State<BrowserHomePage> {
   final List<Map<String, dynamic>> _tabs = [
-    {"isHomepage": true, "url": ""},
+    {"isHomepage": true, "url": "https://google.com"},
   ];
-  List<String> installedExtensions = ["AdBlocker", "Dark Mode", "Language Translator"];
-  final Uri chromeWebStoreUrl = Uri.parse('https://chrome.google.com/webstore/category/extensions');
-  //final Uri chromeWebStoreUrl = Uri.parse('https://chromewebstore.google.com/');
-  final TextEditingController _urlController = TextEditingController();
-
-  late WebViewController _webViewController;
-  //final List<String> _tabs = ["https://google.com"]; // List to track open tabs
-  int _currentTabIndex = 0; // Tracks the currently active tab
-
   final List<String> _history = [];
-  void _showHistory(BuildContext context) {
-    // Ensure history is passed and visible in the modal
-    if (_history.isEmpty) {
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('No History'),
-          content: const Text('You have not visited any pages yet.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('OK'),
-            ),
-          ],
-        ),
-      );
-    } else {
-      showModalBottomSheet(
-        context: context,
-        builder: (context) => ListView.builder(
-          itemCount: _history.length,
-          itemBuilder: (context, index) {
-            return ListTile(
-              title: Text(_history[index], style: const TextStyle(color: Colors.black),),
-              onTap: () {
-                // Load the selected URL from history
-                Navigator.pop(context);  // Close the history modal
-                _handleNavigation(_history[index]);  // Navigate to the selected URL
-              },
-            );
-          },
-        ),
-      );
-    }
-  }
+  int _currentTabIndex = 0;
 
-  void _showExtensions(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Extensions'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('Installed extensions will be listed here.'),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () async {
-                try {
-                  if (!await launchUrl(
-                    chromeWebStoreUrl,
-                    //mode: LaunchMode.externalApplication,
-                    mode: LaunchMode.inAppWebView,
-                  )) {
-                    throw Exception('Could not launch $chromeWebStoreUrl');
-                  }
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(e.toString())),
-                  );
-                }
-              },
-              child: const Text('Add Extension'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    // Initialize WebViewController
-    _webViewController = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setNavigationDelegate(
-        NavigationDelegate(
-          onPageFinished: (url) {
-            setState(() {
-              if (!_history.contains(url) && url.isNotEmpty) {
-                _history.add(url); // Add unique, non-empty URLs to the history
-              }
-            });
-          },
-        ),
-      );
-      //..loadRequest(Uri.parse(_tabs[_currentTabIndex])); // Load the initial tab
-      // Load the initial tab's URL
-      //final String initialUrl = _tabs[_currentTabIndex]["url"] ?? "https://google.com"; // Default to Google if no URL
-      //_webViewController.loadRequest(Uri.parse(initialUrl));
-  }
+  late InAppWebViewController _webViewController;
 
   @override
   Widget build(BuildContext context) {
@@ -171,45 +72,29 @@ class BrowserHomePageState extends State<BrowserHomePage> {
               icon: const Icon(Icons.home),
               onPressed: () {
                 setState(() {
-                  _tabs[_currentTabIndex] = {"isHomepage": true, "url": ""};
+                  _tabs[_currentTabIndex] = {"isHomepage": true, "url": "https://google.com"};
                 });
               },
             ),
             Expanded(
               child: Container(
-                //padding: const EdgeInsets.symmetric(horizontal: 10), // Horizontal padding for width
-                width: double.infinity,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: Colors.grey.withAlpha((0.15 * 255).toInt()), // Grey background
-                  borderRadius: BorderRadius.circular(12), // Rounded corners for the box
+                  color: Colors.grey.withAlpha((0.15 * 255).toInt()),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: TextField(
-                  controller: _urlController,
-                  keyboardType: TextInputType.url,
-                  textInputAction: TextInputAction.go,
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     hintText: 'Search or enter URL',
-                    hintStyle: const TextStyle(color: Colors.grey),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10), // This is for the text inside the box
-                    border: InputBorder.none, // Remove the border since we are using the container's decoration
-                    suffixIcon: IconButton(
-                      icon: const Icon(Icons.search),
-                      onPressed: () => _handleNavigation(_urlController.text),
-                    ),
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                    suffixIcon: Icon(Icons.search),
                   ),
-                  onSubmitted: (value) => _handleNavigation(value),
-                  onTap: () {
-                    // Select all text in the TextField when tapped
-                    _urlController.selection = TextSelection(
-                      baseOffset: 0,
-                      extentOffset: _urlController.text.length,
-                    );
-                  },
+                  textInputAction: TextInputAction.go,
+                  onSubmitted: _handleNavigation,
                 ),
               ),
             ),
-
             IconButton(
               icon: const Icon(Icons.add),
               onPressed: _addNewTab,
@@ -225,11 +110,8 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                 ),
                 if (_tabs.isNotEmpty)
                   Positioned(
-                    //right: 8,
-                    //top: 8,
                     child: CircleAvatar(
                       radius: 10,
-                      //backgroundColor: Theme.of(context).iconTheme.color,
                       backgroundColor: Colors.transparent,
                       child: Text(
                         '${_tabs.length}',
@@ -244,60 +126,72 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                 if (value == 'history') {
                   _showHistory(context);
                 } else if (value == 'extensions') {
-                  _showExtensions(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const ExtensionManager()),
+                  );
                 }
               },
-              itemBuilder: (context) => [
-                const PopupMenuItem(
+              itemBuilder: (context) => const [
+                PopupMenuItem(
                   value: 'history',
                   child: Text('History'),
                 ),
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'extensions',
                   child: Text('Extensions'),
                 ),
               ],
             ),
-
           ],
         ),
       ),
       body: _tabs[_currentTabIndex]["isHomepage"]
           ? BrowserHomepage(onSearch: _handleNavigation)
-          : WebViewWidget(controller: _webViewController),
+          : InAppWebView(
+              initialUrlRequest: URLRequest(
+                url: WebUri(_tabs[_currentTabIndex]["url"] ?? "https://google.com"),
+              ),
+              onWebViewCreated: (controller) {
+                _webViewController = controller;
+                _webViewController.setOptions(
+                  options: InAppWebViewGroupOptions(
+                    crossPlatform: InAppWebViewOptions(
+                      userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+                    ),
+                  ),
+                );
+              },
+              onLoadStop: (controller, url) {
+                if (url != null && !_history.contains(url.toString())) {
+                  setState(() {
+                    _history.add(url.toString());
+                  });
+                }
+              },
+      ),
     );
   }
 
   void _handleNavigation(String input) {
-    if (input.startsWith("http://") || input.startsWith("https://")) {
-      setState(() {
-        _tabs[_currentTabIndex] = {"isHomepage": false, "url": input};
-      });
-      _webViewController.loadRequest(Uri.parse(input));
+    // Ensure input is valid, default to a search query if not a proper URL
+    final String validUrl = input.startsWith("http://") || input.startsWith("https://")
+        ? input
+        : 'https://google.com/search?q=$input';
 
-      if (!_history.contains(input) && input.isNotEmpty) {
-        setState(() {
-          _history.add(input); // Add to history if unique and non-empty
-        });
-      }
-    } else {
-      String searchUrl = "https://www.google.com/search?q=${Uri.encodeQueryComponent(input)}";
-      setState(() {
-        _tabs[_currentTabIndex] = {"isHomepage": false, "url": searchUrl};
-      });
-      _webViewController.loadRequest(Uri.parse(searchUrl));
+    // Create a WebUri
+    final WebUri uri = WebUri(validUrl);
 
-      if (!_history.contains(searchUrl) && searchUrl.isNotEmpty) {
-        setState(() {
-          _history.add(searchUrl); // Add to history if unique and non-empty
-        });
-      }
-    }
+    setState(() {
+      _tabs[_currentTabIndex] = {"isHomepage": false, "url": uri.toString()};
+    });
+
+    _webViewController.loadUrl(urlRequest: URLRequest(url: uri));
   }
 
   void _addNewTab() {
     setState(() {
-      _tabs.add({"isHomepage": true, "url": ""});
+      _tabs.add({"isHomepage": true, "url": "https://google.com"});
       _currentTabIndex = _tabs.length - 1;
     });
   }
@@ -311,28 +205,15 @@ class BrowserHomePageState extends State<BrowserHomePage> {
           onTabSelected: (index) {
             setState(() {
               _currentTabIndex = index;
-              final String url = _tabs[_currentTabIndex]["url"] ?? "https://google.com";
-              _webViewController.loadRequest(Uri.parse(url));
             });
+            Navigator.pop(context);
           },
           onTabRemoved: (index) {
             setState(() {
               _tabs.removeAt(index);
-
-              // Ensure there is always at least one tab
-              if (_tabs.isEmpty) {
-                _tabs.add({"isHomepage": true, "url": "https://google.com"}); // Default tab
-                _currentTabIndex = 0;
-              } else {
-                // Adjust the current tab index if necessary
-                if (_currentTabIndex >= _tabs.length) {
-                  _currentTabIndex = _tabs.length - 1;
-                }
+              if (_currentTabIndex >= _tabs.length) {
+                _currentTabIndex = _tabs.length - 1;
               }
-
-              // Reload the current tab after removal
-              final String url = _tabs[_currentTabIndex]["url"] ?? "https://google.com";
-              _webViewController.loadRequest(Uri.parse(url));
             });
           },
         ),
@@ -340,6 +221,23 @@ class BrowserHomePageState extends State<BrowserHomePage> {
     );
   }
 
+  void _showHistory(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => ListView.builder(
+        itemCount: _history.length,
+        itemBuilder: (context, index) {
+          return ListTile(
+            title: Text(_history[index]),
+            onTap: () {
+              Navigator.pop(context);
+              _handleNavigation(_history[index]);
+            },
+          );
+        },
+      ),
+    );
+  }
 }
 
 class BrowserHomepage extends StatelessWidget {
@@ -435,6 +333,37 @@ class WebViewPage extends StatelessWidget {
   }
 }
 
+class ExtensionManager extends StatelessWidget {
+  const ExtensionManager({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final List<Map<String, dynamic>> extensions = [
+      {'name': 'AdBlocker', 'enabled': true},
+      {'name': 'Dark Mode', 'enabled': false},
+    ];
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('Extension Manager')),
+      body: ListView.builder(
+        itemCount: extensions.length,
+        itemBuilder: (context, index) {
+          final extension = extensions[index];
+          return ListTile(
+            title: Text(extension['name']),
+            trailing: Switch(
+              value: extension['enabled'],
+              onChanged: (value) {
+                // Toggle enable/disable logic
+              },
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
 class AllTabsPage extends StatelessWidget {
   final List<Map<String, dynamic>> tabs;
   final ValueChanged<int> onTabSelected;
@@ -450,52 +379,16 @@ class AllTabsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("All Tabs")),
-      body: GridView.builder(
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          childAspectRatio: 9 / 12,
-          crossAxisSpacing: 8.0,
-          mainAxisSpacing: 8.0,
-        ),
-        padding: const EdgeInsets.all(8.0),
+      appBar: AppBar(title: const Text('All Tabs')),
+      body: ListView.builder(
         itemCount: tabs.length,
         itemBuilder: (context, index) {
-          return Dismissible(
-            key: Key(tabs[index]["url"] ?? index.toString()),
-            direction: DismissDirection.horizontal,
-            onDismissed: (direction) {
-              onTabRemoved(index);
-            },
-            child: GestureDetector(
-              onTap: () {
-                onTabSelected(index);
-                Navigator.pop(context);
-              },
-              child: Card(
-                elevation: 4,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Expanded(
-                      child: tabs[index]["isHomepage"]
-                          ? const Center(child: Text("Homepage"))
-                          : WebViewWidget(
-                        controller: WebViewController()
-                          ..setJavaScriptMode(JavaScriptMode.unrestricted)
-                          ..loadRequest(Uri.parse(tabs[index]["url"] ?? "https://google.com")),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      tabs[index]["url"] ?? "Homepage",
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-              ),
+          return ListTile(
+            title: Text(tabs[index]["url"] ?? "Homepage"),
+            onTap: () => onTabSelected(index),
+            trailing: IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: () => onTabRemoved(index),
             ),
           );
         },

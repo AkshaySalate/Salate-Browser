@@ -1,0 +1,15 @@
+lib/
+│── main.dart
+│── pages/
+│   ├── home_page.dart
+│   ├── browser_homepage.dart
+│   ├── webview_page.dart
+│   ├── all_tabs_page.dart
+│   ├── extension_manager.dart
+│── models/
+│   ├── tab_model.dart
+│── widgets/
+│   ├── search_bar.dart
+│   ├── shortcut_grid.dart
+│── utils/
+│   ├── url_helper.dart
