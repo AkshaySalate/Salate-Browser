@@ -7,7 +7,9 @@ import 'package:salate_browser/models/tab_model.dart';
 import 'package:salate_browser/utils/desktop_mode_manager.dart';
 
 class BrowserHomePage extends StatefulWidget {
-  const BrowserHomePage({super.key});
+  final Function(bool) onThemeToggle; // Accept onThemeToggle
+
+  const BrowserHomePage({super.key, required this.onThemeToggle}); // Constructor accepts the onThemeToggle
 
   @override
   BrowserHomePageState createState() => BrowserHomePageState();
@@ -16,7 +18,7 @@ class BrowserHomePage extends StatefulWidget {
 class BrowserHomePageState extends State<BrowserHomePage> {
   final List<TabModel> _tabs = [TabModel(url: "https://google.com", isHomepage: true)];
   final List<String> _history = [];
-  final DesktopModeManager _desktopModeManager = DesktopModeManager(); // Instance of DesktopModeManager
+  final DesktopModeManager _desktopModeManager = DesktopModeManager();
   int _currentTabIndex = 0;
   late InAppWebViewController _webViewController;
 
@@ -48,7 +50,13 @@ class BrowserHomePageState extends State<BrowserHomePage> {
             onSelected: (value) {
               if (value == 'history') _showHistory();
               if (value == 'extensions') {
-                Navigator.push(context, MaterialPageRoute(builder: (_) => ExtensionManager()));
+                // Pass the onThemeToggle when navigating to ExtensionManager
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ExtensionManager(onThemeToggle: widget.onThemeToggle),
+                  ),
+                );
               }
               if (value == 'desktop_mode') {
                 _toggleDesktopMode();
@@ -65,17 +73,17 @@ class BrowserHomePageState extends State<BrowserHomePage> {
       body: _tabs[_currentTabIndex].isHomepage
           ? BrowserHomepage(onSearch: _handleNavigation)
           : InAppWebView(
-            initialUrlRequest: URLRequest(url: WebUri(_tabs[_currentTabIndex].url)),
-            onWebViewCreated: (controller) {
-              _webViewController = controller;
-              _desktopModeManager.setWebViewController(controller); // Set WebView Controller
-            },
-            onLoadStop: (controller, url) {
-              if (url != null && !_history.contains(url.toString())) {
-                setState(() => _history.add(url.toString()));
-              }
-            },
-          ),
+        initialUrlRequest: URLRequest(url: WebUri(_tabs[_currentTabIndex].url)),
+        onWebViewCreated: (controller) {
+          _webViewController = controller;
+          _desktopModeManager.setWebViewController(controller);
+        },
+        onLoadStop: (controller, url) {
+          if (url != null && !_history.contains(url.toString())) {
+            setState(() => _history.add(url.toString()));
+          }
+        },
+      ),
     );
   }
 

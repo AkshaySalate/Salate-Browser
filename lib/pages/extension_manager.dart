@@ -1,6 +1,15 @@
 import 'package:flutter/material.dart';
 
-class ExtensionManager extends StatelessWidget {
+class ExtensionManager extends StatefulWidget {
+  final Function(bool) onThemeToggle;
+
+  const ExtensionManager({super.key, required this.onThemeToggle});
+
+  @override
+  _ExtensionManagerState createState() => _ExtensionManagerState();
+}
+
+class _ExtensionManagerState extends State<ExtensionManager> {
   final List<Map<String, dynamic>> extensions = [
     {'name': 'AdBlocker', 'enabled': true, 'version': '1.0'},
     {'name': 'Dark Mode', 'enabled': false, 'version': '1.2'},
@@ -21,11 +30,18 @@ class ExtensionManager extends StatelessWidget {
             trailing: Switch(
               value: extension['enabled'],
               onChanged: (value) {
-                // Toggle enable/disable
+                setState(() {
+                  extension['enabled'] = value;
+
+                  // If Dark Mode is toggled, apply the theme change
+                  if (extension['name'] == 'Dark Mode') {
+                    widget.onThemeToggle(value);
+                  }
+                });
               },
             ),
             onTap: () {
-              // Navigate to extension settings
+              // Navigate to extension settings (if you want to implement it later)
             },
           );
         },
