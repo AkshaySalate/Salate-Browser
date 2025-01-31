@@ -7,10 +7,10 @@ import 'package:salate_browser/models/tab_model.dart';
 import 'package:salate_browser/utils/desktop_mode_manager.dart';
 
 class BrowserHomePage extends StatefulWidget {
-  final Function(bool) onThemeToggle; // Accept onThemeToggle
-  final bool isDarkMode; // Accept isDarkMode
+  final Function(bool) onThemeToggle;
+  final bool isDarkMode;
 
-  const BrowserHomePage({super.key, required this.onThemeToggle, required this.isDarkMode}); // Constructor accepts the onThemeToggle
+  const BrowserHomePage({super.key, required this.onThemeToggle, required this.isDarkMode});
 
   @override
   BrowserHomePageState createState() => BrowserHomePageState();
@@ -29,7 +29,7 @@ class BrowserHomePageState extends State<BrowserHomePage> {
       appBar: AppBar(
         title: Row(
           children: [
-            HomeButton(onPressed: _goToHomePage), // Home button to the left
+            HomeButton(onPressed: _goToHomePage),
             const SizedBox(width: 8),
             Expanded(
               child: TextField(
@@ -51,11 +51,14 @@ class BrowserHomePageState extends State<BrowserHomePage> {
             onSelected: (value) {
               if (value == 'history') _showHistory();
               if (value == 'extensions') {
-                // Pass the onThemeToggle when navigating to ExtensionManager
+                // Pass the onThemeToggle and isDarkMode when navigating to ExtensionManager
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => ExtensionManager(onThemeToggle: widget.onThemeToggle),
+                    builder: (_) => ExtensionManager(
+                      onThemeToggle: widget.onThemeToggle,
+                      isDarkMode: widget.isDarkMode, // Pass the current theme state
+                    ),
                   ),
                 );
               }
