@@ -15,5 +15,5 @@ lib/
 │── utils/
 │   ├── url_helper.dart
 │   ├── desktop_mode_manager.dart
-│   ├── history_manager
+│   ├── history_manager.dart
 │   ├── tab_manager.dart

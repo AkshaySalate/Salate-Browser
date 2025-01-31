@@ -122,10 +122,13 @@ class BrowserHomePageState extends State<BrowserHomePage> {
   }
 
   void _addNewTab() {
-    setState(() =>
-        _tabs.add(TabModel(url: "https://google.com", isHomepage: true)));
+    setState(() {
+      _tabs.add(TabModel(url: "https://google.com", isHomepage: true));
+      _currentTabIndex = _tabs.length - 1;  // Switch to the newly added tab
+    });
     TabsManager.saveTabs(_tabs.cast<TabItem>()); // Save tabs whenever a new tab is added
   }
+
 
   void _showAllTabs() {
     Navigator.push(
