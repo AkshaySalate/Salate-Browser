@@ -13,3 +13,4 @@ lib/
 │   ├── shortcut_grid.dart
 │── utils/
 │   ├── url_helper.dart
+│   ├── desktop_mode_manager.dart
