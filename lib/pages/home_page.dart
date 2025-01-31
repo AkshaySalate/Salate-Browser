@@ -39,8 +39,14 @@ class BrowserHomePageState extends State<BrowserHomePage> {
   }
 
   void _loadTabs() async {
-    _tabs.addAll((await TabsManager.loadTabs()) as Iterable<TabModel>);
-    setState(() {});
+    List<TabItem> savedTabs = await TabsManager.loadTabs();
+    if (savedTabs.isNotEmpty) {
+      setState(() {
+        _tabs.clear(); // Clear existing tabs before loading
+        _tabs.addAll(savedTabs.map((tab) => TabModel(url: tab.url)));
+        _currentTabIndex = 0; // Ensure it starts at the first tab
+      });
+    }
   }
 
   @override
@@ -126,7 +132,7 @@ class BrowserHomePageState extends State<BrowserHomePage> {
       _tabs.add(TabModel(url: "https://google.com", isHomepage: true));
       _currentTabIndex = _tabs.length - 1;  // Switch to the newly added tab
     });
-    TabsManager.saveTabs(_tabs.cast<TabItem>()); // Save tabs whenever a new tab is added
+    TabsManager.saveTabs(_tabs.map((tab) => TabItem(url: tab.url)).toList());
   }
 
 
@@ -136,8 +142,19 @@ class BrowserHomePageState extends State<BrowserHomePage> {
       MaterialPageRoute(
         builder: (_) => AllTabsPage(
           tabs: _tabs,
-          onTabSelected: (index) => setState(() => _currentTabIndex = index),
-          onTabRemoved: (index) => setState(() => _tabs.removeAt(index)),
+          onTabSelected: (index) {
+            setState(() => _currentTabIndex = index);
+            Navigator.pop(context);
+          },
+          onTabRemoved: (index) {
+            setState(() {
+              _tabs.removeAt(index);
+              if (_currentTabIndex >= _tabs.length) {
+                _currentTabIndex = _tabs.isNotEmpty ? _tabs.length - 1 : 0;
+              }
+            });
+            TabsManager.saveTabs(_tabs.map((tab) => TabItem(url: tab.url)).toList()); // Save updated tabs
+          },
         ),
       ),
     );

@@ -1,7 +1,7 @@
 // utils/history_manager.dart
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
-import '../models/history_model.dart';
+import 'package:salate_browser/models/history_model.dart';
 
 class HistoryManager {
   static const _key = 'browser_history';

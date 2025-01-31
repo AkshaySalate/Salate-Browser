@@ -1,7 +1,7 @@
 // utils/tabs_manager.dart
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
-import '../models/tab_model.dart';
+import 'package:salate_browser/models/tab_model.dart';
 
 class TabsManager {
   static const _key = 'browser_tabs';
