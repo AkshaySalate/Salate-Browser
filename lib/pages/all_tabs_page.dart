@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:salate_browser/models/tab_model.dart';
+import 'package:salate_browser/utils/tabs_manager.dart';
 
 class AllTabsPage extends StatelessWidget {
   final List<TabModel> tabs;
@@ -31,6 +32,17 @@ class AllTabsPage extends StatelessWidget {
         },
       ),
     );
+  }
+
+  // Saving tabs
+  void saveTabs(List<TabItem> tabs) {
+    TabsManager.saveTabs(tabs);
+  }
+
+// Loading tabs
+  void loadTabs() async {
+    List<TabItem> tabs = await TabsManager.loadTabs();
+    // Restore the tabs in your UI
   }
 }
 

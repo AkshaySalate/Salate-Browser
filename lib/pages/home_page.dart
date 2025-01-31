@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:salate_browser/pages/browser_homepage.dart';
 import 'package:salate_browser/pages/extension_manager.dart';
+import 'package:salate_browser/utils/tabs_manager.dart';
 import 'package:salate_browser/pages/all_tabs_page.dart';
 import 'package:salate_browser/models/tab_model.dart';
 import 'package:salate_browser/utils/desktop_mode_manager.dart';
+import 'package:salate_browser/utils/history_manager.dart';
+import 'package:salate_browser/models/history_model.dart';
 
 class BrowserHomePage extends StatefulWidget {
   final Function(bool) onThemeToggle;
@@ -18,10 +21,27 @@ class BrowserHomePage extends StatefulWidget {
 
 class BrowserHomePageState extends State<BrowserHomePage> {
   final List<TabModel> _tabs = [TabModel(url: "https://google.com", isHomepage: true)];
-  final List<String> _history = [];
+  final List<HistoryItem> _history = [];
   final DesktopModeManager _desktopModeManager = DesktopModeManager();
   int _currentTabIndex = 0;
   late InAppWebViewController _webViewController;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadHistory();
+    _loadTabs();
+  }
+
+  void _loadHistory() async {
+    _history.addAll(await HistoryManager.loadHistory());
+    setState(() {});
+  }
+
+  void _loadTabs() async {
+    _tabs.addAll((await TabsManager.loadTabs()) as Iterable<TabModel>);
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -77,16 +97,18 @@ class BrowserHomePageState extends State<BrowserHomePage> {
       body: _tabs[_currentTabIndex].isHomepage
           ? BrowserHomepage(onSearch: _handleNavigation)
           : InAppWebView(
-        initialUrlRequest: URLRequest(url: WebUri(_tabs[_currentTabIndex].url)),
+        initialUrlRequest: URLRequest(url: WebUri.uri(Uri.parse(_tabs[_currentTabIndex].url))),
         onWebViewCreated: (controller) {
           _webViewController = controller;
           _desktopModeManager.setWebViewController(controller);
         },
-        onLoadStop: (controller, url) {
-          if (url != null && !_history.contains(url.toString())) {
-            setState(() => _history.add(url.toString()));
+          onLoadStop: (controller, url) {
+            if (url != null && !_history.contains(url.toString())) {
+              final historyItem = HistoryItem(url: url.toString(), timestamp: DateTime.now());
+              setState(() => _history.add(historyItem));
+              HistoryManager.saveHistory(_history);
+            }
           }
-        },
       ),
     );
   }
@@ -94,10 +116,16 @@ class BrowserHomePageState extends State<BrowserHomePage> {
   void _handleNavigation(String input) {
     final url = Uri.tryParse(input)?.hasScheme ?? false ? input : 'https://google.com/search?q=$input';
     setState(() => _tabs[_currentTabIndex] = TabModel(url: url, isHomepage: false));
-    _webViewController.loadUrl(urlRequest: URLRequest(url: WebUri(url)));
+    _webViewController.loadUrl(urlRequest: URLRequest(url: WebUri.uri(Uri.parse(url))));
+    TabsManager.saveTabs(_tabs.cast<TabItem>());  // Save tabs whenever they are modified
+    HistoryManager.saveHistory(_history);
   }
 
-  void _addNewTab() => setState(() => _tabs.add(TabModel(url: "https://google.com", isHomepage: true)));
+  void _addNewTab() {
+    setState(() =>
+        _tabs.add(TabModel(url: "https://google.com", isHomepage: true)));
+    TabsManager.saveTabs(_tabs.cast<TabItem>()); // Save tabs whenever a new tab is added
+  }
 
   void _showAllTabs() {
     Navigator.push(
@@ -118,8 +146,8 @@ class BrowserHomePageState extends State<BrowserHomePage> {
       builder: (_) => ListView.builder(
         itemCount: _history.length,
         itemBuilder: (_, index) => ListTile(
-          title: Text(_history[index]),
-          onTap: () => _handleNavigation(_history[index]),
+          title: Text(_history[index].url),
+          onTap: () => _handleNavigation(_history[index].url),
         ),
       ),
     );

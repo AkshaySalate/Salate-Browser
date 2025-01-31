@@ -8,9 +8,12 @@ lib/
 │   ├── extension_manager.dart
 │── models/
 │   ├── tab_model.dart
+│   ├── history_model.dart
 │── widgets/
 │   ├── search_bar.dart
 │   ├── shortcut_grid.dart
 │── utils/
 │   ├── url_helper.dart
 │   ├── desktop_mode_manager.dart
+│   ├── history_manager
+│   ├── tab_manager.dart
