@@ -1,20 +1,38 @@
 import 'package:flutter/material.dart';
 import 'package:salate_browser/pages/home_page.dart'; // Import BrowserHomePage
 import 'package:salate_browser/pages/extension_manager.dart'; // Import ExtensionManager
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:salate_browser/utils/theme_manager.dart';
 
-void main() {
-  runApp(const SalateBrowser());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized(); // Ensures async operations can run before runApp()
+  bool isDarkMode = await loadTheme(); // Load last saved theme
+  runApp(SalateBrowser(isDarkMode: isDarkMode));
 }
 
 class SalateBrowser extends StatefulWidget {
-  const SalateBrowser({super.key});
+  final bool isDarkMode;
+  const SalateBrowser({super.key, required this.isDarkMode});
 
   @override
   _SalateBrowserState createState() => _SalateBrowserState();
 }
 
 class _SalateBrowserState extends State<SalateBrowser> {
-  bool _isDarkMode = false;
+  late bool _isDarkMode;
+
+  @override
+  void initState() {
+    super.initState();
+    _isDarkMode = widget.isDarkMode; // Initialize with saved theme state
+  }
+
+  void _toggleTheme(bool isDarkMode) {
+    setState(() {
+      _isDarkMode = isDarkMode;
+    });
+    saveTheme(isDarkMode); // Save theme state when toggled
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,14 +47,20 @@ class _SalateBrowserState extends State<SalateBrowser> {
           : ThemeData.light(),
       home: BrowserHomePage(
         onThemeToggle: _toggleTheme,
-        isDarkMode: _isDarkMode, // Pass the current theme state
+        isDarkMode: _isDarkMode, // Pass current theme state
       ),
     );
   }
+}
 
-  void _toggleTheme(bool isDarkMode) {
-    setState(() {
-      _isDarkMode = isDarkMode;
-    });
-  }
+/// Saves the theme state using SharedPreferences
+Future<void> saveTheme(bool isDarkMode) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setBool('isDarkMode', isDarkMode);
+}
+
+/// Loads the last saved theme state (defaults to light mode if not set)
+Future<bool> loadTheme() async {
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getBool('isDarkMode') ?? false; // Default: Light mode
 }

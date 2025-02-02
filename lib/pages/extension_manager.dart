@@ -25,6 +25,11 @@ class _ExtensionManagerState extends State<ExtensionManager> {
     _isDarkMode = widget.isDarkMode; // Initialize with the passed value
   }
 
+  void _toggleDarkMode(bool value) {
+    setState(() => _isDarkMode = value);
+    widget.onThemeToggle(value); // Notify parent to save theme
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -39,15 +44,7 @@ class _ExtensionManagerState extends State<ExtensionManager> {
             title: Text(extension['name']),
             subtitle: Text('Version: ${extension['version']}'),
             trailing: extension['name'] == 'Dark Mode'
-                ? Switch(
-              value: _isDarkMode,
-              onChanged: (value) {
-                setState(() {
-                  _isDarkMode = value;
-                  widget.onThemeToggle(value); // Notify parent widget about the theme change
-                });
-              },
-            )
+                ? Switch(value: _isDarkMode, onChanged: _toggleDarkMode)
                 : null, // Show the Switch only for Dark Mode
           );
         },
