@@ -109,7 +109,7 @@ class BrowserHomePageState extends State<BrowserHomePage> {
           _desktopModeManager.setWebViewController(controller);
         },
           onLoadStop: (controller, url) {
-            if (url != null && !_history.contains(url.toString())) {
+            if (url != null && !_history.any((item) => item.url == url.toString())) {
               final historyItem = HistoryItem(url: url.toString(), timestamp: DateTime.now());
               setState(() => _history.add(historyItem));
               HistoryManager.saveHistory(_history);
