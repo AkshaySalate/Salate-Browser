@@ -14,10 +14,15 @@ class DesktopModeManager {
 
       await _webViewController!.evaluateJavascript(
         source: '''
+          var head = document.getElementsByTagName('head')[0];
+          var existingMeta = document.querySelector('meta[name="viewport"]');
+          if (existingMeta) {
+            head.removeChild(existingMeta);
+          }
           var meta = document.createElement('meta');
           meta.name = "viewport";
           meta.content = "${_isDesktopMode ? 'width=1024' : 'width=device-width, initial-scale=1.0'}";
-          document.getElementsByTagName('head')[0].appendChild(meta);
+          head.appendChild(meta);
         ''',
       );
 
