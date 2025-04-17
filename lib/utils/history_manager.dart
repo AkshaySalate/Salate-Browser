@@ -21,4 +21,9 @@ class HistoryManager {
     }
     return [];
   }
+
+  static Future<void> clearHistory() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_key);
+  }
 }

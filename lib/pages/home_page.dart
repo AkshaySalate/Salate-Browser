@@ -160,18 +160,47 @@ class BrowserHomePageState extends State<BrowserHomePage> {
     );
   }
 
-  void _showHistory() {
+  void _showHistory() async {
+    List<HistoryItem> history = await HistoryManager.loadHistory();
+
     showModalBottomSheet(
       context: context,
-      builder: (_) => ListView.builder(
-        itemCount: _history.length,
-        itemBuilder: (_, index) => ListTile(
-          title: Text(_history[index].url),
-          onTap: () => _handleNavigation(_history[index].url),
-        ),
+      builder: (_) => Column(
+        children: [
+          ListTile(
+            title: const Text('Browsing History'),
+            trailing: IconButton(
+              icon: const Icon(Icons.delete_forever),
+              onPressed: () async {
+                await HistoryManager.clearHistory();
+                Navigator.pop(context); // Close modal
+                setState(() => _history.clear()); // Clear local history too
+              },
+              tooltip: 'Clear History',
+            ),
+          ),
+          const Divider(height: 1),
+          Expanded(
+            child: ListView.builder(
+              itemCount: history.length,
+              itemBuilder: (_, index) {
+                final item = history.reversed.toList()[index]; // Latest on top
+                return ListTile(
+                  title: Text(item.url),
+                  subtitle: Text(item.timestamp.toLocal().toString()),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _handleNavigation(item.url);
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
+
 
   void _goToHomePage() {
     setState(() {
