@@ -1,3 +1,7 @@
+8 2 1 to 8 4 gradle wrapper properties
+8 2 1 to 8 3 0 settings gradle
+
+import 'dart:ui';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -28,7 +32,7 @@ class WavyClockWidget extends StatefulWidget {
 }
 
 class _WavyClockWidgetState extends State<WavyClockWidget> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;// Animation controller for the clock
+  late AnimationController _controller;
 
   @override
   void initState() {
@@ -110,9 +114,9 @@ class WavyClockPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final center = size.center(Offset.zero);
     final outerRadius = size.width / 2.2;
-    final innerRadius = outerRadius * 0.75; // Smaller inner circle
+    final innerRadius = outerRadius * 0.75;
 
-    // Background wave circle
+    // ROTATING WAVE
     final wavePaint = Paint()
       ..color = waveColor
       ..style = PaintingStyle.fill;
@@ -121,8 +125,8 @@ class WavyClockPainter extends CustomPainter {
     const waves = 60;
     final step = 2 * pi / waves;
     for (int i = 0; i <= waves; i++) {
-      final angle = i * step;
-      final r = outerRadius + 4 * sin(angle * 3 + animationValue * 2 * pi); // smooth animation
+      final angle = i * step + animationValue * 2 * pi; // Animate rotation
+      final r = outerRadius + 4 * sin(angle * 3);
       final x = center.dx + r * cos(angle);
       final y = center.dy + r * sin(angle);
       if (i == 0) {
@@ -134,29 +138,66 @@ class WavyClockPainter extends CustomPainter {
     wavePath.close();
     canvas.drawPath(wavePath, wavePaint);
 
-    // Inner circle (main background)
+    // INNER CIRCLE
     final backgroundPaint = Paint()
       ..shader = RadialGradient(
         colors: [backgroundColor, backgroundColor.withOpacity(0.8)],
       ).createShader(Rect.fromCircle(center: center, radius: innerRadius));
     canvas.drawCircle(center, innerRadius, backgroundPaint);
 
-    // Hour and Minute Hands
+    // CLOCK TICK MARKS
+    final tickPaint = Paint()
+      ..color = Colors.grey.shade600
+      ..strokeWidth = 1.5;
+
+    for (int i = 0; i < 12; i++) {
+      final angle = (i * 30) * pi / 180;
+      final start = Offset(
+        center.dx + (innerRadius - 10) * cos(angle - pi / 2),
+        center.dy + (innerRadius - 10) * sin(angle - pi / 2),
+      );
+      final end = Offset(
+        center.dx + (innerRadius - 2) * cos(angle - pi / 2),
+        center.dy + (innerRadius - 2) * sin(angle - pi / 2),
+      );
+      canvas.drawLine(start, end, tickPaint);
+    }
+
+    // NUMBERS (1–12)
+    for (int i = 1; i <= 12; i++) {
+      final angle = (i * 30) * pi / 180;
+      final x = center.dx + (innerRadius - 18) * cos(angle - pi / 2);
+      final y = center.dy + (innerRadius - 18) * sin(angle - pi / 2);
+
+      // Alternative approach if TextDirection.ltr still doesn't work
+      final textSpan = TextSpan(
+          text: '$i',
+          style: TextStyle(color: Colors.grey[700], fontSize: size.width * 0.05)
+      );
+      final textPainter = TextPainter(text: textSpan)..layout();
+      textPainter.layout();
+      canvas.save();
+      canvas.translate(x - textPainter.width / 2, y - textPainter.height / 2);
+      textPainter.paint(canvas, Offset.zero);
+      canvas.restore();
+    }
+
+    // HOUR HAND
     final hourAngle = (datetime.hour % 12 + datetime.minute / 60) * 30 * pi / 180;
     final minuteAngle = datetime.minute * 6 * pi / 180;
 
     final hourHandPaint = Paint()
-      ..strokeWidth = size.width * 0.045
+      ..strokeWidth = size.width * 0.035
       ..color = hourColor
       ..strokeCap = StrokeCap.round;
 
     final minuteHandPaint = Paint()
-      ..strokeWidth = size.width * 0.035
+      ..strokeWidth = size.width * 0.025
       ..color = minuteColor
       ..strokeCap = StrokeCap.round;
 
-    final hourLength = innerRadius * 0.5;
-    final minuteLength = innerRadius * 0.75;
+    final hourLength = innerRadius * 0.45;
+    final minuteLength = innerRadius * 0.7;
 
     canvas.drawLine(
       center,
@@ -176,19 +217,18 @@ class WavyClockPainter extends CustomPainter {
       minuteHandPaint,
     );
 
-    // Second Dot
+    // SECOND DOT
     final secondAngle = animationValue * 2 * pi;
     final secondLength = innerRadius * 0.95;
     final secondOffset = Offset(
       center.dx + secondLength * cos(secondAngle - pi / 2),
       center.dy + secondLength * sin(secondAngle - pi / 2),
     );
-    canvas.drawCircle(secondOffset, size.width * 0.02, Paint()..color = secondDotColor);
+    canvas.drawCircle(secondOffset, size.width * 0.015, Paint()..color = secondDotColor);
 
-    // Center Dot
+    // CENTER DOT
     canvas.drawCircle(center, size.width * 0.015, Paint()..color = Colors.black.withOpacity(0.6));
   }
-
 
   @override
   bool shouldRepaint(covariant WavyClockPainter oldDelegate) => true;
@@ -297,6 +337,7 @@ class BrowserHomePageState extends State<BrowserHomePage> {
         child: _tabs[_currentTabIndex].isHomepage
             ? Column(
           children: [
+            SizedBox(width: screenHeight * 0.03),
             Row(
               children: [
                 SizedBox(
