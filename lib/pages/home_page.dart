@@ -1,9 +1,7 @@
-import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
-import 'package:salate_browser/pages/browser_homepage.dart';
 import 'package:salate_browser/pages/extension_manager.dart';
 import 'package:salate_browser/utils/tabs_manager.dart';
 import 'package:salate_browser/pages/all_tabs_page.dart';
@@ -64,21 +62,33 @@ class _WavyClockWidgetState extends State<WavyClockWidget> with SingleTickerProv
         final size = min(constraints.maxWidth, constraints.maxHeight);
         final clockSize = size.clamp(80.0, 150.0);
 
-        return SizedBox(
-          width: clockSize,
-          height: clockSize,
-          child: AnimatedBuilder(
-            animation: _controller,
-            builder: (context, _) => CustomPaint(
-              size: Size(clockSize, clockSize),
-              painter: WavyClockPainter(
-                datetime: DateTime.now(),
-                animationValue: _controller.value,
-                backgroundColor: bgColor,
-                waveColor: waveColor,
-                hourColor: hourColor,
-                minuteColor: minuteColor,
-                secondDotColor: secondDotColor,
+        return Container(
+          decoration: BoxDecoration(
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 12,
+                spreadRadius: 2,
+              ),
+            ],
+            shape: BoxShape.circle,
+          ),
+          child: SizedBox(
+            width: clockSize,
+            height: clockSize,
+            child: AnimatedBuilder(
+              animation: _controller,
+              builder: (context, _) => CustomPaint(
+                size: Size(clockSize, clockSize),
+                painter: WavyClockPainter(
+                  datetime: DateTime.now(),
+                  animationValue: _controller.value,
+                  backgroundColor: bgColor,
+                  waveColor: waveColor,
+                  hourColor: hourColor,
+                  minuteColor: minuteColor,
+                  secondDotColor: secondDotColor,
+                ),
               ),
             ),
           ),
@@ -111,54 +121,60 @@ class WavyClockPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final center = size.center(Offset.zero);
-    final radius = size.width / 2.2;
+    final outerRadius = size.width / 2.2;
+    final innerRadius = outerRadius * 0.75; // Smaller inner circle
 
-    final backgroundPaint = Paint()..color = backgroundColor;
-    final wavePaint = Paint()..color = waveColor;
+    // Background wave circle
+    final wavePaint = Paint()
+      ..color = waveColor
+      ..style = PaintingStyle.fill;
 
-    // Draw wavy circle
-    final wavyPath = Path();
-    const waves = 12;
+    final wavePath = Path();
+    const waves = 60;
     final step = 2 * pi / waves;
     for (int i = 0; i <= waves; i++) {
       final angle = i * step;
-      final r = radius + 5 * sin(angle * 3); // wave effect
+      final r = outerRadius + 4 * sin(angle * 3 + animationValue * 2 * pi); // smooth animation
       final x = center.dx + r * cos(angle);
       final y = center.dy + r * sin(angle);
       if (i == 0) {
-        wavyPath.moveTo(x, y);
+        wavePath.moveTo(x, y);
       } else {
-        wavyPath.lineTo(x, y);
+        wavePath.lineTo(x, y);
       }
     }
-    wavyPath.close();
-    canvas.drawPath(wavyPath, wavePaint);
+    wavePath.close();
+    canvas.drawPath(wavePath, wavePaint);
 
-    // Draw main circle inside
-    canvas.drawCircle(center, radius, backgroundPaint);
+    // Inner circle (main background)
+    final backgroundPaint = Paint()
+      ..shader = RadialGradient(
+        colors: [backgroundColor, backgroundColor.withOpacity(0.8)],
+      ).createShader(Rect.fromCircle(center: center, radius: innerRadius));
+    canvas.drawCircle(center, innerRadius, backgroundPaint);
 
-    // Hour and minute hands
+    // Hour and Minute Hands
     final hourAngle = (datetime.hour % 12 + datetime.minute / 60) * 30 * pi / 180;
     final minuteAngle = datetime.minute * 6 * pi / 180;
 
     final hourHandPaint = Paint()
-      ..strokeWidth = 10
+      ..strokeWidth = size.width * 0.035
       ..color = hourColor
       ..strokeCap = StrokeCap.round;
 
     final minuteHandPaint = Paint()
-      ..strokeWidth = 10
-      ..color = Colors.deepOrange
+      ..strokeWidth = size.width * 0.025
+      ..color = minuteColor
       ..strokeCap = StrokeCap.round;
 
-    final hourHandLength = radius * 0.4;
-    final minuteHandLength = radius * 0.6;
+    final hourLength = innerRadius * 0.5;
+    final minuteLength = innerRadius * 0.75;
 
     canvas.drawLine(
       center,
       Offset(
-        center.dx + hourHandLength * cos(hourAngle - pi / 2),
-        center.dy + hourHandLength * sin(hourAngle - pi / 2),
+        center.dx + hourLength * cos(hourAngle - pi / 2),
+        center.dy + hourLength * sin(hourAngle - pi / 2),
       ),
       hourHandPaint,
     );
@@ -166,24 +182,25 @@ class WavyClockPainter extends CustomPainter {
     canvas.drawLine(
       center,
       Offset(
-        center.dx + minuteHandLength * cos(minuteAngle - pi / 2),
-        center.dy + minuteHandLength * sin(minuteAngle - pi / 2),
+        center.dx + minuteLength * cos(minuteAngle - pi / 2),
+        center.dy + minuteLength * sin(minuteAngle - pi / 2),
       ),
       minuteHandPaint,
     );
 
-    // Moving second dot
+    // Second Dot
     final secondAngle = animationValue * 2 * pi;
-    final secondDotRadius = 6.0;
-    final secondLength = radius * 0.85;
-
+    final secondLength = innerRadius * 0.95;
     final secondOffset = Offset(
       center.dx + secondLength * cos(secondAngle - pi / 2),
       center.dy + secondLength * sin(secondAngle - pi / 2),
     );
+    canvas.drawCircle(secondOffset, size.width * 0.015, Paint()..color = secondDotColor);
 
-    canvas.drawCircle(secondOffset, secondDotRadius, Paint()..color = secondDotColor);
+    // Center Dot
+    canvas.drawCircle(center, size.width * 0.015, Paint()..color = Colors.black.withOpacity(0.6));
   }
+
 
   @override
   bool shouldRepaint(covariant WavyClockPainter oldDelegate) => true;
