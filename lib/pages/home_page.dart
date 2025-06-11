@@ -223,11 +223,20 @@ class BrowserHomePageState extends State<BrowserHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
     final Color bgColor = isDark ? const Color(0xFF0B1D3A) : const Color(0xFFE6F1FF);
     final Color primaryColor = isDark ? const Color(0xFF1E3A8A) : const Color(0xFF60A5FA);
     final Color cardColor = isDark ? const Color(0xFF172554) : Colors.white;
     final Color textColor = isDark ? Colors.white : Colors.black;
+
+    final double padding = screenWidth * 0.05;
+    final double fieldFontSize = screenWidth * 0.04; // Scales with screen
+    final double dateFontSize = screenWidth * 0.038;
+    final double iconSize = screenWidth * 0.055;
+    final double clockSize = screenWidth * 0.4; // Responsive clock widget
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -285,47 +294,56 @@ class BrowserHomePageState extends State<BrowserHomePage> {
           children: [
             Row(
               children: [
-                WavyClockWidget(),
-                const SizedBox(width: 0),
+                SizedBox(
+                  width: clockSize,
+                  height: clockSize,
+                  child: WavyClockWidget(),
+                ),
+                SizedBox(width: screenWidth * 0.03),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: screenWidth * 0.03,
+                          vertical: screenHeight * 0.0,
+                        ),
                         decoration: BoxDecoration(
                           color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE0F2FE),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(screenWidth * 0.03),
                         ),
                         child: TextField(
                           style: TextStyle(
                             color: textColor,
-                            fontSize: 16,
+                            fontSize: fieldFontSize,
                             fontWeight: FontWeight.w500,
                           ),
                           decoration: InputDecoration(
-                            labelText: "Enter your name",
-                            labelStyle: TextStyle(
-                              color: textColor.withOpacity(0.8),
-                              fontWeight: FontWeight.w400,
+                            hintText: "Enter your name",
+                            hintStyle: TextStyle(
+                              color: textColor.withOpacity(0.6),
+                              fontSize: fieldFontSize,
                             ),
                             border: InputBorder.none,
-                            icon: Icon(Icons.person_outline, color: primaryColor),
+                            icon: Icon(Icons.person_outline, color: primaryColor,size: iconSize),
                           ),
                           onChanged: (val) => setState(() => _userName = val),
                         ),
                       ),
-                      const SizedBox(height: 10),
+                      SizedBox(height: screenHeight * 0.0),
                       Row(
                         children: [
-                          Icon(Icons.calendar_today_outlined, size: 16, color: primaryColor),
-                          const SizedBox(width: 6),
-                          Text(
-                            DateFormat('EEEE, MMMM d, y').format(DateTime.now()),
-                            style: TextStyle(
-                              color: primaryColor,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
+                          Icon(Icons.calendar_today_outlined, size: iconSize - 1, color: primaryColor),
+                          SizedBox(width: screenWidth * 0.025),
+                          Center(
+                            child: Text(
+                              DateFormat('EEE, MMM d, y').format(DateTime.now()),
+                              style: TextStyle(
+                                color: primaryColor,
+                                fontSize: dateFontSize,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                           ),
                         ],
@@ -336,43 +354,45 @@ class BrowserHomePageState extends State<BrowserHomePage> {
               ],
             ),
 
-            const SizedBox(height: 20),
+            SizedBox(height: screenHeight * 0.02),
 
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
+              padding: EdgeInsets.symmetric(horizontal: padding),
               child: Container(
-                padding: const EdgeInsets.all(20),
+                padding: EdgeInsets.all(screenWidth * 0.05),
                 decoration: BoxDecoration(
                   color: cardColor,
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(screenWidth * 0.05),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text("Welcome to Salate Browser", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textColor)),
-                    const SizedBox(height: 20),
+                    Center(
+                      child: Text("Welcome to Salate Browser", style: TextStyle(fontSize: screenWidth * 0.05, fontWeight: FontWeight.bold, color: textColor)),
+                    ),
+                    SizedBox(height: screenHeight * 0.02),
                     Row(
                       children: [
                         Expanded(
                           child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            padding: EdgeInsets.symmetric(vertical: screenHeight * 0.015),
                             decoration: BoxDecoration(
                               color: primaryColor,
-                              borderRadius: BorderRadius.circular(30),
+                              borderRadius: BorderRadius.circular(screenWidth * 0.08),
                             ),
-                            child: const Center(child: Text("Humidity", style: TextStyle(color: Colors.white, fontSize: 16))),
+                            child: Center(child: Text("Humidity", style: TextStyle(color: Colors.white, fontSize: screenWidth * 0.04))),
                           ),
                         ),
-                        const SizedBox(width: 10),
-                        Icon(Icons.water_drop, color: primaryColor, size: 28),
+                        SizedBox(width: screenWidth * 0.03),
+                        Icon(Icons.water_drop, color: primaryColor, size: iconSize + 8),
                       ],
                     ),
-                    const SizedBox(height: 10),
+                    SizedBox(height: screenHeight * 0.015),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        _customButton(icon: Icons.thermostat, label: "Feels", primaryColor: primaryColor),
-                        _customButton(icon: Icons.location_on, label: "Earth", primaryColor: primaryColor),
+                        _customButton(icon: Icons.thermostat, label: "Feels", primaryColor: primaryColor, fontSize: screenWidth * 0.035, screenWidth: screenWidth),
+                        _customButton(icon: Icons.location_on, label: "Earth", primaryColor: primaryColor, fontSize: screenWidth * 0.035, screenWidth: screenWidth),
                       ],
                     )
                   ],
@@ -380,81 +400,95 @@ class BrowserHomePageState extends State<BrowserHomePage> {
               ),
             ),
 
-            const SizedBox(height: 20),
+            SizedBox(height: screenHeight * 0.02),
 
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
+              padding: EdgeInsets.symmetric(horizontal: padding),
               child: Row(
                 children: [
                   Expanded(
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.04, vertical: screenHeight * 0.0005),
                       decoration: BoxDecoration(
                         color: cardColor,
-                        borderRadius: BorderRadius.circular(30),
+                        borderRadius: BorderRadius.circular(screenWidth * 0.1),
                       ),
-                      child: const TextField(
+                      child: TextField(
+                        style: TextStyle(fontSize: screenWidth * 0.04),
                         decoration: InputDecoration(
                           hintText: "Search or type URL",
+                          hintStyle: TextStyle(fontSize: screenWidth * 0.04),
                           border: InputBorder.none,
-                          icon: Icon(Icons.search),
+                          icon: Icon(Icons.search, size: iconSize + 3, color: primaryColor),
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  SizedBox(width: screenWidth * 0.025),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: primaryColor,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(screenWidth * 0.1)),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: screenWidth * 0.06,
+                        vertical: screenHeight * 0.017,
+                      ),
                     ),
                     onPressed: () {},
-                    child: const Text("Search", style: TextStyle(color: Colors.white)),
+                    child: Text("Search", style: TextStyle(color: Colors.white, fontSize: screenWidth * 0.04)),
                   )
                 ],
               ),
             ),
 
-            const SizedBox(height: 20),
+            SizedBox(height: screenHeight * 0.02),
 
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
+              padding: EdgeInsets.symmetric(horizontal: padding),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("Search With", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: textColor)),
-                  const SizedBox(height: 10),
+                  Text(
+                    "Search With",
+                    style: TextStyle(
+                      fontSize: screenWidth * 0.045,
+                      fontWeight: FontWeight.w500,
+                      color: textColor,
+                    ),
+                  ),
+                  SizedBox(height: screenHeight * 0.015),
                   Wrap(
-                    spacing: 10,
-                    runSpacing: 10,
+                    spacing: screenWidth * 0.025,
+                    runSpacing: screenHeight * 0.015,
                     children: [
-                      _searchEngineButton("Google", Icons.g_mobiledata, primaryColor, textColor),
-                      _searchEngineButton("Duck", Icons.bubble_chart, primaryColor, textColor),
-                      _searchEngineButton("Bing", Icons.brightness_5, primaryColor, textColor),
-                      _searchEngineButton("Brave", Icons.shield, primaryColor, textColor),
+                      _searchEngineButton("Google", Icons.g_mobiledata, primaryColor, textColor, screenWidth * 0.04, screenWidth),
+                      _searchEngineButton("Duck", Icons.bubble_chart, primaryColor, textColor, screenWidth * 0.04, screenWidth),
+                      _searchEngineButton("Bing", Icons.brightness_5, primaryColor, textColor, screenWidth * 0.04, screenWidth),
+                      _searchEngineButton("Brave", Icons.shield, primaryColor, textColor, screenWidth * 0.04, screenWidth),
                     ],
                   ),
                 ],
               ),
             ),
 
+
             const Spacer(),
 
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              padding: EdgeInsets.symmetric(horizontal: padding, vertical: screenHeight * 0.02),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  _iconButton(Icons.ondemand_video, primaryColor),
-                  _iconButton(Icons.email_outlined, primaryColor),
-                  _iconButton(Icons.send, primaryColor),
-                  _iconButton(Icons.call, primaryColor),
-                  _iconButton(Icons.message, primaryColor),
-                  _iconButton(Icons.videogame_asset, primaryColor),
+                  _iconButton(Icons.ondemand_video, primaryColor, screenWidth),
+                  _iconButton(Icons.email_outlined, primaryColor, screenWidth),
+                  _iconButton(Icons.send, primaryColor, screenWidth),
+                  _iconButton(Icons.call, primaryColor, screenWidth),
+                  _iconButton(Icons.message, primaryColor, screenWidth),
+                  _iconButton(Icons.videogame_asset, primaryColor, screenWidth),
                 ],
               ),
             )
+
           ],
         )
             : InAppWebView(
@@ -475,50 +509,69 @@ class BrowserHomePageState extends State<BrowserHomePage> {
     );
   }
 
-  Widget _customButton({required IconData icon, required String label, required Color primaryColor}) {
+  Widget _customButton({
+    required IconData icon,
+    required String label,
+    required Color primaryColor,
+    required double fontSize,
+    required double screenWidth,
+  }) {
     return Container(
-      width: 120,
-      padding: const EdgeInsets.symmetric(vertical: 10),
+      width: screenWidth * 0.28, // Responsive width (~110–120 at 400px)
+      padding: EdgeInsets.symmetric(vertical: screenWidth * 0.025), // Responsive vertical padding
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(30),
+        borderRadius: BorderRadius.circular(screenWidth * 0.07),
         color: primaryColor.withOpacity(0.1),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, color: primaryColor, size: 18),
-          const SizedBox(width: 6),
-          Text(label, style: TextStyle(color: primaryColor)),
+          Icon(icon, color: primaryColor, size: screenWidth * 0.045),
+          SizedBox(width: screenWidth * 0.015),
+          Text(label, style: TextStyle(fontSize: fontSize, color: primaryColor)),
         ],
       ),
     );
   }
 
-  Widget _searchEngineButton(String label, IconData icon, Color color, Color textColor) {
+
+  Widget _searchEngineButton(
+      String label,
+      IconData icon,
+      Color color,
+      Color textColor,
+      double fontSize,
+      double screenWidth,
+      ) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      padding: EdgeInsets.symmetric(
+        horizontal: screenWidth * 0.04,
+        vertical: screenWidth * 0.025,
+      ),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(30),
+        borderRadius: BorderRadius.circular(screenWidth * 0.07),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 20, color: color),
-          const SizedBox(width: 6),
-          Text(label, style: TextStyle(color: textColor)),
+          Icon(icon, size: screenWidth * 0.05, color: color),
+          SizedBox(width: screenWidth * 0.015),
+          Text(label, style: TextStyle(color: textColor, fontSize: fontSize)),
         ],
       ),
     );
   }
 
-  Widget _iconButton(IconData icon, Color color) {
+
+  Widget _iconButton(IconData icon, Color color, double screenWidth) {
     return CircleAvatar(
       backgroundColor: color.withOpacity(0.15),
-      radius: 22,
-      child: Icon(icon, color: color, size: 20),
+      radius: screenWidth * 0.06, // Responsive radius (~24 for 400px width)
+      child: Icon(icon, color: color, size: screenWidth * 0.055),
     );
   }
+
 
   void _handleNavigation(String input) {
     final url = Uri.tryParse(input)?.hasScheme ?? false ? input : 'https://google.com/search?q=$input';
