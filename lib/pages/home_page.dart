@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
@@ -19,6 +21,174 @@ class BrowserHomePage extends StatefulWidget {
   @override
   BrowserHomePageState createState() => BrowserHomePageState();
 }
+
+class WavyClockWidget extends StatefulWidget {
+  const WavyClockWidget({super.key});
+
+  @override
+  State<WavyClockWidget> createState() => _WavyClockWidgetState();
+}
+
+class _WavyClockWidgetState extends State<WavyClockWidget> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 60),
+    )..repeat(); // Continuous animation for seconds
+
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final Color bgColor = isDark ? const Color(0xFF0B1D3A) : const Color(0xFFE6F1FF);
+    final Color primaryColor = isDark ? const Color(0xFF1E3A8A) : const Color(0xFF60A5FA);
+    final Color waveColor = isDark ? const Color(0xFF172554) : const Color(0xFFCFE8FF);
+    final Color hourColor = isDark ? Colors.white : Colors.purple;
+    final Color minuteColor = isDark ? const Color(0xFF60A5FA) : Colors.deepOrange;
+    final Color secondDotColor = isDark ? const Color(0xFF60A5FA) : Colors.purple;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final size = min(constraints.maxWidth, constraints.maxHeight);
+        final clockSize = size.clamp(80.0, 150.0);
+
+        return SizedBox(
+          width: clockSize,
+          height: clockSize,
+          child: AnimatedBuilder(
+            animation: _controller,
+            builder: (context, _) => CustomPaint(
+              size: Size(clockSize, clockSize),
+              painter: WavyClockPainter(
+                datetime: DateTime.now(),
+                animationValue: _controller.value,
+                backgroundColor: bgColor,
+                waveColor: waveColor,
+                hourColor: hourColor,
+                minuteColor: minuteColor,
+                secondDotColor: secondDotColor,
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+}
+
+class WavyClockPainter extends CustomPainter {
+  final DateTime datetime;
+  final double animationValue;
+  final Color backgroundColor;
+  final Color waveColor;
+  final Color hourColor;
+  final Color minuteColor;
+  final Color secondDotColor;
+
+  WavyClockPainter({
+    required this.datetime,
+    required this.animationValue,
+    required this.backgroundColor,
+    required this.waveColor,
+    required this.hourColor,
+    required this.minuteColor,
+    required this.secondDotColor,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = size.center(Offset.zero);
+    final radius = size.width / 2.2;
+
+    final backgroundPaint = Paint()..color = backgroundColor;
+    final wavePaint = Paint()..color = waveColor;
+
+    // Draw wavy circle
+    final wavyPath = Path();
+    const waves = 12;
+    final step = 2 * pi / waves;
+    for (int i = 0; i <= waves; i++) {
+      final angle = i * step;
+      final r = radius + 5 * sin(angle * 3); // wave effect
+      final x = center.dx + r * cos(angle);
+      final y = center.dy + r * sin(angle);
+      if (i == 0) {
+        wavyPath.moveTo(x, y);
+      } else {
+        wavyPath.lineTo(x, y);
+      }
+    }
+    wavyPath.close();
+    canvas.drawPath(wavyPath, wavePaint);
+
+    // Draw main circle inside
+    canvas.drawCircle(center, radius, backgroundPaint);
+
+    // Hour and minute hands
+    final hourAngle = (datetime.hour % 12 + datetime.minute / 60) * 30 * pi / 180;
+    final minuteAngle = datetime.minute * 6 * pi / 180;
+
+    final hourHandPaint = Paint()
+      ..strokeWidth = 10
+      ..color = hourColor
+      ..strokeCap = StrokeCap.round;
+
+    final minuteHandPaint = Paint()
+      ..strokeWidth = 10
+      ..color = Colors.deepOrange
+      ..strokeCap = StrokeCap.round;
+
+    final hourHandLength = radius * 0.4;
+    final minuteHandLength = radius * 0.6;
+
+    canvas.drawLine(
+      center,
+      Offset(
+        center.dx + hourHandLength * cos(hourAngle - pi / 2),
+        center.dy + hourHandLength * sin(hourAngle - pi / 2),
+      ),
+      hourHandPaint,
+    );
+
+    canvas.drawLine(
+      center,
+      Offset(
+        center.dx + minuteHandLength * cos(minuteAngle - pi / 2),
+        center.dy + minuteHandLength * sin(minuteAngle - pi / 2),
+      ),
+      minuteHandPaint,
+    );
+
+    // Moving second dot
+    final secondAngle = animationValue * 2 * pi;
+    final secondDotRadius = 6.0;
+    final secondLength = radius * 0.85;
+
+    final secondOffset = Offset(
+      center.dx + secondLength * cos(secondAngle - pi / 2),
+      center.dy + secondLength * sin(secondAngle - pi / 2),
+    );
+
+    canvas.drawCircle(secondOffset, secondDotRadius, Paint()..color = secondDotColor);
+  }
+
+  @override
+  bool shouldRepaint(covariant WavyClockPainter oldDelegate) => true;
+}
+
 
 class BrowserHomePageState extends State<BrowserHomePage> {
   final List<TabModel> _tabs = [TabModel(url: "https://google.com", isHomepage: true)];
@@ -113,7 +283,38 @@ class BrowserHomePageState extends State<BrowserHomePage> {
         child: _tabs[_currentTabIndex].isHomepage
             ? Column(
           children: [
-
+            Row(
+              children: [
+                WavyClockWidget(),
+                const SizedBox(width: 20),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextField(
+                        style: TextStyle(color: textColor),
+                        decoration: InputDecoration(
+                          labelText: "Enter your name",
+                          labelStyle: TextStyle(color: textColor),
+                          enabledBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: primaryColor),
+                          ),
+                          focusedBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: primaryColor),
+                          ),
+                        ),
+                        onChanged: (val) => setState(() => _userName = val),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        DateFormat('EEEE, MMMM d, y').format(DateTime.now()),
+                        style: TextStyle(color: primaryColor, fontSize: 14),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
 
             const SizedBox(height: 20),
 
