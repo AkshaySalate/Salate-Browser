@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:salate_browser/pages/browser_homepage.dart';
 import 'package:salate_browser/pages/extension_manager.dart';
@@ -25,6 +26,7 @@ class BrowserHomePageState extends State<BrowserHomePage> {
   final DesktopModeManager _desktopModeManager = DesktopModeManager();
   int _currentTabIndex = 0;
   late InAppWebViewController _webViewController;
+  String _userName = "";
 
   @override
   void initState() {
@@ -51,7 +53,14 @@ class BrowserHomePageState extends State<BrowserHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+    final Color bgColor = isDark ? const Color(0xFF0B1D3A) : const Color(0xFFE6F1FF);
+    final Color primaryColor = isDark ? const Color(0xFF1E3A8A) : const Color(0xFF60A5FA);
+    final Color cardColor = isDark ? const Color(0xFF172554) : Colors.white;
+    final Color textColor = isDark ? Colors.white : Colors.black;
+
     return Scaffold(
+      backgroundColor: bgColor,
       appBar: AppBar(
         title: Row(
           children: [
@@ -100,22 +109,193 @@ class BrowserHomePageState extends State<BrowserHomePage> {
           ),
         ],
       ),
-      body: _tabs[_currentTabIndex].isHomepage
-          ? BrowserHomepage(onSearch: _handleNavigation)
-          : InAppWebView(
-        initialUrlRequest: URLRequest(url: WebUri.uri(Uri.parse(_tabs[_currentTabIndex].url))),
-        onWebViewCreated: (controller) {
-          _webViewController = controller;
-          _desktopModeManager.setWebViewController(controller);
-        },
+      body: SafeArea(
+        child: _tabs[_currentTabIndex].isHomepage
+            ? Column(
+          children: [
+
+
+            const SizedBox(height: 20),
+
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: cardColor,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Welcome to Salate Browser", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textColor)),
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            decoration: BoxDecoration(
+                              color: primaryColor,
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                            child: const Center(child: Text("Humidity", style: TextStyle(color: Colors.white, fontSize: 16))),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Icon(Icons.water_drop, color: primaryColor, size: 28),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _customButton(icon: Icons.thermostat, label: "Feels", primaryColor: primaryColor),
+                        _customButton(icon: Icons.location_on, label: "Earth", primaryColor: primaryColor),
+                      ],
+                    )
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      decoration: BoxDecoration(
+                        color: cardColor,
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      child: const TextField(
+                        decoration: InputDecoration(
+                          hintText: "Search or type URL",
+                          border: InputBorder.none,
+                          icon: Icon(Icons.search),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryColor,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                    ),
+                    onPressed: () {},
+                    child: const Text("Search", style: TextStyle(color: Colors.white)),
+                  )
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text("Search With", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: textColor)),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    children: [
+                      _searchEngineButton("Google", Icons.g_mobiledata, primaryColor, textColor),
+                      _searchEngineButton("Duck", Icons.bubble_chart, primaryColor, textColor),
+                      _searchEngineButton("Bing", Icons.brightness_5, primaryColor, textColor),
+                      _searchEngineButton("Brave", Icons.shield, primaryColor, textColor),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            const Spacer(),
+
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _iconButton(Icons.ondemand_video, primaryColor),
+                  _iconButton(Icons.email_outlined, primaryColor),
+                  _iconButton(Icons.send, primaryColor),
+                  _iconButton(Icons.call, primaryColor),
+                  _iconButton(Icons.message, primaryColor),
+                  _iconButton(Icons.videogame_asset, primaryColor),
+                ],
+              ),
+            )
+          ],
+        )
+            : InAppWebView(
+          initialUrlRequest: URLRequest(url: WebUri.uri(Uri.parse(_tabs[_currentTabIndex].url))),
+          onWebViewCreated: (controller) {
+            _webViewController = controller;
+            _desktopModeManager.setWebViewController(controller);
+          },
           onLoadStop: (controller, url) {
             if (url != null && !_history.any((item) => item.url == url.toString())) {
               final historyItem = HistoryItem(url: url.toString(), timestamp: DateTime.now());
               setState(() => _history.add(historyItem));
               HistoryManager.saveHistory(_history);
             }
-          }
+          },
+        ),
       ),
+    );
+  }
+
+  Widget _customButton({required IconData icon, required String label, required Color primaryColor}) {
+    return Container(
+      width: 120,
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(30),
+        color: primaryColor.withOpacity(0.1),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: primaryColor, size: 18),
+          const SizedBox(width: 6),
+          Text(label, style: TextStyle(color: primaryColor)),
+        ],
+      ),
+    );
+  }
+
+  Widget _searchEngineButton(String label, IconData icon, Color color, Color textColor) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(30),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 20, color: color),
+          const SizedBox(width: 6),
+          Text(label, style: TextStyle(color: textColor)),
+        ],
+      ),
+    );
+  }
+
+  Widget _iconButton(IconData icon, Color color) {
+    return CircleAvatar(
+      backgroundColor: color.withOpacity(0.15),
+      radius: 22,
+      child: Icon(icon, color: color, size: 20),
     );
   }
 
