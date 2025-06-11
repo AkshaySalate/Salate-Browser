@@ -286,29 +286,49 @@ class BrowserHomePageState extends State<BrowserHomePage> {
             Row(
               children: [
                 WavyClockWidget(),
-                const SizedBox(width: 20),
+                const SizedBox(width: 0),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      TextField(
-                        style: TextStyle(color: textColor),
-                        decoration: InputDecoration(
-                          labelText: "Enter your name",
-                          labelStyle: TextStyle(color: textColor),
-                          enabledBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: primaryColor),
-                          ),
-                          focusedBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: primaryColor),
-                          ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE0F2FE),
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        onChanged: (val) => setState(() => _userName = val),
+                        child: TextField(
+                          style: TextStyle(
+                            color: textColor,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          decoration: InputDecoration(
+                            labelText: "Enter your name",
+                            labelStyle: TextStyle(
+                              color: textColor.withOpacity(0.8),
+                              fontWeight: FontWeight.w400,
+                            ),
+                            border: InputBorder.none,
+                            icon: Icon(Icons.person_outline, color: primaryColor),
+                          ),
+                          onChanged: (val) => setState(() => _userName = val),
+                        ),
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        DateFormat('EEEE, MMMM d, y').format(DateTime.now()),
-                        style: TextStyle(color: primaryColor, fontSize: 14),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          Icon(Icons.calendar_today_outlined, size: 16, color: primaryColor),
+                          const SizedBox(width: 6),
+                          Text(
+                            DateFormat('EEEE, MMMM d, y').format(DateTime.now()),
+                            style: TextStyle(
+                              color: primaryColor,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
