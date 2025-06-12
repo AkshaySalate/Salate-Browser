@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:salate_browser/pages/extension_manager.dart';
 import 'package:salate_browser/utils/tabs_manager.dart';
@@ -25,12 +26,15 @@ class BrowserHomePage extends StatefulWidget {
 }
 
 class BrowserHomePageState extends State<BrowserHomePage> {
+  late double screenWidth;
+  late double screenHeight;
   final List<TabModel> _tabs = [TabModel(url: "https://google.com", isHomepage: true)];
   final List<HistoryItem> _history = [];
   final DesktopModeManager _desktopModeManager = DesktopModeManager();
   int _currentTabIndex = 0;
   late InAppWebViewController _webViewController;
-  String _userName = "";
+  String? _userName;
+  final TextEditingController _nameController = TextEditingController();
   double? _humidity;
   double? _temperature;
   String? _weatherIconUrl;
@@ -44,6 +48,7 @@ class BrowserHomePageState extends State<BrowserHomePage> {
   @override
   void initState() {
     super.initState();
+    _loadUserName();
     _loadHistory();
     _loadTabs();
     _loadWeatherData();
@@ -104,6 +109,22 @@ class BrowserHomePageState extends State<BrowserHomePage> {
     }
   }
 
+  Future<void> _loadUserName() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _userName = prefs.getString('userName') ?? '';
+      _nameController.text = _userName!;
+    });
+  }
+
+  Future<void> _saveUserName(String val) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('userName', _nameController.text.trim());
+    setState(() {
+      _userName = _nameController.text.trim();
+    });
+  }
+
   void _loadHistory() async {
     _history.addAll(await HistoryManager.loadHistory());
     setState(() {});
@@ -128,12 +149,13 @@ class BrowserHomePageState extends State<BrowserHomePage> {
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
     final Color bgColor = isDark ? const Color(0xFF0B1D3A) : const Color(0xFFE6F1FF);
     final Color primaryColor = isDark ? const Color(0xFF60A5FA) : const Color(0xFF1E3A8A);
-    //final Color primaryColor = isDark ? const Color(0xFF1E3A8A) : const Color(0xFF60A5FA);
+    final Color primaryColor2 = isDark ? const Color(0xFF1E3A8A) : const Color(0xFF60A5FA);
     final Color cardColor = isDark ? const Color(0xFF172554) : Colors.white;
     final Color textColor = isDark ? Colors.white : Colors.black;
 
     final Color hourColor = isDark ? Colors.white : Colors.purple;
     final Color minuteColor = isDark ? const Color(0xFF60A5FA) : Colors.deepOrange;
+    final Color secondDotColor = isDark ? const Color(0xFF60A5FA) : Colors.purple;
 
     final double padding = screenWidth * 0.05;
     final double fieldFontSize = screenWidth * 0.04; // Scales with screen
@@ -148,15 +170,16 @@ class BrowserHomePageState extends State<BrowserHomePage> {
         title: Row(
           children: [
             HomeButton(onPressed: _goToHomePage, iconColor: primaryColor,),
-            const SizedBox(width: 8),
+            SizedBox(width: screenWidth * 0.02),
             Expanded(
               child: TextField(
                 decoration: InputDecoration(
                   hintText: 'Search or enter URL',
                   border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                  contentPadding: EdgeInsets.symmetric(horizontal: screenWidth * 0.02),
                   //prefixIcon: Icon(Icons.search, color: primaryColor), // ← Primary color
                 ),
+                style: TextStyle(fontSize: screenWidth * 0.038),
                 textInputAction: TextInputAction.go,
                 onSubmitted: _handleNavigation,
               ),
@@ -164,10 +187,10 @@ class BrowserHomePageState extends State<BrowserHomePage> {
           ],
         ),
         actions: [
-          IconButton(icon: Icon(Icons.add, color: primaryColor), onPressed: _addNewTab),
-          IconButton(icon: Icon(Icons.tab, color: primaryColor), onPressed: _showAllTabs),
+          IconButton(icon: Icon(Icons.add, color: primaryColor, size: screenWidth * 0.075), onPressed: _addNewTab),
+          IconButton(icon: Icon(Icons.tab, color: primaryColor, size: screenWidth * 0.06), onPressed: _showAllTabs),
           PopupMenuButton<String>(
-            icon: Icon(Icons.more_vert, color: primaryColor), // ← Primary color
+            icon: Icon(Icons.more_vert, color: primaryColor, size: screenWidth * 0.065), // ← Primary color
             onSelected: (value) {
               if (value == 'history') _showHistory();
               if (value == 'extensions') {
@@ -198,11 +221,7 @@ class BrowserHomePageState extends State<BrowserHomePage> {
       body: SafeArea(
         child: _tabs[_currentTabIndex].isHomepage
             ? SingleChildScrollView(
-          padding: EdgeInsets.only(
-            left: padding,
-            right: padding,
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-          ),
+          padding: EdgeInsets.only(left: padding, right: padding, bottom: MediaQuery.of(context).viewInsets.bottom,),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -225,6 +244,7 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                             horizontal: screenWidth * 0.03,
                           ),
                           child: TextField(
+                            controller: _nameController,
                             style: TextStyle(
                               color: textColor,
                               fontSize: fieldFontSize,
@@ -239,7 +259,9 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                               border: InputBorder.none,
                               icon: Icon(Icons.person_outline, color: primaryColor, size: iconSize),
                             ),
-                            onChanged: (val) => setState(() => _userName = val),
+                            onChanged: (val) {
+                              _saveUserName(val);
+                            },
                           ),
                         ),
                         SizedBox(height: screenHeight * 0.01),
@@ -262,9 +284,7 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                   ),
                 ],
               ),
-
               SizedBox(height: screenHeight * 0.025),
-
               // Search Bar
               Row(
                 children: [
@@ -310,9 +330,7 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                   )
                 ],
               ),
-
-              SizedBox(height: screenHeight * 0.025),
-
+              SizedBox(height: screenHeight * 0.02),
               // Weather Card
               Container(
                 padding: EdgeInsets.all(screenWidth * 0.05),
@@ -328,24 +346,27 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                       children: [
                         if (_weatherIconUrl != null && _weatherIconUrl!.isNotEmpty)
                           Padding(
-                            padding: const EdgeInsets.only(right: 8.0),
+                            padding: EdgeInsets.only(right: screenWidth * 0.02),
                             child: Image.network(
                               _weatherIconUrl!,
-                              width: 28,
-                              height: 28,
-                              errorBuilder: (context, error, stackTrace) => const Icon(
+                              width: screenWidth * 0.07,
+                              height: screenWidth * 0.07,
+                              errorBuilder: (context, error, stackTrace) => Icon(
                                 Icons.cloud,
-                                size: 24,
-                                color: Colors.grey,
+                                size: screenWidth * 0.06,
+                                color: minuteColor,
                               ),
                             ),
                           )
                         else
-                          const Padding(
-                            padding: EdgeInsets.only(right: 8.0),
-                            child: Icon(Icons.wb_sunny_outlined, size: 24),
+                          Padding(
+                            padding: EdgeInsets.only(right: screenWidth * 0.02),
+                            child: Icon(
+                              Icons.wb_sunny_outlined,
+                              size: screenWidth * 0.06,
+                            ),
                           ),
-                        const SizedBox(width: 8),
+                        SizedBox(width: screenWidth * 0.025),
                         Expanded(
                           child: AnimatedSwitcher(
                             duration: const Duration(milliseconds: 600),
@@ -381,33 +402,34 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                         ),
                       ],
                     ),
-
-                    const SizedBox(height: 12),
-
+                    SizedBox(height: screenHeight * 0.02),
                     // Humidity Indicator
                     Row(
                       children: [
                         Expanded(
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: MediaQuery.of(context).size.width * 0.04,
+                              vertical: MediaQuery.of(context).size.height * 0.013,
+                            ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF4285F4),
-                              borderRadius: BorderRadius.circular(20),
+                              color: Color(0xFF4285F4),
+                              borderRadius: BorderRadius.circular(30),
                             ),
                             child: Row(
                               children: [
                                 Text(
                                   "Humidity ${(_humidity ?? 69).toInt()}%",
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     color: Colors.white,
-                                    fontSize: 14,
+                                    fontSize: MediaQuery.of(context).size.width * 0.045,
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
                                 const Spacer(),
                                 Container(
-                                  width: 60,
-                                  height: 4,
+                                  width: MediaQuery.of(context).size.width * 0.25,
+                                  height: MediaQuery.of(context).size.height * 0.005,
                                   decoration: BoxDecoration(
                                     color: Colors.white.withOpacity(0.3),
                                     borderRadius: BorderRadius.circular(2),
@@ -427,49 +449,50 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                             ),
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        SizedBox(width: MediaQuery.of(context).size.width * 0.03),
                         Container(
-                          width: 40,
-                          height: 40,
+                          width: MediaQuery.of(context).size.width * 0.12,
+                          height: MediaQuery.of(context).size.width * 0.12,
                           decoration: const BoxDecoration(
                             color: Color(0xFF4285F4),
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(
+                          child: Icon(
                             Icons.water_drop,
                             color: Colors.white,
-                            size: 20,
+                            size: MediaQuery.of(context).size.width * 0.06,
                           ),
                         ),
                       ],
                     ),
-
                     const SizedBox(height: 12),
-
                     // Temperature and Location
                     Row(
                       children: [
                         Expanded(
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: MediaQuery.of(context).size.width * 0.04,
+                              vertical: MediaQuery.of(context).size.height * 0.015,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.white,
-                              borderRadius: BorderRadius.circular(20),
+                              borderRadius: BorderRadius.circular(30),
                               border: Border.all(color: Colors.grey.shade200),
                             ),
                             child: Row(
                               children: [
-                                const Icon(
+                                Icon(
                                   Icons.thermostat,
                                   color: Color(0xFF4285F4),
-                                  size: 20,
+                                  size: MediaQuery.of(context).size.width * 0.05,
                                 ),
-                                const SizedBox(width: 8),
+                                SizedBox(width: screenWidth * 0.02),
                                 Expanded(
                                   child: Text(
                                     "Feels ${_temperature?.toStringAsFixed(1) ?? '--'}°C",
-                                    style: const TextStyle(
-                                      fontSize: 14,
+                                    style: TextStyle(
+                                      fontSize: MediaQuery.of(context).size.width * 0.038,
                                       fontWeight: FontWeight.w500,
                                       color: Color(0xFF1F2937),
                                     ),
@@ -480,27 +503,30 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                             ),
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        SizedBox(width: screenWidth * 0.03),
                         Expanded(
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: screenWidth * 0.04,
+                              vertical: screenHeight * 0.015,
+                            ),
                             decoration: BoxDecoration(
                               color: const Color(0xFF4285F4),
-                              borderRadius: BorderRadius.circular(20),
+                              borderRadius: BorderRadius.circular(30),
                             ),
                             child: Row(
                               children: [
-                                const Icon(
+                                Icon(
                                   Icons.location_on,
                                   color: Colors.white,
-                                  size: 20,
+                                  size: screenWidth * 0.05,
                                 ),
-                                const SizedBox(width: 8),
+                                SizedBox(width: screenWidth * 0.02),
                                 Expanded(
                                   child: Text(
                                     _locationName ?? "--",
-                                    style: const TextStyle(
-                                      fontSize: 14,
+                                    style: TextStyle(
+                                      fontSize: screenWidth * 0.04,
                                       fontWeight: FontWeight.w500,
                                       color: Colors.white,
                                     ),
@@ -516,9 +542,7 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                   ],
                 ),
               ),
-
               SizedBox(height: screenHeight * 0.025),
-
               // Search Engine Buttons
               Text(
                 "Search With",
@@ -539,75 +563,19 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                   _searchEngineButton("Brave", Icons.shield, primaryColor, textColor, screenWidth * 0.04, screenWidth),
                 ],
               ),
-
               SizedBox(height: screenHeight * 0.08),
-
               // Bottom Icon Row
               Padding(
                 padding: EdgeInsets.only(bottom: screenHeight * 0.02),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _iconButton(
-                      icon: Icons.ondemand_video,
-                      color: primaryColor,
-                      screenWidth: screenWidth,
-                      onTap: () => _handleSearch("https://www.youtube.com"),
-                    ),
-                    _iconButton(
-                      icon: Icons.email_outlined,
-                      color: primaryColor,
-                      screenWidth: screenWidth,
-                      onTap: () => _handleSearch("https://mail.google.com"),
-                    ),
-                    _iconButton(
-                      icon: Icons.send,
-                      color: primaryColor,
-                      screenWidth: screenWidth,
-                      onTap: () => _handleSearch("https://mail.google.com/mail/u/0/#sent"),
-                    ),
-                    _iconButton(
-                      icon: Icons.call,
-                      color: primaryColor,
-                      screenWidth: screenWidth,
-                      onTap: () => _handleSearch("https://voice.google.com"),
-                    ),
-                    _iconButton(
-                      icon: Icons.videogame_asset,
-                      color: primaryColor,
-                      screenWidth: screenWidth,
-                      onTap: () => _handleSearch("https://stadia.google.com"),
-                    ),
-                    _iconButton(
-                      icon: Icons.apps,
-                      color: primaryColor,
-                      screenWidth: screenWidth,
-                      onTap: () => showModalBottomSheet(
-                        context: context,
-                        builder: (_) => Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Wrap(
-                            alignment: WrapAlignment.center,
-                            spacing: 20,
-                            runSpacing: 20,
-                            children: [
-                              _googleAppTile("YouTube", Icons.ondemand_video, "https://www.youtube.com"),
-                              _googleAppTile("Gmail", Icons.email, "https://mail.google.com"),
-                              _googleAppTile("Drive", Icons.cloud, "https://drive.google.com"),
-                              _googleAppTile("Docs", Icons.description, "https://docs.google.com"),
-                              _googleAppTile("Sheets", Icons.table_chart, "https://sheets.google.com"),
-                              _googleAppTile("Slides", Icons.slideshow, "https://slides.google.com"),
-                              _googleAppTile("Meet", Icons.video_call, "https://meet.google.com"),
-                              _googleAppTile("Classroom", Icons.class_, "https://classroom.google.com"),
-                              _googleAppTile("News", Icons.newspaper, "https://news.google.com"),
-                              _googleAppTile("Maps", Icons.map, "https://maps.google.com"),
-                              _googleAppTile("Photos", Icons.photo, "https://photos.google.com"),
-                              _googleAppTile("Translate", Icons.translate, "https://translate.google.com"),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
+                    _iconButton(Icons.ondemand_video, primaryColor, screenWidth, 'https://www.youtube.com'),
+                    _iconButton(Icons.email_outlined, primaryColor, screenWidth, 'https://mail.google.com'),
+                    _iconButton(Icons.send, primaryColor, screenWidth, 'https://mail.google.com/mail/u/0/#sent'),
+                    _iconButton(Icons.call, primaryColor, screenWidth, 'https://voice.google.com'),
+                    _iconButton(Icons.message, primaryColor, screenWidth, 'https://messages.google.com/web'),
+                    _iconButton(Icons.apps, primaryColor, screenWidth, null, showAppMenu: true),
                   ],
                 ),
               ),
@@ -630,7 +598,6 @@ class BrowserHomePageState extends State<BrowserHomePage> {
         ),
       ),
     );
-
   }
 
   Widget _customButton({
@@ -657,7 +624,6 @@ class BrowserHomePageState extends State<BrowserHomePage> {
       ),
     );
   }
-
 
   Widget _searchEngineButton(
       String label,
@@ -687,16 +653,47 @@ class BrowserHomePageState extends State<BrowserHomePage> {
     );
   }
 
-
   // Modified icon button with onTap
-  Widget _iconButton({
-    required IconData icon,
-    required Color color,
-    required double screenWidth,
-    required VoidCallback onTap,
-  }) {
+  Widget _iconButton(IconData icon, Color color, double screenWidth, String? url, {bool showAppMenu = false}) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    //final screenWidth = MediaQuery.of(context).size.width;
+
     return GestureDetector(
-      onTap: onTap,
+      onTap: () {
+        if (showAppMenu) {
+          showModalBottomSheet(
+            context: context,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            builder: (context) => Container(
+              padding: EdgeInsets.all(screenWidth * 0.04),
+              height: screenHeight * 0.5,
+              child: GridView.count(
+                crossAxisCount: 3,
+                mainAxisSpacing: 16,
+                crossAxisSpacing: 16,
+                children: [
+                  _googleAppTile('YouTube', Icons.ondemand_video, 'https://www.youtube.com'),
+                  _googleAppTile('Gmail', Icons.email, 'https://mail.google.com'),
+                  _googleAppTile('Drive', Icons.cloud, 'https://drive.google.com'),
+                  _googleAppTile('Maps', Icons.map, 'https://maps.google.com'),
+                  _googleAppTile('Calendar', Icons.calendar_today, 'https://calendar.google.com'),
+                  _googleAppTile('Photos', Icons.photo, 'https://photos.google.com'),
+                  _googleAppTile('Classroom', Icons.class_, 'https://classroom.google.com'),
+                  _googleAppTile('Docs', Icons.description, 'https://docs.google.com'),
+                  _googleAppTile('Sheets', Icons.table_chart, 'https://sheets.google.com'),
+                  _googleAppTile('Slides', Icons.slideshow, 'https://slides.google.com'),
+                  _googleAppTile('News', Icons.article, 'https://news.google.com'),
+                  _googleAppTile('Meet', Icons.video_call, 'https://meet.google.com'),
+                ],
+              ),
+            ),
+          );
+        } else if (url != null) {
+          _handleSearch(url);
+        }
+      },
       child: CircleAvatar(
         backgroundColor: color.withOpacity(0.15),
         radius: screenWidth * 0.06,
@@ -705,12 +702,17 @@ class BrowserHomePageState extends State<BrowserHomePage> {
     );
   }
 
-
 // Google app tile used in the modal
   Widget _googleAppTile(String name, IconData icon, String url) {
+    final Size screenSize = MediaQuery.of(context).size;
+    final double screenWidth = screenSize.width;
+    final double screenHeight = screenSize.height;
+
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
     final Color bgColor = isDark ? const Color(0xFF0B1D3A) : const Color(0xFFE6F1FF);
     final Color primaryColor = isDark ? const Color(0xFF60A5FA) : const Color(0xFF1E3A8A);
+    final Color primaryColor2 = isDark ? const Color(0xFF1E3A8A) : const Color(0xFF60A5FA);
+
     return GestureDetector(
       onTap: () {
         Navigator.pop(context);
@@ -720,16 +722,28 @@ class BrowserHomePageState extends State<BrowserHomePage> {
         mainAxisSize: MainAxisSize.min,
         children: [
           CircleAvatar(
-            radius: 24,
             backgroundColor: primaryColor.withOpacity(0.1),
-            child: Icon(icon, color: primaryColor, size: 24),
+            radius: screenWidth * 0.075, // ~28 on standard width
+            child: Icon(
+              icon,
+              size: screenWidth * 0.08, // ~24 on standard width
+              color: primaryColor,
+            ),
           ),
-          SizedBox(height: 8),
-          Text(name, style: TextStyle(fontSize: 12)),
+          SizedBox(height: screenHeight * 0.01), // ~8 on typical height
+          Text(
+            name,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: screenWidth * 0.03, // ~12 on standard width
+              color: isDark ? Colors.white70 : Colors.black87,
+            ),
+          ),
         ],
       ),
     );
   }
+
 
 // Function to open a URL (like search bar)
   void _handleSearch(String url) {
@@ -754,7 +768,6 @@ class BrowserHomePageState extends State<BrowserHomePage> {
     });
     TabsManager.saveTabs(_tabs.map((tab) => TabItem(url: tab.url)).toList());
   }
-
 
   void _showAllTabs() {
     Navigator.push(
@@ -820,7 +833,6 @@ class BrowserHomePageState extends State<BrowserHomePage> {
       ),
     );
   }
-
 
   void _goToHomePage() {
     setState(() {
