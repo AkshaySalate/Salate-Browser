@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
@@ -25,7 +24,6 @@ class BrowserHomePage extends StatefulWidget {
   BrowserHomePageState createState() => BrowserHomePageState();
 }
 
-
 class BrowserHomePageState extends State<BrowserHomePage> {
   final List<TabModel> _tabs = [TabModel(url: "https://google.com", isHomepage: true)];
   final List<HistoryItem> _history = [];
@@ -41,7 +39,7 @@ class BrowserHomePageState extends State<BrowserHomePage> {
   String _currentDisplayText = "Welcome to Salate Browser";
   bool _showWelcome = false;
   Timer? _textSwitchTimer;
-
+  final TextEditingController _bodySearchController = TextEditingController();
 
   @override
   void initState() {
@@ -64,7 +62,6 @@ class BrowserHomePageState extends State<BrowserHomePage> {
         });
       });
     });
-
     // Load weather
     _loadWeatherData();
   }
@@ -74,7 +71,6 @@ class BrowserHomePageState extends State<BrowserHomePage> {
     _textSwitchTimer?.cancel();
     super.dispose();
   }
-
   Future<void> _loadWeatherData() async {
     try {
       // Request permission
@@ -198,52 +194,60 @@ class BrowserHomePageState extends State<BrowserHomePage> {
           ),
         ],
       ),
+      resizeToAvoidBottomInset: true,
       body: SafeArea(
         child: _tabs[_currentTabIndex].isHomepage
-            ? Column(
-          children: [
-            Row(
-              children: [
-                SizedBox(
-                  width: clockSize,
-                  height: clockSize,
-                  child: WavyClockWidget(),
-                ),
-                SizedBox(width: screenWidth * 0.03),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: screenWidth * 0.03,
-                          vertical: screenHeight * 0.0,
-                        ),
-                        child: TextField(
-                          style: TextStyle(
-                            color: textColor,
-                            fontSize: fieldFontSize,
-                            fontWeight: FontWeight.w500,
+            ? SingleChildScrollView(
+          padding: EdgeInsets.only(
+            left: padding,
+            right: padding,
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(height: screenHeight * 0.01),
+              // Top Row with Clock and Name Input
+              Row(
+                children: [
+                  SizedBox(
+                    width: clockSize,
+                    height: clockSize,
+                    child: WavyClockWidget(),
+                  ),
+                  SizedBox(width: screenWidth * 0.03),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: screenWidth * 0.03,
                           ),
-                          decoration: InputDecoration(
-                            hintText: "Enter your name",
-                            hintStyle: TextStyle(
-                              color: textColor.withOpacity(0.6),
+                          child: TextField(
+                            style: TextStyle(
+                              color: textColor,
                               fontSize: fieldFontSize,
+                              fontWeight: FontWeight.w500,
                             ),
-                            border: InputBorder.none,
-                            icon: Icon(Icons.person_outline, color: primaryColor,size: iconSize),
+                            decoration: InputDecoration(
+                              hintText: "Enter your name",
+                              hintStyle: TextStyle(
+                                color: textColor.withOpacity(0.6),
+                                fontSize: fieldFontSize,
+                              ),
+                              border: InputBorder.none,
+                              icon: Icon(Icons.person_outline, color: primaryColor, size: iconSize),
+                            ),
+                            onChanged: (val) => setState(() => _userName = val),
                           ),
-                          onChanged: (val) => setState(() => _userName = val),
                         ),
-                      ),
-                      SizedBox(height: screenHeight * 0.0),
-                      Row(
-                        children: [
-                          Icon(Icons.calendar_today_outlined, size: iconSize - 1, color: primaryColor),
-                          SizedBox(width: screenWidth * 0.025),
-                          Center(
-                            child: Text(
+                        SizedBox(height: screenHeight * 0.01),
+                        Row(
+                          children: [
+                            Icon(Icons.calendar_today_outlined, size: iconSize - 1, color: primaryColor),
+                            SizedBox(width: screenWidth * 0.025),
+                            Text(
                               DateFormat('EEE, MMM d, y').format(DateTime.now()),
                               style: TextStyle(
                                 color: primaryColor,
@@ -251,20 +255,18 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ],
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
 
-            SizedBox(height: screenHeight * 0.02),
+              SizedBox(height: screenHeight * 0.025),
 
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: padding),
-              child: Row(
+              // Search Bar
+              Row(
                 children: [
                   Expanded(
                     child: Container(
@@ -274,6 +276,7 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                         borderRadius: BorderRadius.circular(screenWidth * 0.1),
                       ),
                       child: TextField(
+                        controller: _bodySearchController,
                         style: TextStyle(fontSize: screenWidth * 0.04),
                         decoration: InputDecoration(
                           hintText: "Search or type URL",
@@ -281,7 +284,9 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                           border: InputBorder.none,
                           icon: Icon(Icons.search, size: iconSize + 3, color: primaryColor),
                         ),
+                        onSubmitted: (query) => _handleNavigation(query),
                       ),
+
                     ),
                   ),
                   SizedBox(width: screenWidth * 0.025),
@@ -294,18 +299,22 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                         vertical: screenHeight * 0.017,
                       ),
                     ),
-                    onPressed: () {},
+                    onPressed: () {
+                      final query = _bodySearchController.text.trim();
+                      if (query.isNotEmpty) {
+                        _handleNavigation(query);
+                      }
+                    },
+
                     child: Text("Search", style: TextStyle(color: Colors.white, fontSize: screenWidth * 0.04)),
                   )
                 ],
               ),
-            ),
 
-            SizedBox(height: screenHeight * 0.02),
+              SizedBox(height: screenHeight * 0.025),
 
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: padding),
-              child: Container(
+              // Weather Card
+              Container(
                 padding: EdgeInsets.all(screenWidth * 0.05),
                 decoration: BoxDecoration(
                   color: cardColor,
@@ -314,7 +323,7 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Top Row with Weather Text
+                    // Weather Text with Icon
                     Row(
                       children: [
                         if (_weatherIconUrl != null && _weatherIconUrl!.isNotEmpty)
@@ -336,20 +345,19 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                             padding: EdgeInsets.only(right: 8.0),
                             child: Icon(Icons.wb_sunny_outlined, size: 24),
                           ),
-                        //const Icon(Icons.wb_sunny_outlined, size: 24),
                         const SizedBox(width: 8),
                         Expanded(
                           child: AnimatedSwitcher(
                             duration: const Duration(milliseconds: 600),
                             transitionBuilder: (Widget child, Animation<double> animation) {
                               final inAnimation = Tween<Offset>(
-                                begin: const Offset(0.0, 1.0), // from bottom
+                                begin: const Offset(0.0, 1.0),
                                 end: Offset.zero,
                               ).animate(animation);
 
                               final outAnimation = Tween<Offset>(
                                 begin: Offset.zero,
-                                end: const Offset(0.0, -1.0), // slide out to top
+                                end: const Offset(0.0, -1.0),
                               ).animate(animation);
 
                               return SlideTransition(
@@ -370,20 +378,18 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-
-
                         ),
                       ],
                     ),
 
                     const SizedBox(height: 12),
 
-                    // Humidity Row
+                    // Humidity Indicator
                     Row(
                       children: [
                         Expanded(
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                             decoration: BoxDecoration(
                               color: const Color(0xFF4285F4),
                               borderRadius: BorderRadius.circular(20),
@@ -440,10 +446,9 @@ class BrowserHomePageState extends State<BrowserHomePage> {
 
                     const SizedBox(height: 12),
 
-                    // Temperature & Location Row
+                    // Temperature and Location
                     Row(
                       children: [
-                        // Temperature card
                         Expanded(
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -475,10 +480,7 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                             ),
                           ),
                         ),
-
                         const SizedBox(width: 8),
-
-                        // Location card
                         Expanded(
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -514,58 +516,103 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                   ],
                 ),
               ),
-            ),
 
+              SizedBox(height: screenHeight * 0.025),
 
-            SizedBox(height: screenHeight * 0.02),
-
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: padding),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              // Search Engine Buttons
+              Text(
+                "Search With",
+                style: TextStyle(
+                  fontSize: screenWidth * 0.045,
+                  fontWeight: FontWeight.w500,
+                  color: textColor,
+                ),
+              ),
+              SizedBox(height: screenHeight * 0.015),
+              Wrap(
+                spacing: screenWidth * 0.025,
+                runSpacing: screenHeight * 0.015,
                 children: [
-                  Text(
-                    "Search With",
-                    style: TextStyle(
-                      fontSize: screenWidth * 0.045,
-                      fontWeight: FontWeight.w500,
-                      color: textColor,
+                  _searchEngineButton("Google", Icons.g_mobiledata, primaryColor, textColor, screenWidth * 0.04, screenWidth),
+                  _searchEngineButton("Duck", Icons.bubble_chart, primaryColor, textColor, screenWidth * 0.04, screenWidth),
+                  _searchEngineButton("Bing", Icons.brightness_5, primaryColor, textColor, screenWidth * 0.04, screenWidth),
+                  _searchEngineButton("Brave", Icons.shield, primaryColor, textColor, screenWidth * 0.04, screenWidth),
+                ],
+              ),
+
+              SizedBox(height: screenHeight * 0.08),
+
+              // Bottom Icon Row
+              Padding(
+                padding: EdgeInsets.only(bottom: screenHeight * 0.02),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _iconButton(
+                      icon: Icons.ondemand_video,
+                      color: primaryColor,
+                      screenWidth: screenWidth,
+                      onTap: () => _handleSearch("https://www.youtube.com"),
                     ),
-                  ),
-                  SizedBox(height: screenHeight * 0.015),
-                  Wrap(
-                    spacing: screenWidth * 0.025,
-                    runSpacing: screenHeight * 0.015,
-                    children: [
-                      _searchEngineButton("Google", Icons.g_mobiledata, primaryColor, textColor, screenWidth * 0.04, screenWidth),
-                      _searchEngineButton("Duck", Icons.bubble_chart, primaryColor, textColor, screenWidth * 0.04, screenWidth),
-                      _searchEngineButton("Bing", Icons.brightness_5, primaryColor, textColor, screenWidth * 0.04, screenWidth),
-                      _searchEngineButton("Brave", Icons.shield, primaryColor, textColor, screenWidth * 0.04, screenWidth),
-                    ],
-                  ),
-                ],
+                    _iconButton(
+                      icon: Icons.email_outlined,
+                      color: primaryColor,
+                      screenWidth: screenWidth,
+                      onTap: () => _handleSearch("https://mail.google.com"),
+                    ),
+                    _iconButton(
+                      icon: Icons.send,
+                      color: primaryColor,
+                      screenWidth: screenWidth,
+                      onTap: () => _handleSearch("https://mail.google.com/mail/u/0/#sent"),
+                    ),
+                    _iconButton(
+                      icon: Icons.call,
+                      color: primaryColor,
+                      screenWidth: screenWidth,
+                      onTap: () => _handleSearch("https://voice.google.com"),
+                    ),
+                    _iconButton(
+                      icon: Icons.videogame_asset,
+                      color: primaryColor,
+                      screenWidth: screenWidth,
+                      onTap: () => _handleSearch("https://stadia.google.com"),
+                    ),
+                    _iconButton(
+                      icon: Icons.apps,
+                      color: primaryColor,
+                      screenWidth: screenWidth,
+                      onTap: () => showModalBottomSheet(
+                        context: context,
+                        builder: (_) => Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Wrap(
+                            alignment: WrapAlignment.center,
+                            spacing: 20,
+                            runSpacing: 20,
+                            children: [
+                              _googleAppTile("YouTube", Icons.ondemand_video, "https://www.youtube.com"),
+                              _googleAppTile("Gmail", Icons.email, "https://mail.google.com"),
+                              _googleAppTile("Drive", Icons.cloud, "https://drive.google.com"),
+                              _googleAppTile("Docs", Icons.description, "https://docs.google.com"),
+                              _googleAppTile("Sheets", Icons.table_chart, "https://sheets.google.com"),
+                              _googleAppTile("Slides", Icons.slideshow, "https://slides.google.com"),
+                              _googleAppTile("Meet", Icons.video_call, "https://meet.google.com"),
+                              _googleAppTile("Classroom", Icons.class_, "https://classroom.google.com"),
+                              _googleAppTile("News", Icons.newspaper, "https://news.google.com"),
+                              _googleAppTile("Maps", Icons.map, "https://maps.google.com"),
+                              _googleAppTile("Photos", Icons.photo, "https://photos.google.com"),
+                              _googleAppTile("Translate", Icons.translate, "https://translate.google.com"),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-
-
-            const Spacer(),
-
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: padding, vertical: screenHeight * 0.02),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _iconButton(Icons.ondemand_video, primaryColor, screenWidth),
-                  _iconButton(Icons.email_outlined, primaryColor, screenWidth),
-                  _iconButton(Icons.send, primaryColor, screenWidth),
-                  _iconButton(Icons.call, primaryColor, screenWidth),
-                  _iconButton(Icons.message, primaryColor, screenWidth),
-                  _iconButton(Icons.videogame_asset, primaryColor, screenWidth),
-                ],
-              ),
-            )
-
-          ],
+            ],
+          ),
         )
             : InAppWebView(
           initialUrlRequest: URLRequest(url: WebUri.uri(Uri.parse(_tabs[_currentTabIndex].url))),
@@ -583,6 +630,7 @@ class BrowserHomePageState extends State<BrowserHomePage> {
         ),
       ),
     );
+
   }
 
   Widget _customButton({
@@ -640,15 +688,57 @@ class BrowserHomePageState extends State<BrowserHomePage> {
   }
 
 
-  Widget _iconButton(IconData icon, Color color, double screenWidth) {
-    return CircleAvatar(
-      backgroundColor: color.withOpacity(0.15),
-      radius: screenWidth * 0.06, // Responsive radius (~24 for 400px width)
-      child: Icon(icon, color: color, size: screenWidth * 0.055),
+  // Modified icon button with onTap
+  Widget _iconButton({
+    required IconData icon,
+    required Color color,
+    required double screenWidth,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: CircleAvatar(
+        backgroundColor: color.withOpacity(0.15),
+        radius: screenWidth * 0.06,
+        child: Icon(icon, color: color, size: screenWidth * 0.055),
+      ),
     );
   }
 
 
+// Google app tile used in the modal
+  Widget _googleAppTile(String name, IconData icon, String url) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+    final Color bgColor = isDark ? const Color(0xFF0B1D3A) : const Color(0xFFE6F1FF);
+    final Color primaryColor = isDark ? const Color(0xFF60A5FA) : const Color(0xFF1E3A8A);
+    return GestureDetector(
+      onTap: () {
+        Navigator.pop(context);
+        _handleSearch(url);
+      },
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          CircleAvatar(
+            radius: 24,
+            backgroundColor: primaryColor.withOpacity(0.1),
+            child: Icon(icon, color: primaryColor, size: 24),
+          ),
+          SizedBox(height: 8),
+          Text(name, style: TextStyle(fontSize: 12)),
+        ],
+      ),
+    );
+  }
+
+// Function to open a URL (like search bar)
+  void _handleSearch(String url) {
+    final newTab = TabModel(url: url, isHomepage: false);
+    setState(() {
+      _tabs.add(newTab);
+      _currentTabIndex = _tabs.length - 1;
+    });
+  }
   void _handleNavigation(String input) {
     final url = Uri.tryParse(input)?.hasScheme ?? false ? input : 'https://google.com/search?q=$input';
     setState(() => _tabs[_currentTabIndex] = TabModel(url: url, isHomepage: false));
