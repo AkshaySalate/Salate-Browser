@@ -1,5 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:salate_browser/pages/extension_manager.dart';
@@ -238,9 +240,11 @@ class BrowserHomePageState extends State<BrowserHomePage> {
   int _currentTabIndex = 0;
   late InAppWebViewController _webViewController;
   String _userName = "";
+  double? _humidity;
   double? _temperature;
-  int? _humidity;
-  String? _weatherIcon;
+  String? _weatherIconUrl;
+  String? _locationName;
+
 
 
   @override
@@ -248,17 +252,38 @@ class BrowserHomePageState extends State<BrowserHomePage> {
     super.initState();
     _loadHistory();
     _loadTabs();
-    _loadWeather();
+    _loadWeatherData();
   }
 
-  void _loadWeather() async {
-    final data = await WeatherService.fetchWeather("Goa"); // or use GPS later
-    if (data != null) {
-      setState(() {
-        _temperature = data['temp_c'];
-        _humidity = data['humidity'];
-        _weatherIcon = 'https:${data['icon']}';
-      });
+  Future<void> _loadWeatherData() async {
+    try {
+      // Request permission
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied ||
+            permission == LocationPermission.deniedForever) {
+          throw Exception("User denied permissions to access the device's location.");
+        }
+      }
+      Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high);
+      List<Placemark> placemarks = await placemarkFromCoordinates(
+          position.latitude, position.longitude);
+      final city = placemarks.first.locality ?? "Unknown";
+
+      final weather = await WeatherService.fetchWeather(city);
+      if (weather != null) {
+        setState(() {
+          _locationName = city;
+          _humidity = weather['humidity']?.toDouble();
+          _temperature = weather['temp_c']?.toDouble();
+          _weatherIconUrl = 'https:${weather['icon']}';
+        });
+      }
+    } catch (e) {
+      print("Error getting location/weather: $e");
     }
   }
 
@@ -469,30 +494,52 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                       child: Text("Welcome to Salate Browser", style: TextStyle(fontSize: screenWidth * 0.05, fontWeight: FontWeight.bold, color: textColor)),
                     ),
                     SizedBox(height: screenHeight * 0.02),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Container(
-                            padding: EdgeInsets.symmetric(vertical: screenHeight * 0.015),
-                            decoration: BoxDecoration(
-                              color: primaryColor,
-                              borderRadius: BorderRadius.circular(screenWidth * 0.08),
-                            ),
-                            child: Center(child: Text("Humidity", style: TextStyle(color: Colors.white, fontSize: screenWidth * 0.04))),
-                          ),
-                        ),
-                        SizedBox(width: screenWidth * 0.03),
-                        Icon(Icons.water_drop, color: primaryColor, size: iconSize + 8),
-                      ],
+                    // === Humidity Progress Bar ===
+                    Text("Humidity", style: TextStyle(fontSize: screenWidth * 0.04, color: primaryColor)),
+                    SizedBox(height: 8),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: LinearProgressIndicator(
+                        value: (_humidity ?? 0) / 100,
+                        minHeight: 20,
+                        backgroundColor: Colors.grey[300],
+                        valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
+                      ),
                     ),
                     SizedBox(height: screenHeight * 0.015),
+                    // === Temp, Icon, Location ===
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        _customButton(icon: Icons.thermostat, label: "Feels", primaryColor: primaryColor, fontSize: screenWidth * 0.035, screenWidth: screenWidth),
-                        _customButton(icon: Icons.location_on, label: "Earth", primaryColor: primaryColor, fontSize: screenWidth * 0.035, screenWidth: screenWidth),
+                        Column(
+                          children: [
+                            Icon(Icons.thermostat, color: primaryColor, size: iconSize),
+                            SizedBox(height: 4),
+                            Text(
+                              _temperature != null ? "${_temperature!.toStringAsFixed(1)}°C" : "--",
+                              style: TextStyle(fontSize: screenWidth * 0.035, color: textColor),
+                            ),
+                          ],
+                        ),
+
+                        // Weather Icon
+                        _weatherIconUrl != null
+                            ? Image.network(_weatherIconUrl!, width: 50, height: 50)
+                            : Icon(Icons.cloud_outlined, color: Colors.grey, size: 40),
+
+                        // Location
+                        Column(
+                          children: [
+                            Icon(Icons.location_on, color: primaryColor, size: iconSize),
+                            SizedBox(height: 4),
+                            Text(
+                              _locationName ?? "--",
+                              style: TextStyle(fontSize: screenWidth * 0.035, color: textColor),
+                            ),
+                          ],
+                        ),
                       ],
-                    )
+                    ),
                   ],
                 ),
               ),
