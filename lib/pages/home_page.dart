@@ -9,6 +9,7 @@ import 'package:salate_browser/models/tab_model.dart';
 import 'package:salate_browser/utils/desktop_mode_manager.dart';
 import 'package:salate_browser/utils/history_manager.dart';
 import 'package:salate_browser/models/history_model.dart';
+import 'package:salate_browser/utils/weather_service.dart';
 
 class BrowserHomePage extends StatefulWidget {
   final Function(bool) onThemeToggle;
@@ -27,32 +28,44 @@ class WavyClockWidget extends StatefulWidget {
   State<WavyClockWidget> createState() => _WavyClockWidgetState();
 }
 
-class _WavyClockWidgetState extends State<WavyClockWidget> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;// Animation controller for the clock
+class _WavyClockWidgetState extends State<WavyClockWidget> with TickerProviderStateMixin {
+  late AnimationController? _secondController; // Animation controller for seconds
+  late AnimationController? _waveController;   // Animation controller for wave animation
 
   @override
   void initState() {
-    _controller = AnimationController(
+    super.initState();
+
+    _secondController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 60),
-    )..repeat(); // Continuous animation for seconds
+    )..repeat();
 
-    super.initState();
+    _waveController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 3),
+    )..repeat();
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _secondController?.dispose();
+    _waveController?.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    // Safeguard: Return an empty container if controllers aren't initialized
+    if (_secondController == null || _waveController == null) {
+      return const SizedBox.shrink();
+    }
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
 
     final Color bgColor = isDark ? const Color(0xFF0B1D3A) : const Color(0xFFE6F1FF);
     final Color primaryColor = isDark ? const Color(0xFF1E3A8A) : const Color(0xFF60A5FA);
-    final Color waveColor = isDark ? const Color(0xFF172554) : const Color(0xFFCFE8FF);
+    final Color waveColor = isDark ? const Color(0xFF60A5FA) : const Color(0xFF60A5FA);
+    //final Color waveColor = isDark ? const Color(0xFF172554) : const Color(0xFF60A5FA);
     final Color hourColor = isDark ? Colors.white : Colors.purple;
     final Color minuteColor = isDark ? const Color(0xFF60A5FA) : Colors.deepOrange;
     final Color secondDotColor = isDark ? const Color(0xFF60A5FA) : Colors.purple;
@@ -66,12 +79,13 @@ class _WavyClockWidgetState extends State<WavyClockWidget> with SingleTickerProv
           width: clockSize,
           height: clockSize,
           child: AnimatedBuilder(
-            animation: _controller,
+            animation: Listenable.merge([_secondController, _waveController]),
             builder: (context, _) => CustomPaint(
               size: Size(clockSize, clockSize),
               painter: WavyClockPainter(
                 datetime: DateTime.now(),
-                animationValue: _controller.value,
+                secondAnimationValue: _secondController!.value,
+                waveAnimationValue: _waveController!.value,
                 backgroundColor: bgColor,
                 waveColor: waveColor,
                 hourColor: hourColor,
@@ -84,12 +98,12 @@ class _WavyClockWidgetState extends State<WavyClockWidget> with SingleTickerProv
       },
     );
   }
-
 }
 
 class WavyClockPainter extends CustomPainter {
   final DateTime datetime;
-  final double animationValue;
+  final double secondAnimationValue;
+  final double waveAnimationValue;
   final Color backgroundColor;
   final Color waveColor;
   final Color hourColor;
@@ -98,7 +112,8 @@ class WavyClockPainter extends CustomPainter {
 
   WavyClockPainter({
     required this.datetime,
-    required this.animationValue,
+    required this.secondAnimationValue,
+    required this.waveAnimationValue,
     required this.backgroundColor,
     required this.waveColor,
     required this.hourColor,
@@ -109,30 +124,13 @@ class WavyClockPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final center = size.center(Offset.zero);
-    final outerRadius = size.width / 2.2;
-    final innerRadius = outerRadius * 0.75; // Smaller inner circle
+    final baseRadius = size.width / 2.2;
+    final innerRadius = baseRadius * 0.75;
 
-    // Background wave circle
-    final wavePaint = Paint()
-      ..color = waveColor
-      ..style = PaintingStyle.fill;
-
-    final wavePath = Path();
-    const waves = 60;
-    final step = 2 * pi / waves;
-    for (int i = 0; i <= waves; i++) {
-      final angle = i * step;
-      final r = outerRadius + 4 * sin(angle * 3 + animationValue * 2 * pi); // smooth animation
-      final x = center.dx + r * cos(angle);
-      final y = center.dy + r * sin(angle);
-      if (i == 0) {
-        wavePath.moveTo(x, y);
-      } else {
-        wavePath.lineTo(x, y);
-      }
-    }
-    wavePath.close();
-    canvas.drawPath(wavePath, wavePaint);
+    // Create multiple wave layers for water-like effect
+    _drawWaveLayer(canvas, center, baseRadius, waveAnimationValue, waveColor.withOpacity(0.3), 1.0);
+    _drawWaveLayer(canvas, center, baseRadius * 0.95, waveAnimationValue + 0.3, waveColor.withOpacity(0.5), 0.8);
+    _drawWaveLayer(canvas, center, baseRadius * 0.9, waveAnimationValue + 0.6, waveColor.withOpacity(0.7), 0.6);
 
     // Inner circle (main background)
     final backgroundPaint = Paint()
@@ -177,8 +175,8 @@ class WavyClockPainter extends CustomPainter {
     );
 
     // Second Dot
-    final secondAngle = animationValue * 2 * pi;
-    final secondLength = innerRadius * 0.95;
+    final secondAngle = secondAnimationValue * 2 * pi;
+    final secondLength = innerRadius * 0.85;
     final secondOffset = Offset(
       center.dx + secondLength * cos(secondAngle - pi / 2),
       center.dy + secondLength * sin(secondAngle - pi / 2),
@@ -189,6 +187,44 @@ class WavyClockPainter extends CustomPainter {
     canvas.drawCircle(center, size.width * 0.015, Paint()..color = Colors.black.withOpacity(0.6));
   }
 
+  void _drawWaveLayer(Canvas canvas, Offset center, double baseRadius, double animationPhase, Color color, double intensity) {
+    final wavePaint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+
+    final wavePath = Path();
+    const waves = 60;
+    final step = 2 * pi / waves;
+
+    // Create water-like shrinking and expanding effect
+    final breathingEffect = sin(animationPhase * 2 * pi) * 0.15; // Overall size pulsing
+    final rippleEffect = sin(animationPhase * 4 * pi) * 0.05;    // Faster ripple effect
+
+    for (int i = 0; i <= waves; i++) {
+      final angle = i * step;
+
+      // Multiple wave frequencies for complex water-like motion
+      final wave1 = sin(angle * 4 + animationPhase * 6 * pi) * intensity;
+      final wave2 = sin(angle * 6 - animationPhase * 4 * pi) * intensity * 0.6;
+      final wave3 = sin(angle * 8 + animationPhase * 8 * pi) * intensity * 0.3;
+
+      // Combine all effects
+      final totalWaveEffect = (wave1 + wave2 + wave3) * 3;
+      final radiusModification = breathingEffect + rippleEffect + totalWaveEffect * 0.02;
+
+      final r = baseRadius * (1 + radiusModification);
+      final x = center.dx + r * cos(angle);
+      final y = center.dy + r * sin(angle);
+
+      if (i == 0) {
+        wavePath.moveTo(x, y);
+      } else {
+        wavePath.lineTo(x, y);
+      }
+    }
+    wavePath.close();
+    canvas.drawPath(wavePath, wavePaint);
+  }
 
   @override
   bool shouldRepaint(covariant WavyClockPainter oldDelegate) => true;
@@ -202,12 +238,28 @@ class BrowserHomePageState extends State<BrowserHomePage> {
   int _currentTabIndex = 0;
   late InAppWebViewController _webViewController;
   String _userName = "";
+  double? _temperature;
+  int? _humidity;
+  String? _weatherIcon;
+
 
   @override
   void initState() {
     super.initState();
     _loadHistory();
     _loadTabs();
+    _loadWeather();
+  }
+
+  void _loadWeather() async {
+    final data = await WeatherService.fetchWeather("Goa"); // or use GPS later
+    if (data != null) {
+      setState(() {
+        _temperature = data['temp_c'];
+        _humidity = data['humidity'];
+        _weatherIcon = 'https:${data['icon']}';
+      });
+    }
   }
 
   void _loadHistory() async {
@@ -233,7 +285,8 @@ class BrowserHomePageState extends State<BrowserHomePage> {
 
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
     final Color bgColor = isDark ? const Color(0xFF0B1D3A) : const Color(0xFFE6F1FF);
-    final Color primaryColor = isDark ? const Color(0xFF1E3A8A) : const Color(0xFF60A5FA);
+    final Color primaryColor = isDark ? const Color(0xFF60A5FA) : const Color(0xFF1E3A8A);
+    //final Color primaryColor = isDark ? const Color(0xFF1E3A8A) : const Color(0xFF60A5FA);
     final Color cardColor = isDark ? const Color(0xFF172554) : Colors.white;
     final Color textColor = isDark ? Colors.white : Colors.black;
 
@@ -246,16 +299,18 @@ class BrowserHomePageState extends State<BrowserHomePage> {
     return Scaffold(
       backgroundColor: bgColor,
       appBar: AppBar(
+        backgroundColor: bgColor,
         title: Row(
           children: [
-            HomeButton(onPressed: _goToHomePage),
+            HomeButton(onPressed: _goToHomePage, iconColor: primaryColor,),
             const SizedBox(width: 8),
             Expanded(
               child: TextField(
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   hintText: 'Search or enter URL',
                   border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 8),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                  //prefixIcon: Icon(Icons.search, color: primaryColor), // ← Primary color
                 ),
                 textInputAction: TextInputAction.go,
                 onSubmitted: _handleNavigation,
@@ -264,9 +319,10 @@ class BrowserHomePageState extends State<BrowserHomePage> {
           ],
         ),
         actions: [
-          IconButton(icon: const Icon(Icons.add), onPressed: _addNewTab),
-          IconButton(icon: const Icon(Icons.tab), onPressed: _showAllTabs),
+          IconButton(icon: Icon(Icons.add, color: primaryColor), onPressed: _addNewTab),
+          IconButton(icon: Icon(Icons.tab, color: primaryColor), onPressed: _showAllTabs),
           PopupMenuButton<String>(
+            icon: Icon(Icons.more_vert, color: primaryColor), // ← Primary color
             onSelected: (value) {
               if (value == 'history') _showHistory();
               if (value == 'extensions') {
@@ -314,10 +370,6 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                           horizontal: screenWidth * 0.03,
                           vertical: screenHeight * 0.0,
                         ),
-                        decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE0F2FE),
-                          borderRadius: BorderRadius.circular(screenWidth * 0.03),
-                        ),
                         child: TextField(
                           style: TextStyle(
                             color: textColor,
@@ -363,6 +415,47 @@ class BrowserHomePageState extends State<BrowserHomePage> {
 
             Padding(
               padding: EdgeInsets.symmetric(horizontal: padding),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.04, vertical: screenHeight * 0.0005),
+                      decoration: BoxDecoration(
+                        color: cardColor,
+                        borderRadius: BorderRadius.circular(screenWidth * 0.1),
+                      ),
+                      child: TextField(
+                        style: TextStyle(fontSize: screenWidth * 0.04),
+                        decoration: InputDecoration(
+                          hintText: "Search or type URL",
+                          hintStyle: TextStyle(fontSize: screenWidth * 0.04),
+                          border: InputBorder.none,
+                          icon: Icon(Icons.search, size: iconSize + 3, color: primaryColor),
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: screenWidth * 0.025),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryColor,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(screenWidth * 0.1)),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: screenWidth * 0.06,
+                        vertical: screenHeight * 0.017,
+                      ),
+                    ),
+                    onPressed: () {},
+                    child: Text("Search", style: TextStyle(color: Colors.white, fontSize: screenWidth * 0.04)),
+                  )
+                ],
+              ),
+            ),
+
+            SizedBox(height: screenHeight * 0.02),
+
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: padding),
               child: Container(
                 padding: EdgeInsets.all(screenWidth * 0.05),
                 decoration: BoxDecoration(
@@ -402,47 +495,6 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                     )
                   ],
                 ),
-              ),
-            ),
-
-            SizedBox(height: screenHeight * 0.02),
-
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: padding),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.04, vertical: screenHeight * 0.0005),
-                      decoration: BoxDecoration(
-                        color: cardColor,
-                        borderRadius: BorderRadius.circular(screenWidth * 0.1),
-                      ),
-                      child: TextField(
-                        style: TextStyle(fontSize: screenWidth * 0.04),
-                        decoration: InputDecoration(
-                          hintText: "Search or type URL",
-                          hintStyle: TextStyle(fontSize: screenWidth * 0.04),
-                          border: InputBorder.none,
-                          icon: Icon(Icons.search, size: iconSize + 3, color: primaryColor),
-                        ),
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: screenWidth * 0.025),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryColor,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(screenWidth * 0.1)),
-                      padding: EdgeInsets.symmetric(
-                        horizontal: screenWidth * 0.06,
-                        vertical: screenHeight * 0.017,
-                      ),
-                    ),
-                    onPressed: () {},
-                    child: Text("Search", style: TextStyle(color: Colors.white, fontSize: screenWidth * 0.04)),
-                  )
-                ],
               ),
             ),
 
@@ -677,13 +729,14 @@ class BrowserHomePageState extends State<BrowserHomePage> {
 
 class HomeButton extends StatelessWidget {
   final VoidCallback onPressed;
+  final Color iconColor;
 
-  const HomeButton({super.key, required this.onPressed});
+  const HomeButton({super.key, required this.onPressed, required this.iconColor});
 
   @override
   Widget build(BuildContext context) {
     return IconButton(
-      icon: const Icon(Icons.home),
+      icon: Icon(Icons.home), color: iconColor,
       onPressed: onPressed,
     );
   }
