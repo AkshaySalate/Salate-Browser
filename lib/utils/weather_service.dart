@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 class WeatherService {
@@ -15,9 +16,12 @@ class WeatherService {
         'temp_c': data['current']['temp_c'],
         'humidity': data['current']['humidity'],
         'icon': data['current']['condition']['icon'],
+        'condition': data['current']['condition']['text'],
       };
     } else {
-      print('Weather API error: ${response.statusCode}');
+      if (kDebugMode) {
+        print('Weather API error: ${response.statusCode}');
+      }
       return null;
     }
   }

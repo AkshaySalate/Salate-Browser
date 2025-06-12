@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
@@ -12,6 +13,7 @@ import 'package:salate_browser/utils/desktop_mode_manager.dart';
 import 'package:salate_browser/utils/history_manager.dart';
 import 'package:salate_browser/models/history_model.dart';
 import 'package:salate_browser/utils/weather_service.dart';
+import 'package:salate_browser/widgets/wavy_clock_widget.dart';
 
 class BrowserHomePage extends StatefulWidget {
   final Function(bool) onThemeToggle;
@@ -21,215 +23,6 @@ class BrowserHomePage extends StatefulWidget {
 
   @override
   BrowserHomePageState createState() => BrowserHomePageState();
-}
-
-class WavyClockWidget extends StatefulWidget {
-  const WavyClockWidget({super.key});
-
-  @override
-  State<WavyClockWidget> createState() => _WavyClockWidgetState();
-}
-
-class _WavyClockWidgetState extends State<WavyClockWidget> with TickerProviderStateMixin {
-  late AnimationController? _secondController; // Animation controller for seconds
-  late AnimationController? _waveController;   // Animation controller for wave animation
-
-  @override
-  void initState() {
-    super.initState();
-
-    _secondController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 60),
-    )..repeat();
-
-    _waveController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 3),
-    )..repeat();
-  }
-
-  @override
-  void dispose() {
-    _secondController?.dispose();
-    _waveController?.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    // Safeguard: Return an empty container if controllers aren't initialized
-    if (_secondController == null || _waveController == null) {
-      return const SizedBox.shrink();
-    }
-    final bool isDark = Theme.of(context).brightness == Brightness.dark;
-
-    final Color bgColor = isDark ? const Color(0xFF0B1D3A) : const Color(0xFFE6F1FF);
-    final Color primaryColor = isDark ? const Color(0xFF1E3A8A) : const Color(0xFF60A5FA);
-    final Color waveColor = isDark ? const Color(0xFF60A5FA) : const Color(0xFF60A5FA);
-    //final Color waveColor = isDark ? const Color(0xFF172554) : const Color(0xFF60A5FA);
-    final Color hourColor = isDark ? Colors.white : Colors.purple;
-    final Color minuteColor = isDark ? const Color(0xFF60A5FA) : Colors.deepOrange;
-    final Color secondDotColor = isDark ? const Color(0xFF60A5FA) : Colors.purple;
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final size = min(constraints.maxWidth, constraints.maxHeight);
-        final clockSize = size.clamp(80.0, 150.0);
-
-        return SizedBox(
-          width: clockSize,
-          height: clockSize,
-          child: AnimatedBuilder(
-            animation: Listenable.merge([_secondController, _waveController]),
-            builder: (context, _) => CustomPaint(
-              size: Size(clockSize, clockSize),
-              painter: WavyClockPainter(
-                datetime: DateTime.now(),
-                secondAnimationValue: _secondController!.value,
-                waveAnimationValue: _waveController!.value,
-                backgroundColor: bgColor,
-                waveColor: waveColor,
-                hourColor: hourColor,
-                minuteColor: minuteColor,
-                secondDotColor: secondDotColor,
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class WavyClockPainter extends CustomPainter {
-  final DateTime datetime;
-  final double secondAnimationValue;
-  final double waveAnimationValue;
-  final Color backgroundColor;
-  final Color waveColor;
-  final Color hourColor;
-  final Color minuteColor;
-  final Color secondDotColor;
-
-  WavyClockPainter({
-    required this.datetime,
-    required this.secondAnimationValue,
-    required this.waveAnimationValue,
-    required this.backgroundColor,
-    required this.waveColor,
-    required this.hourColor,
-    required this.minuteColor,
-    required this.secondDotColor,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = size.center(Offset.zero);
-    final baseRadius = size.width / 2.2;
-    final innerRadius = baseRadius * 0.75;
-
-    // Create multiple wave layers for water-like effect
-    _drawWaveLayer(canvas, center, baseRadius, waveAnimationValue, waveColor.withOpacity(0.3), 1.0);
-    _drawWaveLayer(canvas, center, baseRadius * 0.95, waveAnimationValue + 0.3, waveColor.withOpacity(0.5), 0.8);
-    _drawWaveLayer(canvas, center, baseRadius * 0.9, waveAnimationValue + 0.6, waveColor.withOpacity(0.7), 0.6);
-
-    // Inner circle (main background)
-    final backgroundPaint = Paint()
-      ..shader = RadialGradient(
-        colors: [backgroundColor, backgroundColor.withOpacity(0.8)],
-      ).createShader(Rect.fromCircle(center: center, radius: innerRadius));
-    canvas.drawCircle(center, innerRadius, backgroundPaint);
-
-    // Hour and Minute Hands
-    final hourAngle = (datetime.hour % 12 + datetime.minute / 60) * 30 * pi / 180;
-    final minuteAngle = datetime.minute * 6 * pi / 180;
-
-    final hourHandPaint = Paint()
-      ..strokeWidth = size.width * 0.045
-      ..color = hourColor
-      ..strokeCap = StrokeCap.round;
-
-    final minuteHandPaint = Paint()
-      ..strokeWidth = size.width * 0.035
-      ..color = minuteColor
-      ..strokeCap = StrokeCap.round;
-
-    final hourLength = innerRadius * 0.5;
-    final minuteLength = innerRadius * 0.75;
-
-    canvas.drawLine(
-      center,
-      Offset(
-        center.dx + hourLength * cos(hourAngle - pi / 2),
-        center.dy + hourLength * sin(hourAngle - pi / 2),
-      ),
-      hourHandPaint,
-    );
-
-    canvas.drawLine(
-      center,
-      Offset(
-        center.dx + minuteLength * cos(minuteAngle - pi / 2),
-        center.dy + minuteLength * sin(minuteAngle - pi / 2),
-      ),
-      minuteHandPaint,
-    );
-
-    // Second Dot
-    final secondAngle = secondAnimationValue * 2 * pi;
-    final secondLength = innerRadius * 0.85;
-    final secondOffset = Offset(
-      center.dx + secondLength * cos(secondAngle - pi / 2),
-      center.dy + secondLength * sin(secondAngle - pi / 2),
-    );
-    canvas.drawCircle(secondOffset, size.width * 0.02, Paint()..color = secondDotColor);
-
-    // Center Dot
-    canvas.drawCircle(center, size.width * 0.015, Paint()..color = Colors.black.withOpacity(0.6));
-  }
-
-  void _drawWaveLayer(Canvas canvas, Offset center, double baseRadius, double animationPhase, Color color, double intensity) {
-    final wavePaint = Paint()
-      ..color = color
-      ..style = PaintingStyle.fill;
-
-    final wavePath = Path();
-    const waves = 60;
-    final step = 2 * pi / waves;
-
-    // Create water-like shrinking and expanding effect
-    final breathingEffect = sin(animationPhase * 2 * pi) * 0.15; // Overall size pulsing
-    final rippleEffect = sin(animationPhase * 4 * pi) * 0.05;    // Faster ripple effect
-
-    for (int i = 0; i <= waves; i++) {
-      final angle = i * step;
-
-      // Multiple wave frequencies for complex water-like motion
-      final wave1 = sin(angle * 4 + animationPhase * 6 * pi) * intensity;
-      final wave2 = sin(angle * 6 - animationPhase * 4 * pi) * intensity * 0.6;
-      final wave3 = sin(angle * 8 + animationPhase * 8 * pi) * intensity * 0.3;
-
-      // Combine all effects
-      final totalWaveEffect = (wave1 + wave2 + wave3) * 3;
-      final radiusModification = breathingEffect + rippleEffect + totalWaveEffect * 0.02;
-
-      final r = baseRadius * (1 + radiusModification);
-      final x = center.dx + r * cos(angle);
-      final y = center.dy + r * sin(angle);
-
-      if (i == 0) {
-        wavePath.moveTo(x, y);
-      } else {
-        wavePath.lineTo(x, y);
-      }
-    }
-    wavePath.close();
-    canvas.drawPath(wavePath, wavePaint);
-  }
-
-  @override
-  bool shouldRepaint(covariant WavyClockPainter oldDelegate) => true;
 }
 
 
@@ -244,7 +37,10 @@ class BrowserHomePageState extends State<BrowserHomePage> {
   double? _temperature;
   String? _weatherIconUrl;
   String? _locationName;
-
+  String _weatherCondition = "Cloudy";
+  String _currentDisplayText = "Welcome to Salate Browser";
+  bool _showWelcome = false;
+  Timer? _textSwitchTimer;
 
 
   @override
@@ -253,6 +49,30 @@ class BrowserHomePageState extends State<BrowserHomePage> {
     _loadHistory();
     _loadTabs();
     _loadWeatherData();
+    // Show welcome text first
+    _currentDisplayText = "Welcome to Salate Browser";
+    _showWelcome = false;
+
+    // Start the shuffling timer after a short delay (e.g. 3s)
+    Future.delayed(const Duration(seconds: 3), () {
+      _textSwitchTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
+        setState(() {
+          _showWelcome = !_showWelcome;
+          _currentDisplayText = _showWelcome
+              ? "Welcome to Salate Browser"
+              : (_weatherCondition.isNotEmpty ? _weatherCondition : "Weather Info");
+        });
+      });
+    });
+
+    // Load weather
+    _loadWeatherData();
+  }
+
+  @override
+  void dispose() {
+    _textSwitchTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadWeatherData() async {
@@ -280,6 +100,7 @@ class BrowserHomePageState extends State<BrowserHomePage> {
           _humidity = weather['humidity']?.toDouble();
           _temperature = weather['temp_c']?.toDouble();
           _weatherIconUrl = 'https:${weather['icon']}';
+          _weatherCondition = weather['condition'] ?? "Cloudy";
         });
       }
     } catch (e) {
@@ -314,6 +135,9 @@ class BrowserHomePageState extends State<BrowserHomePage> {
     //final Color primaryColor = isDark ? const Color(0xFF1E3A8A) : const Color(0xFF60A5FA);
     final Color cardColor = isDark ? const Color(0xFF172554) : Colors.white;
     final Color textColor = isDark ? Colors.white : Colors.black;
+
+    final Color hourColor = isDark ? Colors.white : Colors.purple;
+    final Color minuteColor = isDark ? const Color(0xFF60A5FA) : Colors.deepOrange;
 
     final double padding = screenWidth * 0.05;
     final double fieldFontSize = screenWidth * 0.04; // Scales with screen
@@ -490,53 +314,200 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Center(
-                      child: Text("Welcome to Salate Browser", style: TextStyle(fontSize: screenWidth * 0.05, fontWeight: FontWeight.bold, color: textColor)),
-                    ),
-                    SizedBox(height: screenHeight * 0.02),
-                    // === Humidity Progress Bar ===
-                    Text("Humidity", style: TextStyle(fontSize: screenWidth * 0.04, color: primaryColor)),
-                    SizedBox(height: 8),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(20),
-                      child: LinearProgressIndicator(
-                        value: (_humidity ?? 0) / 100,
-                        minHeight: 20,
-                        backgroundColor: Colors.grey[300],
-                        valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
-                      ),
-                    ),
-                    SizedBox(height: screenHeight * 0.015),
-                    // === Temp, Icon, Location ===
+                    // Top Row with Weather Text
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        Column(
-                          children: [
-                            Icon(Icons.thermostat, color: primaryColor, size: iconSize),
-                            SizedBox(height: 4),
-                            Text(
-                              _temperature != null ? "${_temperature!.toStringAsFixed(1)}°C" : "--",
-                              style: TextStyle(fontSize: screenWidth * 0.035, color: textColor),
+                        if (_weatherIconUrl != null && _weatherIconUrl!.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(right: 8.0),
+                            child: Image.network(
+                              _weatherIconUrl!,
+                              width: 28,
+                              height: 28,
+                              errorBuilder: (context, error, stackTrace) => const Icon(
+                                Icons.cloud,
+                                size: 24,
+                                color: Colors.grey,
+                              ),
                             ),
-                          ],
+                          )
+                        else
+                          const Padding(
+                            padding: EdgeInsets.only(right: 8.0),
+                            child: Icon(Icons.wb_sunny_outlined, size: 24),
+                          ),
+                        //const Icon(Icons.wb_sunny_outlined, size: 24),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 600),
+                            transitionBuilder: (Widget child, Animation<double> animation) {
+                              final inAnimation = Tween<Offset>(
+                                begin: const Offset(0.0, 1.0), // from bottom
+                                end: Offset.zero,
+                              ).animate(animation);
+
+                              final outAnimation = Tween<Offset>(
+                                begin: Offset.zero,
+                                end: const Offset(0.0, -1.0), // slide out to top
+                              ).animate(animation);
+
+                              return SlideTransition(
+                                position: child.key == ValueKey(_currentDisplayText)
+                                    ? inAnimation
+                                    : outAnimation,
+                                child: FadeTransition(opacity: animation, child: child),
+                              );
+                            },
+                            child: Text(
+                              _currentDisplayText,
+                              key: ValueKey<String>(_currentDisplayText),
+                              style: TextStyle(
+                                fontSize: screenWidth * 0.05,
+                                fontWeight: FontWeight.bold,
+                                color: primaryColor,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+
+
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    // Humidity Row
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF4285F4),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Row(
+                              children: [
+                                Text(
+                                  "Humidity ${(_humidity ?? 69).toInt()}%",
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                const Spacer(),
+                                Container(
+                                  width: 60,
+                                  height: 4,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.3),
+                                    borderRadius: BorderRadius.circular(2),
+                                  ),
+                                  child: FractionallySizedBox(
+                                    alignment: Alignment.centerLeft,
+                                    widthFactor: (_humidity ?? 69) / 100,
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.circular(2),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF4285F4),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.water_drop,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    // Temperature & Location Row
+                    Row(
+                      children: [
+                        // Temperature card
+                        Expanded(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: Colors.grey.shade200),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.thermostat,
+                                  color: Color(0xFF4285F4),
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    "Feels ${_temperature?.toStringAsFixed(1) ?? '--'}°C",
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                      color: Color(0xFF1F2937),
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
 
-                        // Weather Icon
-                        _weatherIconUrl != null
-                            ? Image.network(_weatherIconUrl!, width: 50, height: 50)
-                            : Icon(Icons.cloud_outlined, color: Colors.grey, size: 40),
+                        const SizedBox(width: 8),
 
-                        // Location
-                        Column(
-                          children: [
-                            Icon(Icons.location_on, color: primaryColor, size: iconSize),
-                            SizedBox(height: 4),
-                            Text(
-                              _locationName ?? "--",
-                              style: TextStyle(fontSize: screenWidth * 0.035, color: textColor),
+                        // Location card
+                        Expanded(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF4285F4),
+                              borderRadius: BorderRadius.circular(20),
                             ),
-                          ],
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.location_on,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    _locationName ?? "--",
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.white,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -544,6 +515,7 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                 ),
               ),
             ),
+
 
             SizedBox(height: screenHeight * 0.02),
 
