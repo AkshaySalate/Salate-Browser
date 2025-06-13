@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
@@ -88,10 +89,19 @@ class BrowserHomePageState extends State<BrowserHomePage> {
           throw Exception("User denied permissions to access the device's location.");
         }
       }
-      Position position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high);
+
+      // New way using LocationSettings
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
+      );
+
       List<Placemark> placemarks = await placemarkFromCoordinates(
-          position.latitude, position.longitude);
+        position.latitude,
+        position.longitude,
+      );
+
       final city = placemarks.first.locality ?? "Unknown";
 
       final weather = await WeatherService.fetchWeather(city);
@@ -105,7 +115,9 @@ class BrowserHomePageState extends State<BrowserHomePage> {
         });
       }
     } catch (e) {
-      print("Error getting location/weather: $e");
+      if (kDebugMode) {
+        print("Error getting location/weather: $e");
+      }
     }
   }
 
@@ -253,7 +265,7 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                             decoration: InputDecoration(
                               hintText: "Enter your name",
                               hintStyle: TextStyle(
-                                color: textColor.withOpacity(0.6),
+                                color: textColor.withAlpha((0.6 * 255).toInt()),
                                 fontSize: fieldFontSize,
                               ),
                               border: InputBorder.none,
@@ -431,7 +443,7 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                                   width: MediaQuery.of(context).size.width * 0.25,
                                   height: MediaQuery.of(context).size.height * 0.005,
                                   decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.3),
+                                    color: Colors.white.withAlpha((0.3 * 255).toInt()),
                                     borderRadius: BorderRadius.circular(2),
                                   ),
                                   child: FractionallySizedBox(
@@ -600,31 +612,6 @@ class BrowserHomePageState extends State<BrowserHomePage> {
     );
   }
 
-  Widget _customButton({
-    required IconData icon,
-    required String label,
-    required Color primaryColor,
-    required double fontSize,
-    required double screenWidth,
-  }) {
-    return Container(
-      width: screenWidth * 0.28, // Responsive width (~110–120 at 400px)
-      padding: EdgeInsets.symmetric(vertical: screenWidth * 0.025), // Responsive vertical padding
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(screenWidth * 0.07),
-        color: primaryColor.withOpacity(0.1),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, color: primaryColor, size: screenWidth * 0.045),
-          SizedBox(width: screenWidth * 0.015),
-          Text(label, style: TextStyle(fontSize: fontSize, color: primaryColor)),
-        ],
-      ),
-    );
-  }
-
   Widget _searchEngineButton(
       String label,
       IconData icon,
@@ -639,7 +626,7 @@ class BrowserHomePageState extends State<BrowserHomePage> {
         vertical: screenWidth * 0.025,
       ),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withAlpha((0.1 * 255).toInt()),
         borderRadius: BorderRadius.circular(screenWidth * 0.07),
       ),
       child: Row(
@@ -695,7 +682,7 @@ class BrowserHomePageState extends State<BrowserHomePage> {
         }
       },
       child: CircleAvatar(
-        backgroundColor: color.withOpacity(0.15),
+        backgroundColor: color.withAlpha((0.15 * 255).toInt()),
         radius: screenWidth * 0.06,
         child: Icon(icon, color: color, size: screenWidth * 0.055),
       ),
@@ -722,7 +709,7 @@ class BrowserHomePageState extends State<BrowserHomePage> {
         mainAxisSize: MainAxisSize.min,
         children: [
           CircleAvatar(
-            backgroundColor: primaryColor.withOpacity(0.1),
+            backgroundColor: primaryColor.withAlpha((0.1 * 255).toInt()),
             radius: screenWidth * 0.075, // ~28 on standard width
             child: Icon(
               icon,
@@ -796,6 +783,12 @@ class BrowserHomePageState extends State<BrowserHomePage> {
   void _showHistory() async {
     List<HistoryItem> history = await HistoryManager.loadHistory();
 
+    if (!mounted) return;
+
+    _showHistorySheet(history); // Move UI rendering to a separate function
+  }
+
+  void _showHistorySheet(List<HistoryItem> history) {
     showModalBottomSheet(
       context: context,
       builder: (_) => Column(
@@ -805,9 +798,16 @@ class BrowserHomePageState extends State<BrowserHomePage> {
             trailing: IconButton(
               icon: const Icon(Icons.delete_forever),
               onPressed: () async {
+                final ctx = context; // ✅ store context locally inside callback
                 await HistoryManager.clearHistory();
-                Navigator.pop(context); // Close modal
-                setState(() => _history.clear()); // Clear local history too
+
+                if (ctx.mounted && Navigator.canPop(ctx)) {
+                  Navigator.pop(ctx);
+                }
+
+                if (mounted) {
+                  setState(() => _history.clear());
+                }
               },
               tooltip: 'Clear History',
             ),
@@ -817,7 +817,7 @@ class BrowserHomePageState extends State<BrowserHomePage> {
             child: ListView.builder(
               itemCount: history.length,
               itemBuilder: (_, index) {
-                final item = history.reversed.toList()[index]; // Latest on top
+                final item = history.reversed.toList()[index];
                 return ListTile(
                   title: Text(item.url),
                   subtitle: Text(item.timestamp.toLocal().toString()),
