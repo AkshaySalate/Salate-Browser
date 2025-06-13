@@ -158,9 +158,16 @@ class BrowserHomePageState extends State<BrowserHomePage> {
       setState(() {
         _tabs.clear();
         _tabs.addAll(savedTabs);
+        _tabs.sort(_tabSort); // Ensure pinned tabs stay on top
         _currentTabIndex = 0;
       });
     }
+  }
+
+  int _tabSort(TabModel a, TabModel b) {
+    if (a.isPinned && !b.isPinned) return -1;
+    if (!a.isPinned && b.isPinned) return 1;
+    return 0;
   }
 
   @override
@@ -184,8 +191,6 @@ class BrowserHomePageState extends State<BrowserHomePage> {
     final double dateFontSize = screenWidth * 0.038;
     final double iconSize = screenWidth * 0.055;
     final double clockSize = screenWidth * 0.4; // Responsive clock widget
-
-
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -813,7 +818,12 @@ class BrowserHomePageState extends State<BrowserHomePage> {
         url: url,
         isHomepage: false,
         faviconUrl: _generateFaviconUrl(url),
+        title: _extractTitleFromUrl(url),
+        isPinned: _tabs[_currentTabIndex].isPinned,
+        group: _tabs[_currentTabIndex].group,
+        screenshotBase64: _tabs[_currentTabIndex].screenshotBase64,
       );
+      _tabs.sort(_tabSort);
     });
 
     _webViewController.loadUrl(
@@ -829,9 +839,15 @@ class BrowserHomePageState extends State<BrowserHomePage> {
     return uri != null ? 'https://${uri.host}/favicon.ico' : '';
   }
 
+  String _extractTitleFromUrl(String url) {
+    final uri = Uri.tryParse(url);
+    return uri != null ? uri.host.replaceAll("www.", "") : "Untitled";
+  }
+
   void _addNewTab() {
     setState(() {
       _tabs.add(TabModel(url: "https://google.com", isHomepage: true));
+      _tabs.sort(_tabSort);
       _currentTabIndex = _tabs.length - 1;
     });
     TabsManager.saveTabs(_tabs);
@@ -857,6 +873,20 @@ class BrowserHomePageState extends State<BrowserHomePage> {
             TabsManager.saveTabs(_tabs);
           },
           onAddNewTab: _addNewTab,
+          onReorderTabs: (newTabs) {
+            setState(() {
+              _tabs.clear();
+              _tabs.addAll(newTabs);
+            });
+            TabsManager.saveTabs(_tabs);
+          },
+          onTogglePin: (index) {
+            setState(() {
+              _tabs[index].isPinned = !_tabs[index].isPinned;
+              _tabs.sort(_tabSort);
+            });
+            TabsManager.saveTabs(_tabs);
+          },
         ),
       ),
     );

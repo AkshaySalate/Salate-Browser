@@ -1,144 +1,122 @@
-import 'package:flutter/material.dart';
-import '../models/tab_model.dart';
+// ============================
+// all_tabs_page.dart – Enhanced Tab Manager UI
+// ============================
 
-class AllTabsPage extends StatelessWidget {
+import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:salate_browser/models/tab_model.dart';
+
+class AllTabsPage extends StatefulWidget {
   final List<TabModel> tabs;
   final Function(int) onTabSelected;
   final Function(int) onTabRemoved;
-  final VoidCallback onAddNewTab;
+  final Function() onAddNewTab;
+  final Function(List<TabModel>) onReorderTabs;
+  final Function(int) onTogglePin;
 
   const AllTabsPage({
     required this.tabs,
     required this.onTabSelected,
     required this.onTabRemoved,
     required this.onAddNewTab,
+    required this.onReorderTabs,
+    required this.onTogglePin,
     super.key,
   });
 
   @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+  State<AllTabsPage> createState() => _AllTabsPageState();
+}
 
+class _AllTabsPageState extends State<AllTabsPage> {
+  late List<TabModel> tabs;
+
+  @override
+  void initState() {
+    super.initState();
+    tabs = List.from(widget.tabs);
+  }
+
+  void _onReorder(int oldIndex, int newIndex) {
+    setState(() {
+      if (oldIndex < newIndex) {
+        newIndex -= 1;
+      }
+      final TabModel movedTab = tabs.removeAt(oldIndex);
+      tabs.insert(newIndex, movedTab);
+    });
+    widget.onReorderTabs(tabs);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text("All Tabs"),
-        centerTitle: true,
-        backgroundColor: theme.colorScheme.background,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: widget.onAddNewTab,
+          )
+        ],
       ),
-      body: GridView.builder(
-        padding: const EdgeInsets.all(12),
-        itemCount: tabs.length + 1,
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          mainAxisSpacing: 12,
-          crossAxisSpacing: 12,
-          childAspectRatio: 3 / 2,
-        ),
-        itemBuilder: (context, index) {
-          if (index == tabs.length) {
-            return _buildAddTabCard(context);
-          } else {
-            final tab = tabs[index];
-            return _buildTabCard(context, tab, index);
-          }
-        },
-      ),
-    );
-  }
-
-  Widget _buildTabCard(BuildContext context, TabModel tab, int index) {
-    final theme = Theme.of(context);
-    final bgColor = theme.cardColor;
-    final textColor = theme.textTheme.bodyLarge?.color;
-
-    return GestureDetector(
-      onTap: () => onTabSelected(index),
-      child: Stack(
+      body: ReorderableListView(
+        onReorder: _onReorder,
         children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: bgColor,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 6,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    if (tab.faviconUrl != null)
-                      Image.network(
-                        tab.faviconUrl!,
-                        width: 20,
-                        height: 20,
-                        errorBuilder: (_, __, ___) => const Icon(Icons.language, size: 20),
-                      )
-                    else
-                      const Icon(Icons.language, size: 20),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        tab.title ?? 'Untitled',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: textColor,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  Uri.tryParse(tab.url)?.host ?? tab.url,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: textColor?.withOpacity(0.7),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Positioned(
-            right: 8,
-            top: 8,
-            child: GestureDetector(
-              onTap: () => onTabRemoved(index),
-              child: const Icon(Icons.close, size: 18, color: Colors.redAccent),
-            ),
-          ),
+          for (int i = 0; i < tabs.length; i++)
+            _buildTabCard(context, tabs[i], i, Key('$i')),
         ],
       ),
     );
   }
 
-  Widget _buildAddTabCard(BuildContext context) {
-    final theme = Theme.of(context);
-    return GestureDetector(
-      onTap: onAddNewTab,
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          color: theme.colorScheme.primary.withOpacity(0.1),
-          border: Border.all(
-            color: theme.colorScheme.primary.withOpacity(0.4),
-            width: 1.5,
-          ),
+  Widget _buildTabCard(BuildContext context, TabModel tab, int index, Key key) {
+    return Card(
+      key: key,
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      child: ListTile(
+        leading: tab.screenshotBase64 != null
+            ? Image.memory(
+          base64Decode(tab.screenshotBase64!),
+          width: 64,
+          height: 48,
+          fit: BoxFit.cover,
+        )
+            : const Icon(Icons.web),
+        title: Text(
+          tab.title ?? tab.url,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
-        child: const Center(
-          child: Icon(Icons.add, size: 36),
+        subtitle: Row(
+          children: [
+            if (tab.group != null) ...[
+              const Icon(Icons.folder, size: 14),
+              const SizedBox(width: 4),
+              Text(tab.group!),
+            ],
+            if (tab.isPinned) ...[
+              const SizedBox(width: 10),
+              const Icon(Icons.push_pin, size: 14),
+            ]
+          ],
         ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              icon: Icon(
+                tab.isPinned ? Icons.push_pin : Icons.push_pin_outlined,
+              ),
+              onPressed: () => widget.onTogglePin(index),
+            ),
+            IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: () => widget.onTabRemoved(index),
+            ),
+          ],
+        ),
+        onTap: () => widget.onTabSelected(index),
       ),
     );
   }
