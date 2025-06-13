@@ -45,6 +45,16 @@ class BrowserHomePageState extends State<BrowserHomePage> {
   bool _showWelcome = false;
   Timer? _textSwitchTimer;
   final TextEditingController _bodySearchController = TextEditingController();
+  final List<Map<String, dynamic>> _aiTools = [
+    {'name': 'ChatGPT', 'url': 'https://chat.openai.com', 'icon': Icons.chat_bubble_outline,},
+    {'name': 'Gemini', 'url': 'https://gemini.google.com', 'icon': Icons.auto_awesome,},
+    {'name': 'Claude AI', 'url': 'https://claude.ai', 'icon': Icons.psychology_alt_outlined,},
+    {'name': 'Copilot', 'url': 'https://copilot.microsoft.com', 'icon': Icons.smart_toy_outlined,},
+    {'name': 'Perplexity', 'url': 'https://www.perplexity.ai', 'icon': Icons.bubble_chart_outlined,},
+    {'name': 'You.com AI', 'url': 'https://you.com', 'icon': Icons.explore_outlined,},
+    {'name': 'Poe', 'url': 'https://poe.com', 'icon': Icons.memory_outlined,},
+    {'name': 'HuggingChat', 'url': 'https://huggingface.co/chat/', 'icon': Icons.tag_faces_outlined,},
+  ];
 
   @override
   void initState() {
@@ -174,6 +184,8 @@ class BrowserHomePageState extends State<BrowserHomePage> {
     final double dateFontSize = screenWidth * 0.038;
     final double iconSize = screenWidth * 0.055;
     final double clockSize = screenWidth * 0.4; // Responsive clock widget
+
+
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -582,11 +594,11 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
+                    _iconButton(Icons.smart_toy, primaryColor, screenWidth, null, showAiMenu: true), // AI Hub
                     _iconButton(Icons.ondemand_video, primaryColor, screenWidth, 'https://www.youtube.com'),
                     _iconButton(Icons.email_outlined, primaryColor, screenWidth, 'https://mail.google.com'),
-                    _iconButton(Icons.send, primaryColor, screenWidth, 'https://mail.google.com/mail/u/0/#sent'),
-                    _iconButton(Icons.call, primaryColor, screenWidth, 'https://voice.google.com'),
-                    _iconButton(Icons.message, primaryColor, screenWidth, 'https://messages.google.com/web'),
+                    _iconButton(Icons.map, primaryColor, screenWidth, 'https://maps.google.com'),
+                    _iconButton(Icons.cloud, primaryColor, screenWidth, 'https://drive.google.com'),
                     _iconButton(Icons.apps, primaryColor, screenWidth, null, showAppMenu: true),
                   ],
                 ),
@@ -640,14 +652,13 @@ class BrowserHomePageState extends State<BrowserHomePage> {
     );
   }
 
-  // Modified icon button with onTap
-  Widget _iconButton(IconData icon, Color color, double screenWidth, String? url, {bool showAppMenu = false}) {
+  Widget _iconButton(IconData icon, Color color, double screenWidth, String? url, {bool showAppMenu = false, bool showAiMenu = false}) {
     final screenHeight = MediaQuery.of(context).size.height;
     //final screenWidth = MediaQuery.of(context).size.width;
-
     return GestureDetector(
       onTap: () {
         if (showAppMenu) {
+          // show google app menu
           showModalBottomSheet(
             context: context,
             shape: RoundedRectangleBorder(
@@ -677,6 +688,9 @@ class BrowserHomePageState extends State<BrowserHomePage> {
               ),
             ),
           );
+        } else if (showAiMenu) {
+          // Show AI Menu
+          _showAiMenu();
         } else if (url != null) {
           _handleSearch(url);
         }
@@ -731,6 +745,55 @@ class BrowserHomePageState extends State<BrowserHomePage> {
     );
   }
 
+  void _showAiMenu() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.all(16),
+          child: GridView.builder(
+            shrinkWrap: true,
+            itemCount: _aiTools.length,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              childAspectRatio: 0.8,
+            ),
+            itemBuilder: (context, index) {
+              final ai = _aiTools[index];
+              return GestureDetector(
+                onTap: () {
+                  Navigator.pop(context);
+                  _handleSearch(ai['url']);
+                },
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CircleAvatar(
+                      backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                      radius: 28,
+                      child: Icon(ai['icon'], size: 24, color: Theme.of(context).colorScheme.primary),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      ai['name'],
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodyMedium?.color),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
 
 // Function to open a URL (like search bar)
   void _handleSearch(String url) {
