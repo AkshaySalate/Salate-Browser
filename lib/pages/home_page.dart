@@ -153,7 +153,7 @@ class BrowserHomePageState extends State<BrowserHomePage> {
   }
 
   void _loadTabs() async {
-    List<TabItem> savedTabs = await TabsManager.loadTabs();
+    List<TabModel> savedTabs = await TabsManager.loadTabs();
     if (savedTabs.isNotEmpty) {
       setState(() {
         _tabs.clear(); // Clear existing tabs before loading
@@ -807,7 +807,7 @@ class BrowserHomePageState extends State<BrowserHomePage> {
     final url = Uri.tryParse(input)?.hasScheme ?? false ? input : 'https://google.com/search?q=$input';
     setState(() => _tabs[_currentTabIndex] = TabModel(url: url, isHomepage: false));
     _webViewController.loadUrl(urlRequest: URLRequest(url: WebUri.uri(Uri.parse(url))));
-    TabsManager.saveTabs(_tabs.cast<TabItem>());  // Save tabs whenever they are modified
+    TabsManager.saveTabs(_tabs);  // Save tabs whenever they are modified
     HistoryManager.saveHistory(_history);
   }
 
@@ -816,7 +816,7 @@ class BrowserHomePageState extends State<BrowserHomePage> {
       _tabs.add(TabModel(url: "https://google.com", isHomepage: true));
       _currentTabIndex = _tabs.length - 1;  // Switch to the newly added tab
     });
-    TabsManager.saveTabs(_tabs.map((tab) => TabItem(url: tab.url)).toList());
+    TabsManager.saveTabs(_tabs);
   }
 
   void _showAllTabs() {
@@ -836,8 +836,9 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                 _currentTabIndex = _tabs.isNotEmpty ? _tabs.length - 1 : 0;
               }
             });
-            TabsManager.saveTabs(_tabs.map((tab) => TabItem(url: tab.url)).toList()); // Save updated tabs
+            TabsManager.saveTabs(_tabs); // Save updated tabs
           },
+          onAddNewTab: () => _addNewTab(),
         ),
       ),
     );
