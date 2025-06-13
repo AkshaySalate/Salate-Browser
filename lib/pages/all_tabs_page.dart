@@ -1,132 +1,143 @@
 import 'package:flutter/material.dart';
-import 'package:salate_browser/models/tab_model.dart';
-import 'package:favicon/favicon.dart';
+import '../models/tab_model.dart';
 
 class AllTabsPage extends StatelessWidget {
   final List<TabModel> tabs;
-  final ValueChanged<int> onTabSelected;
-  final ValueChanged<int> onTabRemoved;
+  final Function(int) onTabSelected;
+  final Function(int) onTabRemoved;
   final VoidCallback onAddNewTab;
 
   const AllTabsPage({
-    super.key,
     required this.tabs,
     required this.onTabSelected,
     required this.onTabRemoved,
     required this.onAddNewTab,
+    super.key,
   });
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('All Tabs'),
+        title: const Text("All Tabs"),
         centerTitle: true,
-        elevation: 0,
+        backgroundColor: theme.colorScheme.background,
       ),
-      body: Padding(
+      body: GridView.builder(
         padding: const EdgeInsets.all(12),
-        child: GridView.builder(
-          itemCount: tabs.length + 1,
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
-            childAspectRatio: 1.2,
-          ),
-          itemBuilder: (context, index) {
-            if (index == tabs.length) {
-              // + New Tab Card
-              return GestureDetector(
-                onTap: onAddNewTab,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Theme.of(context).colorScheme.primary),
-                  ),
-                  child: const Center(
-                    child: Icon(Icons.add, size: 36),
-                  ),
-                ),
-              );
-            }
-
+        itemCount: tabs.length + 1,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          mainAxisSpacing: 12,
+          crossAxisSpacing: 12,
+          childAspectRatio: 3 / 2,
+        ),
+        itemBuilder: (context, index) {
+          if (index == tabs.length) {
+            return _buildAddTabCard(context);
+          } else {
             final tab = tabs[index];
-            final uri = Uri.tryParse(tab.url);
-            final faviconUrl = uri != null ? 'https://${uri.host}/favicon.ico' : null;
+            return _buildTabCard(context, tab, index);
+          }
+        },
+      ),
+    );
+  }
 
-            return GestureDetector(
-              onTap: () => onTabSelected(index),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Theme.of(context).cardColor,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    if (!isDark)
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 10,
-                        offset: const Offset(2, 2),
-                      ),
-                  ],
+  Widget _buildTabCard(BuildContext context, TabModel tab, int index) {
+    final theme = Theme.of(context);
+    final bgColor = theme.cardColor;
+    final textColor = theme.textTheme.bodyLarge?.color;
+
+    return GestureDetector(
+      onTap: () => onTabSelected(index),
+      child: Stack(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: bgColor,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 6,
+                  offset: const Offset(0, 4),
                 ),
-                child: Stack(
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.all(14),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (faviconUrl != null)
-                            CircleAvatar(
-                              backgroundColor: Colors.transparent,
-                              backgroundImage: NetworkImage(faviconUrl),
-                              radius: 16,
-                              onBackgroundImageError: (_, __) => const Icon(Icons.language),
-                            )
-                          else
-                            const Icon(Icons.language, size: 24),
-                          const SizedBox(height: 12),
-                          Text(
-                            tab.url,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const Spacer(),
-                          if (tab.isHomepage)
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: Colors.orange.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: const Text(
-                                'Homepage',
-                                style: TextStyle(fontSize: 10, color: Colors.orange),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: GestureDetector(
-                        onTap: () => onTabRemoved(index),
-                        child: const Icon(Icons.close, color: Colors.redAccent, size: 20),
+                    if (tab.faviconUrl != null)
+                      Image.network(
+                        tab.faviconUrl!,
+                        width: 20,
+                        height: 20,
+                        errorBuilder: (_, __, ___) => const Icon(Icons.language, size: 20),
+                      )
+                    else
+                      const Icon(Icons.language, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        tab.title ?? 'Untitled',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: textColor,
+                        ),
                       ),
                     ),
                   ],
                 ),
-              ),
-            );
-          },
+                const SizedBox(height: 4),
+                Text(
+                  Uri.tryParse(tab.url)?.host ?? tab.url,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: textColor?.withOpacity(0.7),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Positioned(
+            right: 8,
+            top: 8,
+            child: GestureDetector(
+              onTap: () => onTabRemoved(index),
+              child: const Icon(Icons.close, size: 18, color: Colors.redAccent),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAddTabCard(BuildContext context) {
+    final theme = Theme.of(context);
+    return GestureDetector(
+      onTap: onAddNewTab,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          color: theme.colorScheme.primary.withOpacity(0.1),
+          border: Border.all(
+            color: theme.colorScheme.primary.withOpacity(0.4),
+            width: 1.5,
+          ),
+        ),
+        child: const Center(
+          child: Icon(Icons.add, size: 36),
         ),
       ),
     );
