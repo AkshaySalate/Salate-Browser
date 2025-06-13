@@ -1,7 +1,7 @@
 import 'dart:math';
 
-import 'package:flutter/animation.dart';
-import 'package:flutter/cupertino.dart';
+//import 'package:flutter/animation.dart';
+//import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class WavyClockWidget extends StatefulWidget {
@@ -111,14 +111,14 @@ class WavyClockPainter extends CustomPainter {
     final innerRadius = baseRadius * 0.75;
 
     // Create multiple wave layers for water-like effect
-    _drawWaveLayer(canvas, center, baseRadius, waveAnimationValue, waveColor.withOpacity(0.3), 1.0);
-    _drawWaveLayer(canvas, center, baseRadius * 0.95, waveAnimationValue + 0.3, waveColor.withOpacity(0.5), 0.8);
-    _drawWaveLayer(canvas, center, baseRadius * 0.9, waveAnimationValue + 0.6, waveColor.withOpacity(0.7), 0.6);
+    _drawWaveLayer(canvas, center, baseRadius, waveAnimationValue, waveColor.withAlpha((0.3 * 255).toInt()), 1.0);
+    _drawWaveLayer(canvas, center, baseRadius * 0.95, waveAnimationValue + 0.3, waveColor.withAlpha((0.5 * 255).toInt()), 0.8);
+    _drawWaveLayer(canvas, center, baseRadius * 0.9, waveAnimationValue + 0.6, waveColor.withAlpha((0.7 * 255).toInt()), 0.6);
 
     // Inner circle (main background)
     final backgroundPaint = Paint()
       ..shader = RadialGradient(
-        colors: [backgroundColor, backgroundColor.withOpacity(0.8)],
+        colors: [backgroundColor, backgroundColor.withAlpha((0.8 * 255).toInt()),],
       ).createShader(Rect.fromCircle(center: center, radius: innerRadius));
     canvas.drawCircle(center, innerRadius, backgroundPaint);
 
@@ -167,7 +167,7 @@ class WavyClockPainter extends CustomPainter {
     canvas.drawCircle(secondOffset, size.width * 0.02, Paint()..color = secondDotColor);
 
     // Center Dot
-    canvas.drawCircle(center, size.width * 0.015, Paint()..color = Colors.black.withOpacity(0.6));
+    canvas.drawCircle(center, size.width * 0.015, Paint()..color = Colors.black.withAlpha((0.6 * 255).toInt()),);
   }
 
   void _drawWaveLayer(Canvas canvas, Offset center, double baseRadius, double animationPhase, Color color, double intensity) {
