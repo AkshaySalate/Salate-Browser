@@ -156,9 +156,9 @@ class BrowserHomePageState extends State<BrowserHomePage> {
     List<TabModel> savedTabs = await TabsManager.loadTabs();
     if (savedTabs.isNotEmpty) {
       setState(() {
-        _tabs.clear(); // Clear existing tabs before loading
-        _tabs.addAll(savedTabs.map((tab) => TabModel(url: tab.url)));
-        _currentTabIndex = 0; // Ensure it starts at the first tab
+        _tabs.clear();
+        _tabs.addAll(savedTabs);
+        _currentTabIndex = 0;
       });
     }
   }
@@ -804,17 +804,35 @@ class BrowserHomePageState extends State<BrowserHomePage> {
     });
   }
   void _handleNavigation(String input) {
-    final url = Uri.tryParse(input)?.hasScheme ?? false ? input : 'https://google.com/search?q=$input';
-    setState(() => _tabs[_currentTabIndex] = TabModel(url: url, isHomepage: false));
-    _webViewController.loadUrl(urlRequest: URLRequest(url: WebUri.uri(Uri.parse(url))));
-    TabsManager.saveTabs(_tabs);  // Save tabs whenever they are modified
+    final url = Uri.tryParse(input)?.hasScheme ?? false
+        ? input
+        : 'https://google.com/search?q=$input';
+
+    setState(() {
+      _tabs[_currentTabIndex] = TabModel(
+        url: url,
+        isHomepage: false,
+        faviconUrl: _generateFaviconUrl(url),
+      );
+    });
+
+    _webViewController.loadUrl(
+      urlRequest: URLRequest(url: WebUri.uri(Uri.parse(url))),
+    );
+
+    TabsManager.saveTabs(_tabs);
     HistoryManager.saveHistory(_history);
+  }
+
+  String _generateFaviconUrl(String url) {
+    final uri = Uri.tryParse(url);
+    return uri != null ? 'https://${uri.host}/favicon.ico' : '';
   }
 
   void _addNewTab() {
     setState(() {
       _tabs.add(TabModel(url: "https://google.com", isHomepage: true));
-      _currentTabIndex = _tabs.length - 1;  // Switch to the newly added tab
+      _currentTabIndex = _tabs.length - 1;
     });
     TabsManager.saveTabs(_tabs);
   }
@@ -836,9 +854,9 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                 _currentTabIndex = _tabs.isNotEmpty ? _tabs.length - 1 : 0;
               }
             });
-            TabsManager.saveTabs(_tabs); // Save updated tabs
+            TabsManager.saveTabs(_tabs);
           },
-          onAddNewTab: () => _addNewTab(),
+          onAddNewTab: _addNewTab,
         ),
       ),
     );
