@@ -1,7 +1,4 @@
-// ============================
-// all_tabs_page.dart – Enhanced Tab Manager UI
-// ============================
-
+// all_tabs_page.dart – Enhanced Tab Manager UI with Tab Groups, Screenshots, Favicons
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:salate_browser/models/tab_model.dart';
@@ -35,6 +32,59 @@ class _AllTabsPageState extends State<AllTabsPage> {
   void initState() {
     super.initState();
     tabs = List.from(widget.tabs);
+    _sortTabs(); // New function
+  }
+
+  void _sortTabs() {
+    tabs.sort((a, b) {
+      // Pinned first
+      if (a.isPinned && !b.isPinned) return -1;
+      if (!a.isPinned && b.isPinned) return 1;
+
+      // Grouped next
+      if ((a.group ?? '') != (b.group ?? '')) {
+        return (a.group ?? '').compareTo(b.group ?? '');
+      }
+
+      return 0;
+    });
+  }
+
+  void _assignGroup(int index) {
+    TextEditingController controller = TextEditingController();
+    tabs.sort((a, b) {
+      // Sort by pinned first
+      if (a.isPinned && !b.isPinned) return -1;
+      if (!a.isPinned && b.isPinned) return 1;
+      // Then by group name (nulls last)
+      if (a.group != null && b.group == null) return -1;
+      if (a.group == null && b.group != null) return 1;
+      return 0;
+    });
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Assign Tab Group"),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(hintText: "Group name"),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              setState(() {
+                tabs[index].group = controller.text;
+                _sortTabs(); // Ensure tabs are re-ordered by group
+              });
+              widget.onReorderTabs(tabs);
+              Navigator.pop(context);
+            },
+            child: const Text("Save"),
+          ),
+        ],
+      ),
+    );
   }
 
   void _onReorder(int oldIndex, int newIndex) {
@@ -75,47 +125,59 @@ class _AllTabsPageState extends State<AllTabsPage> {
       key: key,
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       child: ListTile(
-        leading: tab.screenshotBase64 != null
-            ? Image.memory(
-          base64Decode(tab.screenshotBase64!),
-          width: 64,
-          height: 48,
-          fit: BoxFit.cover,
-        )
+        leading: tab.faviconUrl != null
+            ? Image.network(tab.faviconUrl!, width: 32, height: 32)
             : const Icon(Icons.web),
         title: Text(
           tab.title ?? tab.url,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
-        subtitle: Row(
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (tab.group != null) ...[
-              const Icon(Icons.folder, size: 14),
-              const SizedBox(width: 4),
-              Text(tab.group!),
-            ],
-            if (tab.isPinned) ...[
-              const SizedBox(width: 10),
-              const Icon(Icons.push_pin, size: 14),
-            ]
+            if (tab.group != null && tab.group!.isNotEmpty)
+              Row(
+                children: [
+                  const Icon(Icons.folder, size: 14),
+                  const SizedBox(width: 4),
+                  Text(tab.group!),
+                ],
+              ),
+            if (tab.isPinned)
+              const Row(
+                children: [
+                  SizedBox(height: 4),
+                  Icon(Icons.push_pin, size: 14),
+                  SizedBox(width: 4),
+                  Text("Pinned"),
+                ],
+              ),
           ],
         ),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             IconButton(
+              icon: const Icon(Icons.folder),
+              tooltip: 'Set Group',
+              onPressed: () => _assignGroup(index),
+            ),
+            IconButton(
               icon: Icon(
                 tab.isPinned ? Icons.push_pin : Icons.push_pin_outlined,
               ),
+              tooltip: 'Pin/Unpin',
               onPressed: () => widget.onTogglePin(index),
             ),
             IconButton(
               icon: const Icon(Icons.close),
+              tooltip: 'Close Tab',
               onPressed: () => widget.onTabRemoved(index),
             ),
           ],
         ),
+
         onTap: () => widget.onTabSelected(index),
       ),
     );

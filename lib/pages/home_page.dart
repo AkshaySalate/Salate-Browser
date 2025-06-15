@@ -821,7 +821,6 @@ class BrowserHomePageState extends State<BrowserHomePage> {
         title: _extractTitleFromUrl(url),
         isPinned: _tabs[_currentTabIndex].isPinned,
         group: _tabs[_currentTabIndex].group,
-        screenshotBase64: _tabs[_currentTabIndex].screenshotBase64,
       );
       _tabs.sort(_tabSort);
     });

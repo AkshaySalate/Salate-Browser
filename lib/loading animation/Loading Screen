@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Salate Loading Animation</title>
+    <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&display=swap" rel="stylesheet">
+    <style>
+        /* Basic reset and body styling */
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            /* Make background transparent */
+            background-color: transparent;
+            overflow: hidden; /* Prevent scrollbars */
+        }
+
+        /* Container for the SVG to center and size it */
+        .svg-container {
+            width: 100%;
+            max-width: 800px; /* Max width for larger screens */
+            height: auto;
+            aspect-ratio: 16 / 9; /* Maintain aspect ratio */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* SVG styling */
+        svg {
+            width: 100%;
+            height: 100%;
+            /* Ensure the viewbox is respected */
+            display: block;
+            background-color: transparent; /* Keep SVG background transparent */
+        }
+
+        /* Path styling for the "Salate" text */
+        #salate-path {
+            fill: none; /* No fill */
+            stroke: #2c3e50; /* Dark color for the text */
+            stroke-width: 5; /* Thickness of the line */
+            stroke-linecap: round; /* Rounded ends for the lines */
+            stroke-linejoin: round; /* Rounded corners for the lines */
+            /* These properties will be animated */
+            stroke-dasharray: 1000; /* A large number, will be calculated by JS */
+            stroke-dashoffset: 1000; /* Start completely hidden */
+            animation: draw 3s forwards, fadeOut 1s 4s forwards; /* Draw, then fade out after a delay */
+        }
+
+        /* Keyframes for the drawing animation */
+        @keyframes draw {
+            to {
+                stroke-dashoffset: 0; /* Reveal the path */
+            }
+        }
+
+        /* Keyframes for the fade out animation */
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+            to {
+                opacity: 0;
+                visibility: hidden; /* Hide element completely after fade */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="svg-container">
+        <svg viewBox="0 0 500 200" xmlns="http://www.w3.org/2000/svg">
+            <!--
+                Using a custom SVG path for 'Salate' to give it a unique, doodle/calligraphy feel.
+                This path was generated from text and then simplified for animation.
+                The 'Permanent Marker' font is used as a visual guide and can be linked
+                to create a similar aesthetic even if the path isn't strictly that font.
+            -->
+            <path id="salate-path" d="M12.98,90.2c22.65-27.1,38.65-42.1,65.65-42.1c25,0,32.6,13.2,32.6,33c0,21.7-18.7,35-43,35c-19,0-31.9-8.4-43.2-22.3l-5.6-7.1l-10.4,12.7c-9.2,11.2-18.4,18-30.1,18c-12.8,0-19.4-4-19.4-14.7c0-9.2,6.5-14.8,17.2-14.8c6,0,11.9,1.7,16.2,5.2c6.2,5.1,10.2,11.2,10.2,19.2c0,16.6-14.8,25.9-29.8,25.9c-24.6,0-40.8-19.5-40.8-49.3c0-30.8,16.8-51.4,45.4-51.4c29.6,0,46.7,20,46.7,46.4c0,27.2-18.2,46-44.5,46c-18.4,0-30.2-9.6-40.2-22.6L12.98,90.2z
+            M107.58,111.4c1.4,8.2,9.6,14.4,20,14.4c9.8,0,16.7-5,16.7-13.6c0-6.9-5-11.4-12.2-11.4c-4.4,0-8.6,1.4-12.2,4.4L107.58,111.4z
+            M149.38,103c0-10.8-8.2-19.4-20.2-19.4c-11.8,0-19.8,8.2-19.8,19c0,10.8,8.2,19.4,20.2,19.4c11.8,0,19.8-8.2,19.8-19z
+            M182.28,131.7c0,12.6-9.6,21.2-22.6,21.2c-12.6,0-21.6-8.2-21.6-20.8c0-12,9.6-20.2,22-20.2c12,0,22.2,8.6,22.2,19.8L182.28,131.7z
+            M215.18,90.2c22.65-27.1,38.65-42.1,65.65-42.1c25,0,32.6,13.2,32.6,33c0,21.7-18.7,35-43,35c-19,0-31.9-8.4-43.2-22.3l-5.6-7.1l-10.4,12.7c-9.2,11.2-18.4,18-30.1,18c-12.8,0-19.4-4-19.4-14.7c0-9.2,6.5-14.8,17.2-14.8c6,0,11.9,1.7,16.2,5.2c6.2,5.1,10.2,11.2,10.2,19.2c0,16.6-14.8,25.9-29.8,25.9c-24.6,0-40.8-19.5-40.8-49.3c0-30.8,16.8-51.4,45.4-51.4c29.6,0,46.7,20,46.7,46.4c0,27.2-18.2,46-44.5,46c-18.4,0-30.2-9.6-40.2-22.6L215.18,90.2z
+            M315.68,111.4c1.4,8.2,9.6,14.4,20,14.4c9.8,0,16.7-5,16.7-13.6c0-6.9-5-11.4-12.2-11.4c-4.4,0-8.6,1.4-12.2,4.4L315.68,111.4z
+            M357.48,103c0-10.8-8.2-19.4-20.2-19.4c-11.8,0-19.8,8.2-19.8,19c0,10.8,8.2,19.4,20.2,19.4c11.8,0,19.8-8.2,19.8-19z">
+            </path>
+        </svg>
+    </div>
+
+    <script>
+        // Get the path element
+        const salatePath = document.getElementById('salate-path');
+
+        // Calculate the total length of the path
+        const pathLength = salatePath.getTotalLength();
+
+        // Set the stroke-dasharray and stroke-dashoffset to the path length
+        // This ensures the animation works correctly regardless of path complexity
+        salatePath.style.strokeDasharray = pathLength;
+        salatePath.style.strokeDashoffset = pathLength;
+
+        // Optionally, you can log the path length to the console for debugging
+        // console.log('Path Length:', pathLength);
+    </script>
+</body>
+</html>
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Salate Loading Animation</title>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: transparent; /* Transparent background */
+            overflow: hidden; /* Prevent scrollbars */
+        }
+
+        .svg-container {
+            width: 80%; /* Adjust as needed */
+            max-width: 600px;
+            height: auto;
+            aspect-ratio: 4 / 1.5; /* Adjust aspect ratio as needed */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+            background-color: transparent; /* Transparent SVG background */
+        }
+
+        #salate-text {
+            font-family: sans-serif; /* Fallback font */
+            font-size: 80px;
+            fill: #3498db; /* Blue color for the text */
+            stroke: #2980b9; /* Darker blue for outline */
+            stroke-width: 3;
+            stroke-dasharray: 100%;
+            stroke-dashoffset: 100%;
+            animation: write 3s linear forwards, fadeOut 1s 4s forwards; /* Write then fade */
+        }
+
+        @keyframes write {
+            to {
+                stroke-dashoffset: 0%;
+            }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; visibility: hidden; }
+        }
+    </style>
+</head>
+<body>
+    <div class="svg-container">
+        <svg viewBox="0 0 500 150" xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)">
+            <text id="salate-text" x="50" y="100">Salate</text>
+        </svg>
+    </div>
+</body>
+</html>

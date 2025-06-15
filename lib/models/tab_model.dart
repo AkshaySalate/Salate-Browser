@@ -2,31 +2,28 @@
 class TabModel {
   String url;
   bool isHomepage;
-  String? faviconUrl;
   String? title;
-  bool isPinned;
+  String? faviconUrl;
   String? group;
-  String? screenshotBase64;
+  bool isPinned;
 
   TabModel({
     required this.url,
     this.isHomepage = false,
-    this.faviconUrl,
     this.title,
-    this.isPinned = false,
+    this.faviconUrl,
     this.group,
-    this.screenshotBase64,
+    this.isPinned = false,
   });
 
   Map<String, dynamic> toJson() {
     return {
       'url': url,
       'isHomepage': isHomepage,
-      'faviconUrl': faviconUrl,
       'title': title,
-      'isPinned': isPinned,
+      'faviconUrl': faviconUrl,
       'group': group,
-      'screenshotBase64': screenshotBase64,
+      'isPinned': isPinned,
     };
   }
 
@@ -34,11 +31,10 @@ class TabModel {
     return TabModel(
       url: json['url'],
       isHomepage: json['isHomepage'] ?? false,
-      faviconUrl: json['faviconUrl'],
       title: json['title'],
-      isPinned: json['isPinned'] ?? false,
+      faviconUrl: json['faviconUrl'],
       group: json['group'],
-      screenshotBase64: json['screenshotBase64'],
+      isPinned: json['isPinned'] ?? false,
     );
   }
 }

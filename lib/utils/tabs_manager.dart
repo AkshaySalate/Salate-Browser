@@ -1,6 +1,6 @@
 // utils/tabs_manager.dart
-import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 import 'package:salate_browser/models/tab_model.dart';
 
 class TabsManager {
