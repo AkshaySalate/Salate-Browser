@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <style>
+        body {
+          margin: 0;
+          background: radial-gradient(circle at center, #0f0c29, #302b63, #24243e);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          height: 100vh;
+          overflow: hidden;
+        }
+
+        .logo-container {
+          animation: popFade 2s ease-out;
+        }
+
+        @keyframes popFade {
+          0% {
+            transform: scale(0.8);
+            opacity: 0;
+          }
+          100% {
+            transform: scale(1);
+            opacity: 1;
+          }
+        }
+
+        .logo-img {
+          width: 400px;
+          max-width: 80%;
+          height: auto;
+        }
+    </style>
+</head>
+<body>
+<div class="logo-container">
+    <img src="assets/salate11.png" class="logo-img" alt="Salate Logo" />
+</div>
+</body>
+</html>

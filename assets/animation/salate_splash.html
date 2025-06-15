@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+          margin: 0;
+          background: linear-gradient(135deg, #1d2b64, #f8cdda);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          height: 100vh;
+          overflow: hidden;
+        }
+
+        .container {
+          font-family: 'Great Vibes', cursive;
+          font-size: 100px;
+          font-weight: normal;
+          display: flex;
+          animation: fadeOut 1s ease-in-out 6s forwards;
+        }
+
+        .letter {
+          opacity: 0;
+          background: linear-gradient(90deg, #ff3cac, #784ba0, #2b86c5);
+          background-size: 200% auto;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          display: inline-block;
+          transform: scale(0.8) translateY(20px);
+          animation: appear 0.6s ease forwards, gradientShift 5s linear infinite, breathing 2s ease-in-out infinite;
+        }
+
+        .letter:nth-child(1) { animation-delay: 0s, 0s, 1.5s; }
+        .letter:nth-child(2) { animation-delay: 0.3s, 0s, 1.8s; }
+        .letter:nth-child(3) { animation-delay: 0.6s, 0s, 2.1s; }
+        .letter:nth-child(4) { animation-delay: 0.9s, 0s, 2.4s; }
+        .letter:nth-child(5) { animation-delay: 1.2s, 0s, 2.7s; }
+        .letter:nth-child(6) { animation-delay: 1.5s, 0s, 3s; }
+
+        @keyframes appear {
+          to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+          }
+        }
+
+        @keyframes gradientShift {
+          0% { background-position: 0% 50%; }
+          100% { background-position: 100% 50%; }
+        }
+
+        @keyframes fadeOut {
+          to {
+            opacity: 0;
+            transform: scale(0.9);
+          }
+        }
+
+        @keyframes breathing {
+          0%, 100% {
+            transform: scale(1);
+          }
+          50% {
+            transform: scale(1.05);
+          }
+        }
+    </style>
+</head>
+<body>
+<div class="container" id="splashText">
+    <div class="letter">S</div>
+    <div class="letter">a</div>
+    <div class="letter">l</div>
+    <div class="letter">a</div>
+    <div class="letter">t</div>
+    <div class="letter">e</div>
+</div>
+</body>
+</html>

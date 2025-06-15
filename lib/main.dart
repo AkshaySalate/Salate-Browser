@@ -3,6 +3,7 @@ import 'package:salate_browser/pages/home_page.dart'; // Import BrowserHomePage
 import 'package:salate_browser/pages/extension_manager.dart'; // Import ExtensionManager
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:salate_browser/utils/theme_manager.dart';
+import 'package:salate_browser/pages/splash_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized(); // Ensures async operations can run before runApp()
@@ -38,14 +39,14 @@ class _SalateBrowserState extends State<SalateBrowser> {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Salate Browser',
+      title: 'MySalate',
       theme: _isDarkMode
           ? ThemeData.dark().copyWith(
         primaryColor: const Color(0xFF212121),
         scaffoldBackgroundColor: const Color(0xFF181818),
       )
           : ThemeData.light(),
-      home: BrowserHomePage(
+      home: SplashScreen(
         onThemeToggle: _toggleTheme,
         isDarkMode: _isDarkMode, // Pass current theme state
       ),

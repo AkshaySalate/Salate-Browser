@@ -48,6 +48,7 @@ dependencies:
   geocoding: ^4.0.0
   geolocator: ^14.0.1
   favicon: ^1.1.2
+  path_provider: ^2.1.2
 
 dev_dependencies:
   flutter_test:
@@ -65,6 +66,10 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
+
+  assets:
+    - assets/animation/salate_splash.html
+    - assets/salate11.png
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
