@@ -34,14 +34,14 @@ class _SplashScreenState extends State<SplashScreen>
     _controller.forward();
 
     Timer(const Duration(seconds: 4), () {
-      /*Navigator.of(context).pushReplacement(
+      Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (_) => BrowserHomePage(
             onThemeToggle: widget.onThemeToggle,
             isDarkMode: widget.isDarkMode,
           ),
         ),
-      );*/
+      );
     });
   }
 
@@ -86,7 +86,7 @@ class _SplashScreenState extends State<SplashScreen>
                       style: TextStyle(
                         fontFamily: 'Pacifico',
                         fontSize: screen.width * 0.15, // e.g. 36–48 on most screens
-                        fontWeight: FontWeight.bold,
+                        //fontWeight: FontWeight.bold,
                         color: Colors.white,
                         letterSpacing: 1.2,
                       ),

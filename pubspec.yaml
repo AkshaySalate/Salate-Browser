@@ -81,6 +81,10 @@ flutter:
       fonts:
         - asset: assets/fonts/Dancing_Script/DancingScript-VariableFont_wght.ttf
 
+    - family: Varela Round
+      fonts:
+        - asset: assets/fonts/Varela_Round/VarelaRound-Regular.ttf
+
     # Example of adding more fonts later:
     # - family: Great Vibes
     #   fonts:
