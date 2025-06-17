@@ -1,4 +1,3 @@
-// lib/pages/splash_screen.dart
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:salate_browser/pages/home_page.dart';
@@ -18,59 +17,79 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _animation;
+    with TickerProviderStateMixin {
+  late AnimationController _fadeInController;
+  late AnimationController _fadeOutController;
+  late Animation<double> _fadeIn;
+  late Animation<double> _fadeOut;
+
+  bool _startFadeOut = false;
 
   @override
   void initState() {
     super.initState();
 
-    _controller = AnimationController(
+    _fadeInController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 2),
+      duration: const Duration(milliseconds: 1500),
     );
-    _animation = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
-    _controller.forward();
+    _fadeOutController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
 
-    Timer(const Duration(seconds: 4), () {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (_) => BrowserHomePage(
-            onThemeToggle: widget.onThemeToggle,
-            isDarkMode: widget.isDarkMode,
+    _fadeIn = CurvedAnimation(
+      parent: _fadeInController,
+      curve: Curves.easeIn,
+    );
+
+    _fadeOut = Tween<double>(begin: 1.0, end: 0.0).animate(_fadeOutController);
+
+    _fadeInController.forward();
+
+    Timer(const Duration(seconds: 3), () {
+      setState(() => _startFadeOut = true);
+      _fadeOutController.forward();
+
+      Timer(const Duration(milliseconds: 900), () {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (_) => BrowserHomePage(
+              onThemeToggle: widget.onThemeToggle,
+              isDarkMode: widget.isDarkMode,
+            ),
           ),
-        ),
-      );
+        );
+      });
     });
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _fadeInController.dispose();
+    _fadeOutController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final screen = MediaQuery.of(context).size;
-    final isPortrait = MediaQuery.of(context).orientation == Orientation.portrait;
 
     return Scaffold(
       backgroundColor: Colors.black54,
-      body: Column(
-        children: [
-          Expanded(
-            child: Center(
-              child: FadeTransition(
-                opacity: _animation,
+      body: FadeTransition(
+        opacity: _startFadeOut ? _fadeOut : _fadeIn,
+        child: Column(
+          children: [
+            Expanded(
+              child: Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     // Logo
                     Container(
-                      width: screen.width * 0.5,
-                      height: screen.width * 0.5,
+                      width: screen.width * 0.4,
+                      height: screen.width * 0.4,
                       decoration: const BoxDecoration(
                         image: DecorationImage(
                           image: AssetImage('assets/salate_logo.png'),
@@ -78,6 +97,7 @@ class _SplashScreenState extends State<SplashScreen>
                         ),
                       ),
                     ),
+
                     SizedBox(height: screen.height * 0.015),
 
                     // Title
@@ -85,12 +105,13 @@ class _SplashScreenState extends State<SplashScreen>
                       "Salate",
                       style: TextStyle(
                         fontFamily: 'Pacifico',
-                        fontSize: screen.width * 0.15, // e.g. 36–48 on most screens
-                        //fontWeight: FontWeight.bold,
+                        fontSize: screen.width * 0.13,
+                        fontWeight: FontWeight.bold,
                         color: Colors.white,
                         letterSpacing: 1.2,
                       ),
                     ),
+
                     SizedBox(height: screen.height * 0.01),
 
                     // Tagline
@@ -102,9 +123,10 @@ class _SplashScreenState extends State<SplashScreen>
                         fontWeight: FontWeight.w400,
                       ),
                     ),
+
                     SizedBox(height: screen.height * 0.03),
 
-                    // Dots for loading
+                    // Dots
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: List.generate(3, (index) {
@@ -118,20 +140,14 @@ class _SplashScreenState extends State<SplashScreen>
                           ),
                         );
                       }),
-                    )
+                    ),
                   ],
                 ),
               ),
             ),
-          ),
 
-          // Footer
-          FadeTransition(
-            opacity: _animation,
-            child: Padding(
-              padding: EdgeInsets.only(
-                bottom: screen.height * 0.03,
-              ),
+            Padding(
+              padding: EdgeInsets.only(bottom: screen.height * 0.03),
               child: Text(
                 "By Akshay Salate",
                 style: TextStyle(
@@ -140,8 +156,8 @@ class _SplashScreenState extends State<SplashScreen>
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
