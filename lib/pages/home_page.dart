@@ -361,214 +361,249 @@ class BrowserHomePageState extends State<BrowserHomePage> {
               ),
               SizedBox(height: screenHeight * 0.02),
               // Weather Card
-              Container(
-                padding: EdgeInsets.all(screenWidth * 0.05),
-                decoration: BoxDecoration(
-                  color: cardColor,
-                  borderRadius: BorderRadius.circular(screenWidth * 0.05),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Weather Text with Icon
-                    Row(
-                      children: [
-                        if (_weatherIconUrl != null && _weatherIconUrl!.isNotEmpty)
-                          Padding(
-                            padding: EdgeInsets.only(right: screenWidth * 0.02),
-                            child: Image.network(
-                              _weatherIconUrl!,
-                              width: screenWidth * 0.07,
-                              height: screenWidth * 0.07,
-                              errorBuilder: (context, error, stackTrace) => Icon(
-                                Icons.cloud,
-                                size: screenWidth * 0.06,
-                                color: minuteColor,
-                              ),
-                            ),
-                          )
-                        else
-                          Padding(
-                            padding: EdgeInsets.only(right: screenWidth * 0.02),
-                            child: Icon(
-                              Icons.wb_sunny_outlined,
-                              size: screenWidth * 0.06,
-                            ),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(screenWidth * 0.05),
+                child: Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: cardColor.withOpacity(0.85),
+                  ),
+                  child: Stack(
+                    children: [
+                      // 🌧️ Rainy background
+                      if (_weatherCondition.toLowerCase().contains("rain"))
+                        Positioned.fill( // Ensures it fills the exact same area
+                          child: Image.asset(
+                            "assets/weather/rainy_bg.jpg",
+                            fit: BoxFit.cover,
                           ),
-                        SizedBox(width: screenWidth * 0.025),
-                        Expanded(
-                          child: AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 600),
-                            transitionBuilder: (Widget child, Animation<double> animation) {
-                              final inAnimation = Tween<Offset>(
-                                begin: const Offset(0.0, 1.0),
-                                end: Offset.zero,
-                              ).animate(animation);
+                        ),
 
-                              final outAnimation = Tween<Offset>(
-                                begin: Offset.zero,
-                                end: const Offset(0.0, -1.0),
-                              ).animate(animation);
-
-                              return SlideTransition(
-                                position: child.key == ValueKey(_currentDisplayText)
-                                    ? inAnimation
-                                    : outAnimation,
-                                child: FadeTransition(opacity: animation, child: child),
-                              );
-                            },
-                            child: Text(
-                              _currentDisplayText,
-                              key: ValueKey<String>(_currentDisplayText),
-                              style: TextStyle(
-                                fontSize: screenWidth * 0.05,
-                                fontWeight: FontWeight.bold,
-                                color: primaryColor,
-                              ),
-                              overflow: TextOverflow.ellipsis,
+                      // 🌧️ Optional Rain overlay on top of background
+                      if (_weatherCondition.toLowerCase().contains("rain"))
+                        Positioned.fill(
+                          child: Opacity(
+                            opacity: 1.0,
+                            child: Image.asset(
+                              "assets/weather/rain_overlay.gif",
+                              fit: BoxFit.cover,
                             ),
                           ),
                         ),
-                      ],
-                    ),
-                    SizedBox(height: screenHeight * 0.02),
-                    // Humidity Indicator
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: MediaQuery.of(context).size.width * 0.04,
-                              vertical: MediaQuery.of(context).size.height * 0.013,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Color(0xFF4285F4),
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                            child: Row(
+
+                      // 🌤️ Your actual weather card content
+                      Container(
+                        padding: EdgeInsets.all(screenWidth * 0.05),
+                        decoration: BoxDecoration(
+                          color: cardColor.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(screenWidth * 0.05),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Weather Text with Icon
+                            Row(
                               children: [
-                                Text(
-                                  "Humidity ${(_humidity ?? 69).toInt()}%",
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: MediaQuery.of(context).size.width * 0.045,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                const Spacer(),
-                                Container(
-                                  width: MediaQuery.of(context).size.width * 0.25,
-                                  height: MediaQuery.of(context).size.height * 0.005,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withAlpha((0.3 * 255).toInt()),
-                                    borderRadius: BorderRadius.circular(2),
-                                  ),
-                                  child: FractionallySizedBox(
-                                    alignment: Alignment.centerLeft,
-                                    widthFactor: (_humidity ?? 69) / 100,
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        borderRadius: BorderRadius.circular(2),
+                                if (_weatherIconUrl != null && _weatherIconUrl!.isNotEmpty)
+                                  Padding(
+                                    padding: EdgeInsets.only(right: screenWidth * 0.02),
+                                    child: Image.network(
+                                      _weatherIconUrl!,
+                                      width: screenWidth * 0.07,
+                                      height: screenWidth * 0.07,
+                                      errorBuilder: (context, error, stackTrace) => Icon(
+                                        Icons.cloud,
+                                        size: screenWidth * 0.06,
+                                        color: minuteColor,
                                       ),
                                     ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: MediaQuery.of(context).size.width * 0.03),
-                        Container(
-                          width: MediaQuery.of(context).size.width * 0.12,
-                          height: MediaQuery.of(context).size.width * 0.12,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF4285F4),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            Icons.water_drop,
-                            color: Colors.white,
-                            size: MediaQuery.of(context).size.width * 0.06,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    // Temperature and Location
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: MediaQuery.of(context).size.width * 0.04,
-                              vertical: MediaQuery.of(context).size.height * 0.015,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(30),
-                              border: Border.all(color: Colors.grey.shade200),
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.thermostat,
-                                  color: Color(0xFF4285F4),
-                                  size: MediaQuery.of(context).size.width * 0.05,
-                                ),
-                                SizedBox(width: screenWidth * 0.02),
-                                Expanded(
-                                  child: Text(
-                                    "Feels ${_temperature?.toStringAsFixed(1) ?? '--'}°C",
-                                    style: TextStyle(
-                                      fontSize: MediaQuery.of(context).size.width * 0.038,
-                                      fontWeight: FontWeight.w500,
-                                      color: Color(0xFF1F2937),
+                                  )
+                                else
+                                  Padding(
+                                    padding: EdgeInsets.only(right: screenWidth * 0.02),
+                                    child: Icon(
+                                      Icons.wb_sunny_outlined,
+                                      size: screenWidth * 0.06,
                                     ),
-                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                SizedBox(width: screenWidth * 0.025),
+                                Expanded(
+                                  child: AnimatedSwitcher(
+                                    duration: const Duration(milliseconds: 600),
+                                    transitionBuilder: (Widget child, Animation<double> animation) {
+                                      final inAnimation = Tween<Offset>(
+                                        begin: const Offset(0.0, 1.0),
+                                        end: Offset.zero,
+                                      ).animate(animation);
+
+                                      final outAnimation = Tween<Offset>(
+                                        begin: Offset.zero,
+                                        end: const Offset(0.0, -1.0),
+                                      ).animate(animation);
+
+                                      return SlideTransition(
+                                        position: child.key == ValueKey(_currentDisplayText)
+                                            ? inAnimation
+                                            : outAnimation,
+                                        child: FadeTransition(opacity: animation, child: child),
+                                      );
+                                    },
+                                    child: Text(
+                                      _currentDisplayText,
+                                      key: ValueKey<String>(_currentDisplayText),
+                                      style: TextStyle(
+                                        fontSize: screenWidth * 0.05,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                                   ),
                                 ),
                               ],
                             ),
-                          ),
-                        ),
-                        SizedBox(width: screenWidth * 0.03),
-                        Expanded(
-                          child: Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: screenWidth * 0.04,
-                              vertical: screenHeight * 0.015,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF4285F4),
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                            child: Row(
+                            SizedBox(height: screenHeight * 0.02),
+                            // Humidity Indicator
+                            Row(
                               children: [
-                                Icon(
-                                  Icons.location_on,
-                                  color: Colors.white,
-                                  size: screenWidth * 0.05,
-                                ),
-                                SizedBox(width: screenWidth * 0.02),
                                 Expanded(
-                                  child: Text(
-                                    _locationName ?? "--",
-                                    style: TextStyle(
-                                      fontSize: screenWidth * 0.04,
-                                      fontWeight: FontWeight.w500,
+                                  child: Container(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: MediaQuery.of(context).size.width * 0.04,
+                                      vertical: MediaQuery.of(context).size.height * 0.013,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Color(0xFF4285F4),
+                                      borderRadius: BorderRadius.circular(30),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Text(
+                                          "Humidity ${(_humidity ?? 69).toInt()}%",
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: MediaQuery.of(context).size.width * 0.045,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                        const Spacer(),
+                                        Container(
+                                          width: MediaQuery.of(context).size.width * 0.25,
+                                          height: MediaQuery.of(context).size.height * 0.005,
+                                          decoration: BoxDecoration(
+                                            color: Colors.white.withAlpha((0.3 * 255).toInt()),
+                                            borderRadius: BorderRadius.circular(2),
+                                          ),
+                                          child: FractionallySizedBox(
+                                            alignment: Alignment.centerLeft,
+                                            widthFactor: (_humidity ?? 69) / 100,
+                                            child: Container(
+                                              decoration: BoxDecoration(
+                                                color: Colors.white,
+                                                borderRadius: BorderRadius.circular(2),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(width: MediaQuery.of(context).size.width * 0.03),
+                                Container(
+                                  width: MediaQuery.of(context).size.width * 0.12,
+                                  height: MediaQuery.of(context).size.width * 0.12,
+                                  decoration: const BoxDecoration(
+                                    color: Color(0xFF4285F4),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    Icons.water_drop,
+                                    color: Colors.white,
+                                    size: MediaQuery.of(context).size.width * 0.06,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            // Temperature and Location
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Container(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: MediaQuery.of(context).size.width * 0.04,
+                                      vertical: MediaQuery.of(context).size.height * 0.015,
+                                    ),
+                                    decoration: BoxDecoration(
                                       color: Colors.white,
+                                      borderRadius: BorderRadius.circular(30),
+                                      border: Border.all(color: Colors.grey.shade200),
                                     ),
-                                    overflow: TextOverflow.ellipsis,
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.thermostat,
+                                          color: Color(0xFF4285F4),
+                                          size: MediaQuery.of(context).size.width * 0.05,
+                                        ),
+                                        SizedBox(width: screenWidth * 0.02),
+                                        Expanded(
+                                          child: Text(
+                                            "Feels ${_temperature?.toStringAsFixed(1) ?? '--'}°C",
+                                            style: TextStyle(
+                                              fontSize: MediaQuery.of(context).size.width * 0.038,
+                                              fontWeight: FontWeight.w500,
+                                              color: Color(0xFF1F2937),
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(width: screenWidth * 0.03),
+                                Expanded(
+                                  child: Container(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: screenWidth * 0.04,
+                                      vertical: screenHeight * 0.015,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF4285F4),
+                                      borderRadius: BorderRadius.circular(30),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.location_on,
+                                          color: Colors.white,
+                                          size: screenWidth * 0.05,
+                                        ),
+                                        SizedBox(width: screenWidth * 0.02),
+                                        Expanded(
+                                          child: Text(
+                                            _locationName ?? "--",
+                                            style: TextStyle(
+                                              fontSize: screenWidth * 0.04,
+                                              fontWeight: FontWeight.w500,
+                                              color: Colors.white,
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ],
                             ),
-                          ),
+                          ],
                         ),
-                      ],
-                    ),
-                  ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
               SizedBox(height: screenHeight * 0.025),
@@ -956,6 +991,42 @@ class BrowserHomePageState extends State<BrowserHomePage> {
     setState(() {
       _desktopModeManager.toggleDesktopMode();
     });
+  }
+}
+
+class WeatherBackground extends StatelessWidget {
+  final String condition;
+
+  const WeatherBackground({super.key, required this.condition});
+
+  @override
+  Widget build(BuildContext context) {
+    if (condition.toLowerCase().contains("rain")) {
+      return Stack(
+        children: [
+          Container(color: Colors.blueGrey.shade900),
+          Positioned.fill(
+            child: Image.asset(
+              "assets/weather/rainy_bg.png", // <-- replace with your animated/cute rain background
+              fit: BoxFit.cover,
+            ),
+          ),
+          Positioned.fill(
+            child: IgnorePointer(
+              child: Opacity(
+                opacity: 0.4,
+                child: Image.asset(
+                  "assets/weather/rain_overlay.gif", // transparent rain particles overlay
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    return Container(color: Theme.of(context).scaffoldBackgroundColor);
   }
 }
 
