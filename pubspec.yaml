@@ -69,8 +69,10 @@ flutter:
 
   assets:
     - assets/animation/salate_splash.html
+    - assets/salate.png
     - assets/salate11.png
     - assets/salate_logo.png
+    - assets/weather/
 
   fonts:
     - family: Pacifico
@@ -84,6 +86,12 @@ flutter:
     - family: Varela Round
       fonts:
         - asset: assets/fonts/Varela_Round/VarelaRound-Regular.ttf
+
+    - family: Sansita
+      fonts:
+        #- asset: assets/fonts/Sansita/Sansita-Regular.ttf
+        - asset: assets/fonts/Sansita/Sansita-ExtraBold.ttf
+
 
     # Example of adding more fonts later:
     # - family: Great Vibes

@@ -94,7 +94,7 @@ class _SplashScreenState extends State<SplashScreen>
                         height: screenWidth * 0.5,
                         decoration: BoxDecoration(
                           image: const DecorationImage(
-                            image: AssetImage('assets/salate_logo.png'),
+                            image: AssetImage('assets/salate.png'),
                             fit: BoxFit.contain,
                           ),
                         ),
@@ -103,7 +103,7 @@ class _SplashScreenState extends State<SplashScreen>
                       Text(
                         "Salate",
                         style: TextStyle(
-                          fontFamily: 'Pacifico',
+                          fontFamily: 'Sansita',
                           fontSize: screenWidth * 0.15,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
