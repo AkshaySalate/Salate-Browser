@@ -70,6 +70,35 @@ flutter:
   assets:
     - assets/animation/salate_splash.html
     - assets/salate11.png
+    - assets/salate_logo.png
+
+  fonts:
+    - family: Pacifico
+      fonts:
+        - asset: assets/fonts/Pacifico/Pacifico-Regular.ttf
+
+    - family: Dancing Script
+      fonts:
+        - asset: assets/fonts/Dancing_Script/DancingScript-VariableFont_wght.ttf
+
+    # Example of adding more fonts later:
+    # - family: Great Vibes
+    #   fonts:
+    #     - asset: assets/fonts/GreatVibes-Regular.ttf
+
+    # - family: Satisfy
+    #   fonts:
+    #     - asset: assets/fonts/Satisfy-Regular.ttf
+
+    # - family: Lobster
+    #   fonts:
+    #     - asset: assets/fonts/Lobster-Regular.ttf
+
+    - family: Allura
+      fonts:
+       - asset: assets/fonts/Allura/Allura-Regular.ttf
+
+
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
