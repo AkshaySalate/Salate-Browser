@@ -371,7 +371,9 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                   child: Stack(
                     children: [
                       // 🌧️ Rainy background
-                      if (_weatherCondition.toLowerCase().contains("rain"))
+                      if (_weatherCondition.toLowerCase().contains("rain") ||
+                      _weatherCondition.toLowerCase().contains("drizzle") ||
+                _weatherCondition.toLowerCase().contains("showers"))
                         Positioned.fill( // Ensures it fills the exact same area
                           child: Image.asset(
                             "assets/weather/rainy_bg.jpg",
@@ -397,7 +399,7 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(screenWidth * 0.05),
                             child: Image.asset(
-                              "assets/weather/clear_bg2.jpg", // your sunny JPG background
+                              "assets/weather/clear_bg4.avif", // your sunny JPG background
                               fit: BoxFit.cover,
                             ),
                           ),
