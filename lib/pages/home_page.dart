@@ -40,7 +40,7 @@ class BrowserHomePageState extends State<BrowserHomePage> {
   double? _temperature;
   String? _weatherIconUrl;
   String? _locationName;
-  String _weatherCondition = "Cloudy";
+  String _weatherCondition = "clear";
   String _currentDisplayText = "Welcome to Salate Browser";
   bool _showWelcome = false;
   Timer? _textSwitchTimer;
@@ -280,7 +280,7 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                               fontWeight: FontWeight.w500,
                             ),
                             decoration: InputDecoration(
-                              hintText: "Enter your name",
+                              hintText: "Your Name",
                               hintStyle: TextStyle(
                                 color: textColor.withAlpha((0.6 * 255).toInt()),
                                 fontSize: fieldFontSize,
@@ -387,6 +387,107 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                             child: Image.asset(
                               "assets/weather/rain_overlay.gif",
                               fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+
+                      if (_weatherCondition.toLowerCase().contains("clear") ||
+                          _weatherCondition.toLowerCase().contains("sunny"))
+                        Positioned.fill(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(screenWidth * 0.05),
+                            child: Image.asset(
+                              "assets/weather/clear_bg2.jpg", // your sunny JPG background
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                      /*if (_weatherCondition.toLowerCase().contains("clear") ||
+                          _weatherCondition.toLowerCase().contains("sunny"))
+                        Positioned.fill(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(screenWidth * 0.05),
+                            child: Opacity(
+                              opacity: 0.25,  // < Change opacity as needed
+                              child: Image.asset(
+                                "assets/weather/sun_glow.gif", // or .png if static
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
+                        ),*/
+
+                      if (_weatherCondition.toLowerCase().contains("cloudy") ||
+                          _weatherCondition.toLowerCase().contains("overcast"))
+                        Positioned.fill(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(screenWidth * 0.05),
+                            child: Stack(
+                              fit: StackFit.expand,
+                              children: [
+                                Image.asset(
+                                  "assets/weather/cloudy_bg.jpg",
+                                  fit: BoxFit.cover,
+                                ),
+                                Opacity(
+                                  opacity: 0.15,
+                                  child: Image.asset(
+                                    "assets/weather/cloudy_overlay.gif",
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+
+                      if (_weatherCondition.toLowerCase().contains("fog") ||
+                          _weatherCondition.toLowerCase().contains("haze") ||
+                          _weatherCondition.toLowerCase().contains("mist"))
+                        Positioned.fill(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(screenWidth * 0.05),
+                            child: Stack(
+                              fit: StackFit.expand,
+                              children: [
+                                Image.asset(
+                                  "assets/weather/foggy_bg2.avif",
+                                  fit: BoxFit.cover,
+                                ),
+                                Opacity(
+                                  opacity: 0.2,
+                                  child: Image.asset(
+                                    "assets/weather/fog_overlay.gif",
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+
+                      if (_weatherCondition.toLowerCase().contains("thunder") ||
+                          _weatherCondition.toLowerCase().contains("storm") ||
+                          _weatherCondition.toLowerCase().contains("lightning") ||
+                          _weatherCondition.toLowerCase().contains("thunderstorm"))
+                        Positioned.fill(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(screenWidth * 0.05),
+                            child: Stack(
+                              fit: StackFit.expand,
+                              children: [
+                                Image.asset(
+                                  "assets/weather/thunderstorm_bg3.jpg",
+                                  fit: BoxFit.cover,
+                                ),
+                                Opacity(
+                                  opacity: 0.2,  // Adjust as needed
+                                  child: Image.asset(
+                                    "assets/weather/thunder_overlay3.gif",
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
@@ -991,42 +1092,6 @@ class BrowserHomePageState extends State<BrowserHomePage> {
     setState(() {
       _desktopModeManager.toggleDesktopMode();
     });
-  }
-}
-
-class WeatherBackground extends StatelessWidget {
-  final String condition;
-
-  const WeatherBackground({super.key, required this.condition});
-
-  @override
-  Widget build(BuildContext context) {
-    if (condition.toLowerCase().contains("rain")) {
-      return Stack(
-        children: [
-          Container(color: Colors.blueGrey.shade900),
-          Positioned.fill(
-            child: Image.asset(
-              "assets/weather/rainy_bg.png", // <-- replace with your animated/cute rain background
-              fit: BoxFit.cover,
-            ),
-          ),
-          Positioned.fill(
-            child: IgnorePointer(
-              child: Opacity(
-                opacity: 0.4,
-                child: Image.asset(
-                  "assets/weather/rain_overlay.gif", // transparent rain particles overlay
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-          ),
-        ],
-      );
-    }
-
-    return Container(color: Theme.of(context).scaffoldBackgroundColor);
   }
 }
 
