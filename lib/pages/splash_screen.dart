@@ -42,9 +42,11 @@ class _SplashScreenState extends State<SplashScreen>
     });
 
     Timer(Duration(seconds: 6), () {
-      setState(() {
-        showContinueButton = true;
-      });
+      if (mounted) {
+        setState(() {
+          showContinueButton = true;
+        });
+      }
     });
 
     _dotsController = AnimationController(
@@ -55,6 +57,7 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   void _navigateToHome() {
+    if (!mounted) return;
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
         builder: (_) => BrowserHomePage(

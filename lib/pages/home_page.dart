@@ -16,6 +16,7 @@ import 'package:salate_browser/models/history_model.dart';
 import 'package:salate_browser/utils/weather_service.dart';
 import 'package:salate_browser/widgets/wavy_clock_widget.dart';
 import 'package:video_player/video_player.dart';
+import 'package:flutter/services.dart';
 
 class BrowserHomePage extends StatefulWidget {
   final Function(bool) onThemeToggle;
@@ -57,6 +58,17 @@ class BrowserHomePageState extends State<BrowserHomePage> {
     {'name': 'Poe', 'url': 'https://poe.com', 'icon': Icons.memory_outlined,},
     {'name': 'HuggingChat', 'url': 'https://huggingface.co/chat/', 'icon': Icons.tag_faces_outlined,},
   ];
+
+  static const platform = MethodChannel('com.salate.browser/role');
+
+  Future<void> _requestDefaultBrowser() async {
+    try {
+      await platform.invokeMethod('requestDefaultBrowser');
+      debugPrint("RoleManager request sent");
+    } on PlatformException catch (e) {
+      debugPrint("Failed to request default browser: ${e.message}");
+    }
+  }
 
   @override
   void initState() {
