@@ -15,6 +15,7 @@ import 'package:salate_browser/utils/history_manager.dart';
 import 'package:salate_browser/models/history_model.dart';
 import 'package:salate_browser/utils/weather_service.dart';
 import 'package:salate_browser/widgets/wavy_clock_widget.dart';
+import 'package:video_player/video_player.dart';
 
 class BrowserHomePage extends StatefulWidget {
   final Function(bool) onThemeToggle;
@@ -45,6 +46,7 @@ class BrowserHomePageState extends State<BrowserHomePage> {
   bool _showWelcome = false;
   Timer? _textSwitchTimer;
   final TextEditingController _bodySearchController = TextEditingController();
+  late VideoPlayerController _sunnyController;
   final List<Map<String, dynamic>> _aiTools = [
     {'name': 'ChatGPT', 'url': 'https://chat.openai.com', 'icon': Icons.chat_bubble_outline,},
     {'name': 'Gemini', 'url': 'https://gemini.google.com', 'icon': Icons.auto_awesome,},
@@ -80,11 +82,19 @@ class BrowserHomePageState extends State<BrowserHomePage> {
     });
     // Load weather
     _loadWeatherData();
+    _sunnyController = VideoPlayerController.asset('assets/weather/clear_vd.mp4')
+      ..initialize().then((_) {
+        setState(() {}); // Refresh after initialized
+        _sunnyController.setLooping(true);
+        _sunnyController.setVolume(0); // Mute
+        _sunnyController.play();
+      });
   }
 
   @override
   void dispose() {
     _textSwitchTimer?.cancel();
+    _sunnyController.dispose();
     super.dispose();
   }
   Future<void> _loadWeatherData() async {
@@ -372,8 +382,8 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                     children: [
                       // 🌧️ Rainy background
                       if (_weatherCondition.toLowerCase().contains("rain") ||
-                      _weatherCondition.toLowerCase().contains("drizzle") ||
-                _weatherCondition.toLowerCase().contains("showers"))
+                        _weatherCondition.toLowerCase().contains("drizzle") ||
+                        _weatherCondition.toLowerCase().contains("showers"))
                         Positioned.fill( // Ensures it fills the exact same area
                           child: Image.asset(
                             "assets/weather/rainy_bg.jpg",
@@ -393,7 +403,7 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                           ),
                         ),
 
-                      if (_weatherCondition.toLowerCase().contains("clear") ||
+                      /*if (_weatherCondition.toLowerCase().contains("clear") ||
                           _weatherCondition.toLowerCase().contains("sunny"))
                         Positioned.fill(
                           child: ClipRRect(
@@ -404,7 +414,7 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                             ),
                           ),
                         ),
-                      /*if (_weatherCondition.toLowerCase().contains("clear") ||
+                      if (_weatherCondition.toLowerCase().contains("clear") ||
                           _weatherCondition.toLowerCase().contains("sunny"))
                         Positioned.fill(
                           child: ClipRRect(
@@ -412,12 +422,33 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                             child: Opacity(
                               opacity: 0.25,  // < Change opacity as needed
                               child: Image.asset(
-                                "assets/weather/sun_glow.gif", // or .png if static
+                                "assets/weather/flying_birds.gif", // or .png if static
                                 fit: BoxFit.cover,
                               ),
                             ),
                           ),
                         ),*/
+                      if (_weatherCondition.toLowerCase().contains("clear") ||
+                          _weatherCondition.toLowerCase().contains("sunny"))
+                        Positioned.fill(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(screenWidth * 0.05),
+                            child: _sunnyController.value.isInitialized
+                                ? Opacity(
+                              opacity: 1.0,
+                              child: FittedBox(
+                                fit: BoxFit.cover,
+                                child: SizedBox(
+                                  width: _sunnyController.value.size.width,
+                                  height: _sunnyController.value.size.height,
+                                  child: VideoPlayer(_sunnyController),
+                                ),
+                              ),
+                            )
+                                : Container(), // Loading state
+                          ),
+                        ),
+
 
                       if (_weatherCondition.toLowerCase().contains("cloudy") ||
                           _weatherCondition.toLowerCase().contains("overcast"))
@@ -431,13 +462,13 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                                   "assets/weather/cloudy_bg.jpg",
                                   fit: BoxFit.cover,
                                 ),
-                                Opacity(
+                                /*Opacity(
                                   opacity: 0.15,
                                   child: Image.asset(
                                     "assets/weather/cloudy_overlay.gif",
                                     fit: BoxFit.cover,
                                   ),
-                                ),
+                                ),*/
                               ],
                             ),
                           ),

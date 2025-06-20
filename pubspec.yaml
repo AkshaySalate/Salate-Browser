@@ -49,6 +49,7 @@ dependencies:
   geolocator: ^14.0.1
   favicon: ^1.1.2
   path_provider: ^2.1.5
+  video_player: ^2.10.0
 
 dev_dependencies:
   flutter_test:
@@ -72,7 +73,14 @@ flutter:
     - assets/salate.png
     - assets/salate11.png
     - assets/salate_logo.png
-    - assets/weather/
+    - assets/weather/rainy_bg.jpg
+    - assets/weather/rain_overlay.gif
+    - assets/weather/clear_vd.mp4
+    - assets/weather/cloudy_bg.jpg
+    - assets/weather/foggy_bg2.avif
+    - assets/weather/fog_overlay.gif
+    - assets/weather/thunderstorm_bg3.jpg
+    - assets/weather/thunder_overlay3.gif
 
   fonts:
     - family: Pacifico
