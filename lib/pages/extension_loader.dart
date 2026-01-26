@@ -9,7 +9,7 @@ class ExtensionLoader extends StatefulWidget {
   const ExtensionLoader({super.key, required this.controller});
 
   @override
-  _ExtensionLoaderState createState() => _ExtensionLoaderState();
+  State<ExtensionLoader> createState() => _ExtensionLoaderState();
 }
 
 class _ExtensionLoaderState extends State<ExtensionLoader> {
@@ -27,7 +27,8 @@ class _ExtensionLoaderState extends State<ExtensionLoader> {
 
     if (storedExtensions != null) {
       setState(() {
-        extensions = List<Map<String, dynamic>>.from(jsonDecode(storedExtensions));
+        extensions =
+            List<Map<String, dynamic>>.from(jsonDecode(storedExtensions));
       });
     }
   }
@@ -51,8 +52,13 @@ class _ExtensionLoaderState extends State<ExtensionLoader> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(controller: nameController, decoration: InputDecoration(labelText: 'Extension Name')),
-            TextField(controller: scriptController, decoration: InputDecoration(labelText: 'JavaScript Code'), maxLines: 5),
+            TextField(
+                controller: nameController,
+                decoration: InputDecoration(labelText: 'Extension Name')),
+            TextField(
+                controller: scriptController,
+                decoration: InputDecoration(labelText: 'JavaScript Code'),
+                maxLines: 5),
           ],
         ),
         actions: [
@@ -68,7 +74,9 @@ class _ExtensionLoaderState extends State<ExtensionLoader> {
               });
               final prefs = await SharedPreferences.getInstance();
               await prefs.setString('extensions', jsonEncode(extensions));
-              Navigator.pop(context);
+              if (context.mounted) {
+                Navigator.pop(context);
+              }
             },
             child: Text('Add'),
           )
@@ -109,8 +117,8 @@ class _ExtensionLoaderState extends State<ExtensionLoader> {
         },
       ),
       floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.play_arrow),
         onPressed: _injectExtensions,
+        child: Icon(Icons.play_arrow),
       ),
     );
   }

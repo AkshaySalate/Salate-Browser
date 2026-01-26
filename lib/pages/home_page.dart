@@ -22,7 +22,8 @@ class BrowserHomePage extends StatefulWidget {
   final Function(bool) onThemeToggle;
   final bool isDarkMode;
 
-  const BrowserHomePage({super.key, required this.onThemeToggle, required this.isDarkMode});
+  const BrowserHomePage(
+      {super.key, required this.onThemeToggle, required this.isDarkMode});
 
   @override
   BrowserHomePageState createState() => BrowserHomePageState();
@@ -31,7 +32,9 @@ class BrowserHomePage extends StatefulWidget {
 class BrowserHomePageState extends State<BrowserHomePage> {
   late double screenWidth;
   late double screenHeight;
-  final List<TabModel> _tabs = [TabModel(url: "https://google.com", isHomepage: true)];
+  final List<TabModel> _tabs = [
+    TabModel(url: "https://google.com", isHomepage: true)
+  ];
   final List<HistoryItem> _history = [];
   final DesktopModeManager _desktopModeManager = DesktopModeManager();
   int _currentTabIndex = 0;
@@ -49,26 +52,49 @@ class BrowserHomePageState extends State<BrowserHomePage> {
   final TextEditingController _bodySearchController = TextEditingController();
   late VideoPlayerController _sunnyController;
   final List<Map<String, dynamic>> _aiTools = [
-    {'name': 'ChatGPT', 'url': 'https://chat.openai.com', 'icon': Icons.chat_bubble_outline,},
-    {'name': 'Gemini', 'url': 'https://gemini.google.com', 'icon': Icons.auto_awesome,},
-    {'name': 'Claude AI', 'url': 'https://claude.ai', 'icon': Icons.psychology_alt_outlined,},
-    {'name': 'Copilot', 'url': 'https://copilot.microsoft.com', 'icon': Icons.smart_toy_outlined,},
-    {'name': 'Perplexity', 'url': 'https://www.perplexity.ai', 'icon': Icons.bubble_chart_outlined,},
-    {'name': 'You.com AI', 'url': 'https://you.com', 'icon': Icons.explore_outlined,},
-    {'name': 'Poe', 'url': 'https://poe.com', 'icon': Icons.memory_outlined,},
-    {'name': 'HuggingChat', 'url': 'https://huggingface.co/chat/', 'icon': Icons.tag_faces_outlined,},
+    {
+      'name': 'ChatGPT',
+      'url': 'https://chat.openai.com',
+      'icon': Icons.chat_bubble_outline,
+    },
+    {
+      'name': 'Gemini',
+      'url': 'https://gemini.google.com',
+      'icon': Icons.auto_awesome,
+    },
+    {
+      'name': 'Claude AI',
+      'url': 'https://claude.ai',
+      'icon': Icons.psychology_alt_outlined,
+    },
+    {
+      'name': 'Copilot',
+      'url': 'https://copilot.microsoft.com',
+      'icon': Icons.smart_toy_outlined,
+    },
+    {
+      'name': 'Perplexity',
+      'url': 'https://www.perplexity.ai',
+      'icon': Icons.bubble_chart_outlined,
+    },
+    {
+      'name': 'You.com AI',
+      'url': 'https://you.com',
+      'icon': Icons.explore_outlined,
+    },
+    {
+      'name': 'Poe',
+      'url': 'https://poe.com',
+      'icon': Icons.memory_outlined,
+    },
+    {
+      'name': 'HuggingChat',
+      'url': 'https://huggingface.co/chat/',
+      'icon': Icons.tag_faces_outlined,
+    },
   ];
 
   static const platform = MethodChannel('com.salate.browser/role');
-
-  Future<void> _requestDefaultBrowser() async {
-    try {
-      await platform.invokeMethod('requestDefaultBrowser');
-      debugPrint("RoleManager request sent");
-    } on PlatformException catch (e) {
-      debugPrint("Failed to request default browser: ${e.message}");
-    }
-  }
 
   @override
   void initState() {
@@ -88,19 +114,22 @@ class BrowserHomePageState extends State<BrowserHomePage> {
           _showWelcome = !_showWelcome;
           _currentDisplayText = _showWelcome
               ? "Welcome to Salate Browser"
-              : (_weatherCondition.isNotEmpty ? _weatherCondition : "Weather Info");
+              : (_weatherCondition.isNotEmpty
+                  ? _weatherCondition
+                  : "Weather Info");
         });
       });
     });
     // Load weather
     _loadWeatherData();
-    _sunnyController = VideoPlayerController.asset('assets/weather/clear_vd.mp4')
-      ..initialize().then((_) {
-        setState(() {}); // Refresh after initialized
-        _sunnyController.setLooping(true);
-        _sunnyController.setVolume(0); // Mute
-        _sunnyController.play();
-      });
+    _sunnyController =
+        VideoPlayerController.asset('assets/weather/clear_vd.mp4')
+          ..initialize().then((_) {
+            setState(() {}); // Refresh after initialized
+            _sunnyController.setLooping(true);
+            _sunnyController.setVolume(0); // Mute
+            _sunnyController.play();
+          });
   }
 
   @override
@@ -109,6 +138,7 @@ class BrowserHomePageState extends State<BrowserHomePage> {
     _sunnyController.dispose();
     super.dispose();
   }
+
   Future<void> _loadWeatherData() async {
     try {
       // Request permission
@@ -118,7 +148,8 @@ class BrowserHomePageState extends State<BrowserHomePage> {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied ||
             permission == LocationPermission.deniedForever) {
-          throw Exception("User denied permissions to access the device's location.");
+          throw Exception(
+              "User denied permissions to access the device's location.");
         }
       }
 
@@ -198,15 +229,15 @@ class BrowserHomePageState extends State<BrowserHomePage> {
     final screenHeight = MediaQuery.of(context).size.height;
 
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
-    final Color bgColor = isDark ? const Color(0xFF0B1D3A) : const Color(0xFFE6F1FF);
-    final Color primaryColor = isDark ? const Color(0xFF60A5FA) : const Color(0xFF1E3A8A);
-    final Color primaryColor2 = isDark ? const Color(0xFF1E3A8A) : const Color(0xFF60A5FA);
+    final Color bgColor =
+        isDark ? const Color(0xFF0B1D3A) : const Color(0xFFE6F1FF);
+    final Color primaryColor =
+        isDark ? const Color(0xFF60A5FA) : const Color(0xFF1E3A8A);
     final Color cardColor = isDark ? const Color(0xFF172554) : Colors.white;
     final Color textColor = isDark ? Colors.white : Colors.black;
 
-    final Color hourColor = isDark ? Colors.white : Colors.purple;
-    final Color minuteColor = isDark ? const Color(0xFF60A5FA) : Colors.deepOrange;
-    final Color secondDotColor = isDark ? const Color(0xFF60A5FA) : Colors.purple;
+    final Color minuteColor =
+        isDark ? const Color(0xFF60A5FA) : Colors.deepOrange;
 
     final double padding = screenWidth * 0.05;
     final double fieldFontSize = screenWidth * 0.04; // Scales with screen
@@ -220,14 +251,18 @@ class BrowserHomePageState extends State<BrowserHomePage> {
         backgroundColor: bgColor,
         title: Row(
           children: [
-            HomeButton(onPressed: _goToHomePage, iconColor: primaryColor,),
+            HomeButton(
+              onPressed: _goToHomePage,
+              iconColor: primaryColor,
+            ),
             SizedBox(width: screenWidth * 0.02),
             Expanded(
               child: TextField(
                 decoration: InputDecoration(
                   hintText: 'Search or enter URL',
                   border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(horizontal: screenWidth * 0.02),
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: screenWidth * 0.02),
                   //prefixIcon: Icon(Icons.search, color: primaryColor), // ← Primary color
                 ),
                 style: TextStyle(fontSize: screenWidth * 0.038),
@@ -238,10 +273,18 @@ class BrowserHomePageState extends State<BrowserHomePage> {
           ],
         ),
         actions: [
-          IconButton(icon: Icon(Icons.add, color: primaryColor, size: screenWidth * 0.075), onPressed: _addNewTab),
-          IconButton(icon: Icon(Icons.tab, color: primaryColor, size: screenWidth * 0.06), onPressed: _showAllTabs),
+          IconButton(
+              icon: Icon(Icons.add,
+                  color: primaryColor, size: screenWidth * 0.075),
+              onPressed: _addNewTab),
+          IconButton(
+              icon: Icon(Icons.tab,
+                  color: primaryColor, size: screenWidth * 0.06),
+              onPressed: _showAllTabs),
           PopupMenuButton<String>(
-            icon: Icon(Icons.more_vert, color: primaryColor, size: screenWidth * 0.065), // ← Primary color
+            icon: Icon(Icons.more_vert,
+                color: primaryColor,
+                size: screenWidth * 0.065), // ← Primary color
             onSelected: (value) {
               if (value == 'history') _showHistory();
               if (value == 'extensions') {
@@ -251,7 +294,8 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                   MaterialPageRoute(
                     builder: (_) => ExtensionManager(
                       onThemeToggle: widget.onThemeToggle,
-                      isDarkMode: widget.isDarkMode, // Pass the current theme state
+                      isDarkMode:
+                          widget.isDarkMode, // Pass the current theme state
                     ),
                   ),
                 );
@@ -272,150 +316,175 @@ class BrowserHomePageState extends State<BrowserHomePage> {
       body: SafeArea(
         child: _tabs[_currentTabIndex].isHomepage
             ? SingleChildScrollView(
-          padding: EdgeInsets.only(left: padding, right: padding, bottom: MediaQuery.of(context).viewInsets.bottom,),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(height: screenHeight * 0.01),
-              // Top Row with Clock and Name Input
-              Row(
-                children: [
-                  SizedBox(
-                    width: clockSize,
-                    height: clockSize,
-                    child: WavyClockWidget(),
-                  ),
-                  SizedBox(width: screenWidth * 0.03),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                padding: EdgeInsets.only(
+                  left: padding,
+                  right: padding,
+                  bottom: MediaQuery.of(context).viewInsets.bottom,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(height: screenHeight * 0.01),
+                    // Top Row with Clock and Name Input
+                    Row(
                       children: [
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: screenWidth * 0.03,
-                          ),
-                          child: TextField(
-                            controller: _nameController,
-                            style: TextStyle(
-                              color: textColor,
-                              fontSize: fieldFontSize,
-                              fontWeight: FontWeight.w500,
-                            ),
-                            decoration: InputDecoration(
-                              hintText: "Your Name",
-                              hintStyle: TextStyle(
-                                color: textColor.withAlpha((0.6 * 255).toInt()),
-                                fontSize: fieldFontSize,
-                              ),
-                              border: InputBorder.none,
-                              icon: Icon(Icons.person_outline, color: primaryColor, size: iconSize),
-                            ),
-                            onChanged: (val) {
-                              _saveUserName(val);
-                            },
-                          ),
+                        SizedBox(
+                          width: clockSize,
+                          height: clockSize,
+                          child: WavyClockWidget(),
                         ),
-                        SizedBox(height: screenHeight * 0.01),
-                        Row(
-                          children: [
-                            Icon(Icons.calendar_today_outlined, size: iconSize - 1, color: primaryColor),
-                            SizedBox(width: screenWidth * 0.025),
-                            Text(
-                              DateFormat('EEE, MMM d, y').format(DateTime.now()),
-                              style: TextStyle(
-                                color: primaryColor,
-                                fontSize: dateFontSize,
-                                fontWeight: FontWeight.w500,
+                        SizedBox(width: screenWidth * 0.03),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: screenWidth * 0.03,
+                                ),
+                                child: TextField(
+                                  controller: _nameController,
+                                  style: TextStyle(
+                                    color: textColor,
+                                    fontSize: fieldFontSize,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  decoration: InputDecoration(
+                                    hintText: "Your Name",
+                                    hintStyle: TextStyle(
+                                      color: textColor
+                                          .withAlpha((0.6 * 255).toInt()),
+                                      fontSize: fieldFontSize,
+                                    ),
+                                    border: InputBorder.none,
+                                    icon: Icon(Icons.person_outline,
+                                        color: primaryColor, size: iconSize),
+                                  ),
+                                  onChanged: (val) {
+                                    _saveUserName(val);
+                                  },
+                                ),
                               ),
-                            ),
-                          ],
+                              SizedBox(height: screenHeight * 0.01),
+                              Row(
+                                children: [
+                                  Icon(Icons.calendar_today_outlined,
+                                      size: iconSize - 1, color: primaryColor),
+                                  SizedBox(width: screenWidth * 0.025),
+                                  Text(
+                                    DateFormat('EEE, MMM d, y')
+                                        .format(DateTime.now()),
+                                    style: TextStyle(
+                                      color: primaryColor,
+                                      fontSize: dateFontSize,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
-                  ),
-                ],
-              ),
-              SizedBox(height: screenHeight * 0.025),
-              // Search Bar
-              Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.04, vertical: screenHeight * 0.0005),
-                      decoration: BoxDecoration(
-                        color: cardColor,
-                        borderRadius: BorderRadius.circular(screenWidth * 0.1),
-                      ),
-                      child: TextField(
-                        controller: _bodySearchController,
-                        style: TextStyle(fontSize: screenWidth * 0.04),
-                        decoration: InputDecoration(
-                          hintText: "Search or type URL",
-                          hintStyle: TextStyle(fontSize: screenWidth * 0.04),
-                          border: InputBorder.none,
-                          icon: Icon(Icons.search, size: iconSize + 3, color: primaryColor),
-                        ),
-                        onSubmitted: (query) => _handleNavigation(query),
-                      ),
-
-                    ),
-                  ),
-                  SizedBox(width: screenWidth * 0.025),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryColor,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(screenWidth * 0.1)),
-                      padding: EdgeInsets.symmetric(
-                        horizontal: screenWidth * 0.06,
-                        vertical: screenHeight * 0.017,
-                      ),
-                    ),
-                    onPressed: () {
-                      final query = _bodySearchController.text.trim();
-                      if (query.isNotEmpty) {
-                        _handleNavigation(query);
-                      }
-                    },
-
-                    child: Text("Search", style: TextStyle(color: Colors.white, fontSize: screenWidth * 0.04)),
-                  )
-                ],
-              ),
-              SizedBox(height: screenHeight * 0.02),
-              // Weather Card
-              ClipRRect(
-                borderRadius: BorderRadius.circular(screenWidth * 0.05),
-                child: Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: cardColor.withOpacity(0.85),
-                  ),
-                  child: Stack(
-                    children: [
-                      // 🌧️ Rainy background
-                      if (_weatherCondition.toLowerCase().contains("rain") ||
-                        _weatherCondition.toLowerCase().contains("drizzle") ||
-                        _weatherCondition.toLowerCase().contains("showers"))
-                        Positioned.fill( // Ensures it fills the exact same area
-                          child: Image.asset(
-                            "assets/weather/rainy_bg.jpg",
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-
-                      // 🌧️ Optional Rain overlay on top of background
-                      if (_weatherCondition.toLowerCase().contains("rain"))
-                        Positioned.fill(
-                          child: Opacity(
-                            opacity: 1.0,
-                            child: Image.asset(
-                              "assets/weather/rain_overlay.gif",
-                              fit: BoxFit.cover,
+                    SizedBox(height: screenHeight * 0.025),
+                    // Search Bar
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            padding: EdgeInsets.symmetric(
+                                horizontal: screenWidth * 0.04,
+                                vertical: screenHeight * 0.0005),
+                            decoration: BoxDecoration(
+                              color: cardColor,
+                              borderRadius:
+                                  BorderRadius.circular(screenWidth * 0.1),
+                            ),
+                            child: TextField(
+                              controller: _bodySearchController,
+                              style: TextStyle(fontSize: screenWidth * 0.04),
+                              decoration: InputDecoration(
+                                hintText: "Search or type URL",
+                                hintStyle:
+                                    TextStyle(fontSize: screenWidth * 0.04),
+                                border: InputBorder.none,
+                                icon: Icon(Icons.search,
+                                    size: iconSize + 3, color: primaryColor),
+                              ),
+                              onSubmitted: (query) => _handleNavigation(query),
                             ),
                           ),
                         ),
+                        SizedBox(width: screenWidth * 0.025),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: primaryColor,
+                            shape: RoundedRectangleBorder(
+                                borderRadius:
+                                    BorderRadius.circular(screenWidth * 0.1)),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: screenWidth * 0.06,
+                              vertical: screenHeight * 0.017,
+                            ),
+                          ),
+                          onPressed: () {
+                            final query = _bodySearchController.text.trim();
+                            if (query.isNotEmpty) {
+                              _handleNavigation(query);
+                            }
+                          },
+                          child: Text("Search",
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: screenWidth * 0.04)),
+                        )
+                      ],
+                    ),
+                    SizedBox(height: screenHeight * 0.02),
+                    // Weather Card
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(screenWidth * 0.05),
+                      child: Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: cardColor.withAlpha((0.85 * 255).toInt()),
+                        ),
+                        child: Stack(
+                          children: [
+                            // 🌧️ Rainy background
+                            if (_weatherCondition
+                                    .toLowerCase()
+                                    .contains("rain") ||
+                                _weatherCondition
+                                    .toLowerCase()
+                                    .contains("drizzle") ||
+                                _weatherCondition
+                                    .toLowerCase()
+                                    .contains("showers"))
+                              Positioned.fill(
+                                // Ensures it fills the exact same area
+                                child: Image.asset(
+                                  "assets/weather/rainy_bg.jpg",
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
 
-                      /*if (_weatherCondition.toLowerCase().contains("clear") ||
+                            // 🌧️ Optional Rain overlay on top of background
+                            if (_weatherCondition
+                                .toLowerCase()
+                                .contains("rain"))
+                              Positioned.fill(
+                                child: Opacity(
+                                  opacity: 1.0,
+                                  child: Image.asset(
+                                    "assets/weather/rain_overlay.gif",
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                              ),
+
+                            /*if (_weatherCondition.toLowerCase().contains("clear") ||
                           _weatherCondition.toLowerCase().contains("sunny"))
                         Positioned.fill(
                           child: ClipRRect(
@@ -440,384 +509,510 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                             ),
                           ),
                         ),*/
-                      if (_weatherCondition.toLowerCase().contains("clear") ||
-                          _weatherCondition.toLowerCase().contains("sunny"))
-                        Positioned.fill(
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(screenWidth * 0.05),
-                            child: _sunnyController.value.isInitialized
-                                ? Opacity(
-                              opacity: 1.0,
-                              child: FittedBox(
-                                fit: BoxFit.cover,
-                                child: SizedBox(
-                                  width: _sunnyController.value.size.width,
-                                  height: _sunnyController.value.size.height,
-                                  child: VideoPlayer(_sunnyController),
+                            if (_weatherCondition
+                                    .toLowerCase()
+                                    .contains("clear") ||
+                                _weatherCondition
+                                    .toLowerCase()
+                                    .contains("sunny"))
+                              Positioned.fill(
+                                child: ClipRRect(
+                                  borderRadius:
+                                      BorderRadius.circular(screenWidth * 0.05),
+                                  child: _sunnyController.value.isInitialized
+                                      ? Opacity(
+                                          opacity: 1.0,
+                                          child: FittedBox(
+                                            fit: BoxFit.cover,
+                                            child: SizedBox(
+                                              width: _sunnyController
+                                                  .value.size.width,
+                                              height: _sunnyController
+                                                  .value.size.height,
+                                              child:
+                                                  VideoPlayer(_sunnyController),
+                                            ),
+                                          ),
+                                        )
+                                      : Container(), // Loading state
                                 ),
                               ),
-                            )
-                                : Container(), // Loading state
-                          ),
-                        ),
 
-
-                      if (_weatherCondition.toLowerCase().contains("cloudy") ||
-                          _weatherCondition.toLowerCase().contains("overcast"))
-                        Positioned.fill(
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(screenWidth * 0.05),
-                            child: Stack(
-                              fit: StackFit.expand,
-                              children: [
-                                Image.asset(
-                                  "assets/weather/cloudy_bg.jpg",
-                                  fit: BoxFit.cover,
-                                ),
-                                /*Opacity(
+                            if (_weatherCondition
+                                    .toLowerCase()
+                                    .contains("cloudy") ||
+                                _weatherCondition
+                                    .toLowerCase()
+                                    .contains("overcast"))
+                              Positioned.fill(
+                                child: ClipRRect(
+                                  borderRadius:
+                                      BorderRadius.circular(screenWidth * 0.05),
+                                  child: Stack(
+                                    fit: StackFit.expand,
+                                    children: [
+                                      Image.asset(
+                                        "assets/weather/cloudy_bg.jpg",
+                                        fit: BoxFit.cover,
+                                      ),
+                                      /*Opacity(
                                   opacity: 0.15,
                                   child: Image.asset(
                                     "assets/weather/cloudy_overlay.gif",
                                     fit: BoxFit.cover,
                                   ),
                                 ),*/
-                              ],
-                            ),
-                          ),
-                        ),
-
-                      if (_weatherCondition.toLowerCase().contains("fog") ||
-                          _weatherCondition.toLowerCase().contains("haze") ||
-                          _weatherCondition.toLowerCase().contains("mist"))
-                        Positioned.fill(
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(screenWidth * 0.05),
-                            child: Stack(
-                              fit: StackFit.expand,
-                              children: [
-                                Image.asset(
-                                  "assets/weather/foggy_bg2.avif",
-                                  fit: BoxFit.cover,
-                                ),
-                                Opacity(
-                                  opacity: 0.2,
-                                  child: Image.asset(
-                                    "assets/weather/fog_overlay.gif",
-                                    fit: BoxFit.cover,
+                                    ],
                                   ),
                                 ),
-                              ],
-                            ),
-                          ),
-                        ),
+                              ),
 
-                      if (_weatherCondition.toLowerCase().contains("thunder") ||
-                          _weatherCondition.toLowerCase().contains("storm") ||
-                          _weatherCondition.toLowerCase().contains("lightning") ||
-                          _weatherCondition.toLowerCase().contains("thunderstorm"))
-                        Positioned.fill(
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(screenWidth * 0.05),
-                            child: Stack(
-                              fit: StackFit.expand,
-                              children: [
-                                Image.asset(
-                                  "assets/weather/thunderstorm_bg3.jpg",
-                                  fit: BoxFit.cover,
-                                ),
-                                Opacity(
-                                  opacity: 0.2,  // Adjust as needed
-                                  child: Image.asset(
-                                    "assets/weather/thunder_overlay3.gif",
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-
-                      // 🌤️ Your actual weather card content
-                      Container(
-                        padding: EdgeInsets.all(screenWidth * 0.05),
-                        decoration: BoxDecoration(
-                          color: cardColor.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(screenWidth * 0.05),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Weather Text with Icon
-                            Row(
-                              children: [
-                                if (_weatherIconUrl != null && _weatherIconUrl!.isNotEmpty)
-                                  Padding(
-                                    padding: EdgeInsets.only(right: screenWidth * 0.02),
-                                    child: Image.network(
-                                      _weatherIconUrl!,
-                                      width: screenWidth * 0.07,
-                                      height: screenWidth * 0.07,
-                                      errorBuilder: (context, error, stackTrace) => Icon(
-                                        Icons.cloud,
-                                        size: screenWidth * 0.06,
-                                        color: minuteColor,
+                            if (_weatherCondition
+                                    .toLowerCase()
+                                    .contains("fog") ||
+                                _weatherCondition
+                                    .toLowerCase()
+                                    .contains("haze") ||
+                                _weatherCondition
+                                    .toLowerCase()
+                                    .contains("mist"))
+                              Positioned.fill(
+                                child: ClipRRect(
+                                  borderRadius:
+                                      BorderRadius.circular(screenWidth * 0.05),
+                                  child: Stack(
+                                    fit: StackFit.expand,
+                                    children: [
+                                      Image.asset(
+                                        "assets/weather/foggy_bg2.avif",
+                                        fit: BoxFit.cover,
                                       ),
-                                    ),
-                                  )
-                                else
-                                  Padding(
-                                    padding: EdgeInsets.only(right: screenWidth * 0.02),
-                                    child: Icon(
-                                      Icons.wb_sunny_outlined,
-                                      size: screenWidth * 0.06,
-                                    ),
-                                  ),
-                                SizedBox(width: screenWidth * 0.025),
-                                Expanded(
-                                  child: AnimatedSwitcher(
-                                    duration: const Duration(milliseconds: 600),
-                                    transitionBuilder: (Widget child, Animation<double> animation) {
-                                      final inAnimation = Tween<Offset>(
-                                        begin: const Offset(0.0, 1.0),
-                                        end: Offset.zero,
-                                      ).animate(animation);
-
-                                      final outAnimation = Tween<Offset>(
-                                        begin: Offset.zero,
-                                        end: const Offset(0.0, -1.0),
-                                      ).animate(animation);
-
-                                      return SlideTransition(
-                                        position: child.key == ValueKey(_currentDisplayText)
-                                            ? inAnimation
-                                            : outAnimation,
-                                        child: FadeTransition(opacity: animation, child: child),
-                                      );
-                                    },
-                                    child: Text(
-                                      _currentDisplayText,
-                                      key: ValueKey<String>(_currentDisplayText),
-                                      style: TextStyle(
-                                        fontSize: screenWidth * 0.05,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            SizedBox(height: screenHeight * 0.02),
-                            // Humidity Indicator
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Container(
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: MediaQuery.of(context).size.width * 0.04,
-                                      vertical: MediaQuery.of(context).size.height * 0.013,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Color(0xFF4285F4),
-                                      borderRadius: BorderRadius.circular(30),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        Text(
-                                          "Humidity ${(_humidity ?? 69).toInt()}%",
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: MediaQuery.of(context).size.width * 0.045,
-                                            fontWeight: FontWeight.w500,
-                                          ),
+                                      Opacity(
+                                        opacity: 0.2,
+                                        child: Image.asset(
+                                          "assets/weather/fog_overlay.gif",
+                                          fit: BoxFit.cover,
                                         ),
-                                        const Spacer(),
-                                        Container(
-                                          width: MediaQuery.of(context).size.width * 0.25,
-                                          height: MediaQuery.of(context).size.height * 0.005,
-                                          decoration: BoxDecoration(
-                                            color: Colors.white.withAlpha((0.3 * 255).toInt()),
-                                            borderRadius: BorderRadius.circular(2),
-                                          ),
-                                          child: FractionallySizedBox(
-                                            alignment: Alignment.centerLeft,
-                                            widthFactor: (_humidity ?? 69) / 100,
-                                            child: Container(
-                                              decoration: BoxDecoration(
-                                                color: Colors.white,
-                                                borderRadius: BorderRadius.circular(2),
-                                              ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+
+                            if (_weatherCondition
+                                    .toLowerCase()
+                                    .contains("thunder") ||
+                                _weatherCondition
+                                    .toLowerCase()
+                                    .contains("storm") ||
+                                _weatherCondition
+                                    .toLowerCase()
+                                    .contains("lightning") ||
+                                _weatherCondition
+                                    .toLowerCase()
+                                    .contains("thunderstorm"))
+                              Positioned.fill(
+                                child: ClipRRect(
+                                  borderRadius:
+                                      BorderRadius.circular(screenWidth * 0.05),
+                                  child: Stack(
+                                    fit: StackFit.expand,
+                                    children: [
+                                      Image.asset(
+                                        "assets/weather/thunderstorm_bg3.jpg",
+                                        fit: BoxFit.cover,
+                                      ),
+                                      Opacity(
+                                        opacity: 0.2, // Adjust as needed
+                                        child: Image.asset(
+                                          "assets/weather/thunder_overlay3.gif",
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+
+                            // 🌤️ Your actual weather card content
+                            Container(
+                              padding: EdgeInsets.all(screenWidth * 0.05),
+                              decoration: BoxDecoration(
+                                color: cardColor.withOpacity(0.15),
+                                borderRadius:
+                                    BorderRadius.circular(screenWidth * 0.05),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Weather Text with Icon
+                                  Row(
+                                    children: [
+                                      if (_weatherIconUrl != null &&
+                                          _weatherIconUrl!.isNotEmpty)
+                                        Padding(
+                                          padding: EdgeInsets.only(
+                                              right: screenWidth * 0.02),
+                                          child: Image.network(
+                                            _weatherIconUrl!,
+                                            width: screenWidth * 0.07,
+                                            height: screenWidth * 0.07,
+                                            errorBuilder:
+                                                (context, error, stackTrace) =>
+                                                    Icon(
+                                              Icons.cloud,
+                                              size: screenWidth * 0.06,
+                                              color: minuteColor,
                                             ),
                                           ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(width: MediaQuery.of(context).size.width * 0.03),
-                                Container(
-                                  width: MediaQuery.of(context).size.width * 0.12,
-                                  height: MediaQuery.of(context).size.width * 0.12,
-                                  decoration: const BoxDecoration(
-                                    color: Color(0xFF4285F4),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Icon(
-                                    Icons.water_drop,
-                                    color: Colors.white,
-                                    size: MediaQuery.of(context).size.width * 0.06,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            // Temperature and Location
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Container(
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: MediaQuery.of(context).size.width * 0.04,
-                                      vertical: MediaQuery.of(context).size.height * 0.015,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(30),
-                                      border: Border.all(color: Colors.grey.shade200),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        Icon(
-                                          Icons.thermostat,
-                                          color: Color(0xFF4285F4),
-                                          size: MediaQuery.of(context).size.width * 0.05,
-                                        ),
-                                        SizedBox(width: screenWidth * 0.02),
-                                        Expanded(
-                                          child: Text(
-                                            "Feels ${_temperature?.toStringAsFixed(1) ?? '--'}°C",
-                                            style: TextStyle(
-                                              fontSize: MediaQuery.of(context).size.width * 0.038,
-                                              fontWeight: FontWeight.w500,
-                                              color: Color(0xFF1F2937),
-                                            ),
-                                            overflow: TextOverflow.ellipsis,
+                                        )
+                                      else
+                                        Padding(
+                                          padding: EdgeInsets.only(
+                                              right: screenWidth * 0.02),
+                                          child: Icon(
+                                            Icons.wb_sunny_outlined,
+                                            size: screenWidth * 0.06,
                                           ),
                                         ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(width: screenWidth * 0.03),
-                                Expanded(
-                                  child: Container(
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: screenWidth * 0.04,
-                                      vertical: screenHeight * 0.015,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFF4285F4),
-                                      borderRadius: BorderRadius.circular(30),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        Icon(
-                                          Icons.location_on,
-                                          color: Colors.white,
-                                          size: screenWidth * 0.05,
-                                        ),
-                                        SizedBox(width: screenWidth * 0.02),
-                                        Expanded(
+                                      SizedBox(width: screenWidth * 0.025),
+                                      Expanded(
+                                        child: AnimatedSwitcher(
+                                          duration:
+                                              const Duration(milliseconds: 600),
+                                          transitionBuilder: (Widget child,
+                                              Animation<double> animation) {
+                                            final inAnimation = Tween<Offset>(
+                                              begin: const Offset(0.0, 1.0),
+                                              end: Offset.zero,
+                                            ).animate(animation);
+
+                                            final outAnimation = Tween<Offset>(
+                                              begin: Offset.zero,
+                                              end: const Offset(0.0, -1.0),
+                                            ).animate(animation);
+
+                                            return SlideTransition(
+                                              position: child.key ==
+                                                      ValueKey(
+                                                          _currentDisplayText)
+                                                  ? inAnimation
+                                                  : outAnimation,
+                                              child: FadeTransition(
+                                                  opacity: animation,
+                                                  child: child),
+                                            );
+                                          },
                                           child: Text(
-                                            _locationName ?? "--",
+                                            _currentDisplayText,
+                                            key: ValueKey<String>(
+                                                _currentDisplayText),
                                             style: TextStyle(
-                                              fontSize: screenWidth * 0.04,
-                                              fontWeight: FontWeight.w500,
+                                              fontSize: screenWidth * 0.05,
+                                              fontWeight: FontWeight.bold,
                                               color: Colors.white,
                                             ),
                                             overflow: TextOverflow.ellipsis,
                                           ),
                                         ),
-                                      ],
-                                    ),
+                                      ),
+                                    ],
                                   ),
-                                ),
-                              ],
+                                  SizedBox(height: screenHeight * 0.02),
+                                  // Humidity Indicator
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: Container(
+                                          padding: EdgeInsets.symmetric(
+                                            horizontal: MediaQuery.of(context)
+                                                    .size
+                                                    .width *
+                                                0.04,
+                                            vertical: MediaQuery.of(context)
+                                                    .size
+                                                    .height *
+                                                0.013,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: Color(0xFF4285F4),
+                                            borderRadius:
+                                                BorderRadius.circular(30),
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              Text(
+                                                "Humidity ${(_humidity ?? 69).toInt()}%",
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize:
+                                                      MediaQuery.of(context)
+                                                              .size
+                                                              .width *
+                                                          0.045,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                              const Spacer(),
+                                              Container(
+                                                width: MediaQuery.of(context)
+                                                        .size
+                                                        .width *
+                                                    0.25,
+                                                height: MediaQuery.of(context)
+                                                        .size
+                                                        .height *
+                                                    0.005,
+                                                decoration: BoxDecoration(
+                                                  color: Colors.white.withAlpha(
+                                                      (0.3 * 255).toInt()),
+                                                  borderRadius:
+                                                      BorderRadius.circular(2),
+                                                ),
+                                                child: FractionallySizedBox(
+                                                  alignment:
+                                                      Alignment.centerLeft,
+                                                  widthFactor:
+                                                      (_humidity ?? 69) / 100,
+                                                  child: Container(
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.white,
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              2),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                      SizedBox(
+                                          width: MediaQuery.of(context)
+                                                  .size
+                                                  .width *
+                                              0.03),
+                                      Container(
+                                        width:
+                                            MediaQuery.of(context).size.width *
+                                                0.12,
+                                        height:
+                                            MediaQuery.of(context).size.width *
+                                                0.12,
+                                        decoration: const BoxDecoration(
+                                          color: Color(0xFF4285F4),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: Icon(
+                                          Icons.water_drop,
+                                          color: Colors.white,
+                                          size: MediaQuery.of(context)
+                                                  .size
+                                                  .width *
+                                              0.06,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+                                  // Temperature and Location
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: Container(
+                                          padding: EdgeInsets.symmetric(
+                                            horizontal: MediaQuery.of(context)
+                                                    .size
+                                                    .width *
+                                                0.04,
+                                            vertical: MediaQuery.of(context)
+                                                    .size
+                                                    .height *
+                                                0.015,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            borderRadius:
+                                                BorderRadius.circular(30),
+                                            border: Border.all(
+                                                color: Colors.grey.shade200),
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              Icon(
+                                                Icons.thermostat,
+                                                color: Color(0xFF4285F4),
+                                                size: MediaQuery.of(context)
+                                                        .size
+                                                        .width *
+                                                    0.05,
+                                              ),
+                                              SizedBox(
+                                                  width: screenWidth * 0.02),
+                                              Expanded(
+                                                child: Text(
+                                                  "Feels ${_temperature?.toStringAsFixed(1) ?? '--'}°C",
+                                                  style: TextStyle(
+                                                    fontSize:
+                                                        MediaQuery.of(context)
+                                                                .size
+                                                                .width *
+                                                            0.038,
+                                                    fontWeight: FontWeight.w500,
+                                                    color: Color(0xFF1F2937),
+                                                  ),
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                      SizedBox(width: screenWidth * 0.03),
+                                      Expanded(
+                                        child: Container(
+                                          padding: EdgeInsets.symmetric(
+                                            horizontal: screenWidth * 0.04,
+                                            vertical: screenHeight * 0.015,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFF4285F4),
+                                            borderRadius:
+                                                BorderRadius.circular(30),
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              Icon(
+                                                Icons.location_on,
+                                                color: Colors.white,
+                                                size: screenWidth * 0.05,
+                                              ),
+                                              SizedBox(
+                                                  width: screenWidth * 0.02),
+                                              Expanded(
+                                                child: Text(
+                                                  _locationName ?? "--",
+                                                  style: TextStyle(
+                                                    fontSize:
+                                                        screenWidth * 0.04,
+                                                    fontWeight: FontWeight.w500,
+                                                    color: Colors.white,
+                                                  ),
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
                         ),
                       ),
-                    ],
-                  ),
-                ),
-              ),
-              SizedBox(height: screenHeight * 0.025),
-              // Search Engine Buttons
-              Text(
-                "Search With",
-                style: TextStyle(
-                  fontSize: screenWidth * 0.045,
-                  fontWeight: FontWeight.w500,
-                  color: textColor,
-                ),
-              ),
-              SizedBox(height: screenHeight * 0.015),
-              Wrap(
-                spacing: screenWidth * 0.025,
-                runSpacing: screenHeight * 0.015,
-                children: [
-                  _searchEngineButton("Google", Icons.g_mobiledata, primaryColor, textColor, screenWidth * 0.04, screenWidth),
-                  _searchEngineButton("Duck", Icons.bubble_chart, primaryColor, textColor, screenWidth * 0.04, screenWidth),
-                  _searchEngineButton("Bing", Icons.brightness_5, primaryColor, textColor, screenWidth * 0.04, screenWidth),
-                  _searchEngineButton("Brave", Icons.shield, primaryColor, textColor, screenWidth * 0.04, screenWidth),
-                ],
-              ),
-              SizedBox(height: screenHeight * 0.08),
-              // Bottom Icon Row
-              Padding(
-                padding: EdgeInsets.only(bottom: screenHeight * 0.02),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _iconButton(Icons.smart_toy, primaryColor, screenWidth, null, showAiMenu: true), // AI Hub
-                    _iconButton(Icons.ondemand_video, primaryColor, screenWidth, 'https://www.youtube.com'),
-                    _iconButton(Icons.email_outlined, primaryColor, screenWidth, 'https://mail.google.com'),
-                    _iconButton(Icons.map, primaryColor, screenWidth, 'https://maps.google.com'),
-                    _iconButton(Icons.cloud, primaryColor, screenWidth, 'https://drive.google.com'),
-                    _iconButton(Icons.apps, primaryColor, screenWidth, null, showAppMenu: true),
+                    ),
+                    SizedBox(height: screenHeight * 0.025),
+                    // Search Engine Buttons
+                    Text(
+                      "Search With",
+                      style: TextStyle(
+                        fontSize: screenWidth * 0.045,
+                        fontWeight: FontWeight.w500,
+                        color: textColor,
+                      ),
+                    ),
+                    SizedBox(height: screenHeight * 0.015),
+                    Wrap(
+                      spacing: screenWidth * 0.025,
+                      runSpacing: screenHeight * 0.015,
+                      children: [
+                        _searchEngineButton(
+                            "Google",
+                            Icons.g_mobiledata,
+                            primaryColor,
+                            textColor,
+                            screenWidth * 0.04,
+                            screenWidth),
+                        _searchEngineButton(
+                            "Duck",
+                            Icons.bubble_chart,
+                            primaryColor,
+                            textColor,
+                            screenWidth * 0.04,
+                            screenWidth),
+                        _searchEngineButton(
+                            "Bing",
+                            Icons.brightness_5,
+                            primaryColor,
+                            textColor,
+                            screenWidth * 0.04,
+                            screenWidth),
+                        _searchEngineButton("Brave", Icons.shield, primaryColor,
+                            textColor, screenWidth * 0.04, screenWidth),
+                      ],
+                    ),
+                    SizedBox(height: screenHeight * 0.08),
+                    // Bottom Icon Row
+                    Padding(
+                      padding: EdgeInsets.only(bottom: screenHeight * 0.02),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          _iconButton(
+                              Icons.smart_toy, primaryColor, screenWidth, null,
+                              showAiMenu: true), // AI Hub
+                          _iconButton(Icons.ondemand_video, primaryColor,
+                              screenWidth, 'https://www.youtube.com'),
+                          _iconButton(Icons.email_outlined, primaryColor,
+                              screenWidth, 'https://mail.google.com'),
+                          _iconButton(Icons.map, primaryColor, screenWidth,
+                              'https://maps.google.com'),
+                          _iconButton(Icons.cloud, primaryColor, screenWidth,
+                              'https://drive.google.com'),
+                          _iconButton(
+                              Icons.apps, primaryColor, screenWidth, null,
+                              showAppMenu: true),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
-              ),
-            ],
-          ),
-        )
+              )
             : InAppWebView(
-          initialUrlRequest: URLRequest(url: WebUri.uri(Uri.parse(_tabs[_currentTabIndex].url))),
-          onWebViewCreated: (controller) {
-            _webViewController = controller;
-            _desktopModeManager.setWebViewController(controller);
-          },
-          onLoadStop: (controller, url) {
-            if (url != null && !_history.any((item) => item.url == url.toString())) {
-              final historyItem = HistoryItem(url: url.toString(), timestamp: DateTime.now());
-              setState(() => _history.add(historyItem));
-              HistoryManager.saveHistory(_history);
-            }
-          },
-        ),
+                initialUrlRequest: URLRequest(
+                    url: WebUri.uri(Uri.parse(_tabs[_currentTabIndex].url))),
+                onWebViewCreated: (controller) {
+                  _webViewController = controller;
+                  _desktopModeManager.setWebViewController(controller);
+                },
+                onLoadStop: (controller, url) {
+                  if (url != null &&
+                      !_history.any((item) => item.url == url.toString())) {
+                    final historyItem = HistoryItem(
+                        url: url.toString(), timestamp: DateTime.now());
+                    setState(() => _history.add(historyItem));
+                    HistoryManager.saveHistory(_history);
+                  }
+                },
+              ),
       ),
     );
   }
 
   Widget _searchEngineButton(
-      String label,
-      IconData icon,
-      Color color,
-      Color textColor,
-      double fontSize,
-      double screenWidth,
-      ) {
+    String label,
+    IconData icon,
+    Color color,
+    Color textColor,
+    double fontSize,
+    double screenWidth,
+  ) {
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: screenWidth * 0.04,
@@ -838,7 +1033,9 @@ class BrowserHomePageState extends State<BrowserHomePage> {
     );
   }
 
-  Widget _iconButton(IconData icon, Color color, double screenWidth, String? url, {bool showAppMenu = false, bool showAiMenu = false}) {
+  Widget _iconButton(
+      IconData icon, Color color, double screenWidth, String? url,
+      {bool showAppMenu = false, bool showAiMenu = false}) {
     final screenHeight = MediaQuery.of(context).size.height;
     //final screenWidth = MediaQuery.of(context).size.width;
     return GestureDetector(
@@ -858,18 +1055,29 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                 mainAxisSpacing: 16,
                 crossAxisSpacing: 16,
                 children: [
-                  _googleAppTile('YouTube', Icons.ondemand_video, 'https://www.youtube.com'),
-                  _googleAppTile('Gmail', Icons.email, 'https://mail.google.com'),
-                  _googleAppTile('Drive', Icons.cloud, 'https://drive.google.com'),
+                  _googleAppTile('YouTube', Icons.ondemand_video,
+                      'https://www.youtube.com'),
+                  _googleAppTile(
+                      'Gmail', Icons.email, 'https://mail.google.com'),
+                  _googleAppTile(
+                      'Drive', Icons.cloud, 'https://drive.google.com'),
                   _googleAppTile('Maps', Icons.map, 'https://maps.google.com'),
-                  _googleAppTile('Calendar', Icons.calendar_today, 'https://calendar.google.com'),
-                  _googleAppTile('Photos', Icons.photo, 'https://photos.google.com'),
-                  _googleAppTile('Classroom', Icons.class_, 'https://classroom.google.com'),
-                  _googleAppTile('Docs', Icons.description, 'https://docs.google.com'),
-                  _googleAppTile('Sheets', Icons.table_chart, 'https://sheets.google.com'),
-                  _googleAppTile('Slides', Icons.slideshow, 'https://slides.google.com'),
-                  _googleAppTile('News', Icons.article, 'https://news.google.com'),
-                  _googleAppTile('Meet', Icons.video_call, 'https://meet.google.com'),
+                  _googleAppTile('Calendar', Icons.calendar_today,
+                      'https://calendar.google.com'),
+                  _googleAppTile(
+                      'Photos', Icons.photo, 'https://photos.google.com'),
+                  _googleAppTile('Classroom', Icons.class_,
+                      'https://classroom.google.com'),
+                  _googleAppTile(
+                      'Docs', Icons.description, 'https://docs.google.com'),
+                  _googleAppTile(
+                      'Sheets', Icons.table_chart, 'https://sheets.google.com'),
+                  _googleAppTile(
+                      'Slides', Icons.slideshow, 'https://slides.google.com'),
+                  _googleAppTile(
+                      'News', Icons.article, 'https://news.google.com'),
+                  _googleAppTile(
+                      'Meet', Icons.video_call, 'https://meet.google.com'),
                 ],
               ),
             ),
@@ -896,9 +1104,12 @@ class BrowserHomePageState extends State<BrowserHomePage> {
     final double screenHeight = screenSize.height;
 
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
-    final Color bgColor = isDark ? const Color(0xFF0B1D3A) : const Color(0xFFE6F1FF);
-    final Color primaryColor = isDark ? const Color(0xFF60A5FA) : const Color(0xFF1E3A8A);
-    final Color primaryColor2 = isDark ? const Color(0xFF1E3A8A) : const Color(0xFF60A5FA);
+    final Color bgColor =
+        isDark ? const Color(0xFF0B1D3A) : const Color(0xFFE6F1FF);
+    final Color primaryColor =
+        isDark ? const Color(0xFF60A5FA) : const Color(0xFF1E3A8A);
+    final Color primaryColor2 =
+        isDark ? const Color(0xFF1E3A8A) : const Color(0xFF60A5FA);
 
     return GestureDetector(
       onTap: () {
@@ -961,15 +1172,22 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     CircleAvatar(
-                      backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                      backgroundColor: Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withOpacity(0.1),
                       radius: 28,
-                      child: Icon(ai['icon'], size: 24, color: Theme.of(context).colorScheme.primary),
+                      child: Icon(ai['icon'],
+                          size: 24,
+                          color: Theme.of(context).colorScheme.primary),
                     ),
                     const SizedBox(height: 6),
                     Text(
                       ai['name'],
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodyMedium?.color),
+                      style: TextStyle(
+                          fontSize: 12,
+                          color: Theme.of(context).textTheme.bodyMedium?.color),
                     ),
                   ],
                 ),
@@ -989,7 +1207,10 @@ class BrowserHomePageState extends State<BrowserHomePage> {
       _currentTabIndex = _tabs.length - 1;
     });
   }
+
   void _handleNavigation(String input) {
+    if (input.isEmpty) return; // Prevent empty navigation
+
     final url = Uri.tryParse(input)?.hasScheme ?? false
         ? input
         : 'https://google.com/search?q=$input';
@@ -1004,6 +1225,9 @@ class BrowserHomePageState extends State<BrowserHomePage> {
         group: _tabs[_currentTabIndex].group,
       );
       _tabs.sort(_tabSort);
+      // Update the index in case sorting changed positions (though unlikely for current tab if we only modify it)
+      // But if we just modified the text, it stays put.
+      // If we implemented robust sorting, we'd need to find the new index.
     });
 
     _webViewController.loadUrl(
@@ -1030,6 +1254,9 @@ class BrowserHomePageState extends State<BrowserHomePage> {
       _tabs.sort(_tabSort);
       _currentTabIndex = _tabs.length - 1;
     });
+    // Load the new tab's URL (Google)
+    _webViewController.loadUrl(
+        urlRequest: URLRequest(url: WebUri("https://google.com")));
     TabsManager.saveTabs(_tabs);
   }
 
@@ -1042,15 +1269,34 @@ class BrowserHomePageState extends State<BrowserHomePage> {
           onTabSelected: (index) {
             setState(() => _currentTabIndex = index);
             Navigator.pop(context);
+            // VITAL FIX: Load the URL of the selected tab
+            final url = _tabs[_currentTabIndex].url;
+            if (url.isNotEmpty) {
+              _webViewController.loadUrl(
+                  urlRequest: URLRequest(url: WebUri(url)));
+            }
           },
           onTabRemoved: (index) {
             setState(() {
               _tabs.removeAt(index);
-              if (_currentTabIndex >= _tabs.length) {
-                _currentTabIndex = _tabs.isNotEmpty ? _tabs.length - 1 : 0;
+              // Adjust current index if needed
+              if (_currentTabIndex >= index && _currentTabIndex > 0) {
+                _currentTabIndex--;
+              }
+              if (_tabs.isEmpty) {
+                // Always keep at least one tab
+                _tabs
+                    .add(TabModel(url: "https://google.com", isHomepage: true));
+                _currentTabIndex = 0;
+              } else if (_currentTabIndex >= _tabs.length) {
+                _currentTabIndex = _tabs.length - 1;
               }
             });
             TabsManager.saveTabs(_tabs);
+            // Reload current tab after removal to ensure consistency
+            final url = _tabs[_currentTabIndex].url;
+            _webViewController.loadUrl(
+                urlRequest: URLRequest(url: WebUri(url)));
           },
           onAddNewTab: _addNewTab,
           onReorderTabs: (newTabs) {
@@ -1128,9 +1374,11 @@ class BrowserHomePageState extends State<BrowserHomePage> {
 
   void _goToHomePage() {
     setState(() {
-      _tabs[_currentTabIndex] = TabModel(url: "https://google.com", isHomepage: true);
+      _tabs[_currentTabIndex] =
+          TabModel(url: "https://google.com", isHomepage: true);
     });
-    _webViewController.loadUrl(urlRequest: URLRequest(url: WebUri("https://google.com")));
+    _webViewController.loadUrl(
+        urlRequest: URLRequest(url: WebUri("https://google.com")));
   }
 
   void _toggleDesktopMode() {
@@ -1144,12 +1392,14 @@ class HomeButton extends StatelessWidget {
   final VoidCallback onPressed;
   final Color iconColor;
 
-  const HomeButton({super.key, required this.onPressed, required this.iconColor});
+  const HomeButton(
+      {super.key, required this.onPressed, required this.iconColor});
 
   @override
   Widget build(BuildContext context) {
     return IconButton(
-      icon: Icon(Icons.home), color: iconColor,
+      icon: Icon(Icons.home),
+      color: iconColor,
       onPressed: onPressed,
     );
   }

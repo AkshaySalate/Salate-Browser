@@ -4,10 +4,11 @@ class ExtensionManager extends StatefulWidget {
   final Function(bool) onThemeToggle;
   final bool isDarkMode;
 
-  const ExtensionManager({super.key, required this.onThemeToggle, required this.isDarkMode});
+  const ExtensionManager(
+      {super.key, required this.onThemeToggle, required this.isDarkMode});
 
   @override
-  _ExtensionManagerState createState() => _ExtensionManagerState();
+  State<ExtensionManager> createState() => _ExtensionManagerState();
 }
 
 class _ExtensionManagerState extends State<ExtensionManager> {

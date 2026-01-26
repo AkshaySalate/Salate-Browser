@@ -17,7 +17,7 @@ class SalateBrowser extends StatelessWidget {
         primaryColor: const Color(0xFF212121),
         scaffoldBackgroundColor: const Color(0xFF181818),
         appBarTheme: const AppBarTheme(
-          color: Color(0xFF121212),
+          backgroundColor: Color(0xFF121212),
           iconTheme: IconThemeData(color: Colors.white),
         ),
         iconTheme: const IconThemeData(color: Colors.amber),
@@ -25,7 +25,8 @@ class SalateBrowser extends StatelessWidget {
           bodyLarge: TextStyle(color: Colors.white),
           bodyMedium: TextStyle(color: Colors.white70),
           bodySmall: TextStyle(color: Colors.white54),
-          titleLarge: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w500),
+          titleLarge: TextStyle(
+              color: Colors.white, fontSize: 22, fontWeight: FontWeight.w500),
         ),
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
@@ -72,7 +73,10 @@ class BrowserHomePageState extends State<BrowserHomePage> {
               icon: const Icon(Icons.home),
               onPressed: () {
                 setState(() {
-                  _tabs[_currentTabIndex] = {"isHomepage": true, "url": "https://google.com"};
+                  _tabs[_currentTabIndex] = {
+                    "isHomepage": true,
+                    "url": "https://google.com"
+                  };
                 });
               },
             ),
@@ -87,7 +91,8 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                   decoration: const InputDecoration(
                     hintText: 'Search or enter URL',
                     border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                     suffixIcon: Icon(Icons.search),
                   ),
                   textInputAction: TextInputAction.go,
@@ -115,7 +120,9 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                       backgroundColor: Colors.transparent,
                       child: Text(
                         '${_tabs.length}',
-                        style: TextStyle(color: Theme.of(context).iconTheme.color, fontSize: 10),
+                        style: TextStyle(
+                            color: Theme.of(context).iconTheme.color,
+                            fontSize: 10),
                       ),
                     ),
                   ),
@@ -128,7 +135,8 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                 } else if (value == 'extensions') {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const ExtensionManager()),
+                    MaterialPageRoute(
+                        builder: (context) => const ExtensionManager()),
                   );
                 }
               },
@@ -150,15 +158,15 @@ class BrowserHomePageState extends State<BrowserHomePage> {
           ? BrowserHomepage(onSearch: _handleNavigation)
           : InAppWebView(
               initialUrlRequest: URLRequest(
-                url: WebUri(_tabs[_currentTabIndex]["url"] ?? "https://google.com"),
+                url: WebUri(
+                    _tabs[_currentTabIndex]["url"] ?? "https://google.com"),
               ),
               onWebViewCreated: (controller) {
                 _webViewController = controller;
-                _webViewController.setOptions(
-                  options: InAppWebViewGroupOptions(
-                    crossPlatform: InAppWebViewOptions(
-                      userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-                    ),
+                _webViewController.setSettings(
+                  settings: InAppWebViewSettings(
+                    userAgent:
+                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
                   ),
                 );
               },
@@ -169,15 +177,16 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                   });
                 }
               },
-      ),
+            ),
     );
   }
 
   void _handleNavigation(String input) {
     // Ensure input is valid, default to a search query if not a proper URL
-    final String validUrl = input.startsWith("http://") || input.startsWith("https://")
-        ? input
-        : 'https://google.com/search?q=$input';
+    final String validUrl =
+        input.startsWith("http://") || input.startsWith("https://")
+            ? input
+            : 'https://google.com/search?q=$input';
 
     // Create a WebUri
     final WebUri uri = WebUri(validUrl);
@@ -248,7 +257,8 @@ class BrowserHomepage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final DateTime now = DateTime.now();
-    final String time = "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}";
+    final String time =
+        "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}";
 
     return SingleChildScrollView(
       child: Column(
@@ -266,7 +276,8 @@ class BrowserHomepage extends StatelessWidget {
               onSubmitted: onSearch,
               decoration: InputDecoration(
                 hintText: "Search or enter URL",
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                 prefixIcon: const Icon(Icons.search),
               ),
             ),
@@ -279,18 +290,22 @@ class BrowserHomepage extends StatelessWidget {
             children: [
               _buildShortcut(Icons.mail, "Gmail", "https://mail.google.com/"),
               _buildShortcut(Icons.map, "Maps", "https://maps.google.com/"),
-              _buildShortcut(Icons.drive_file_move, "Drive", "https://drive.google.com/"),
-              _buildShortcut(Icons.video_library, "YouTube", "https://www.youtube.com/"),
+              _buildShortcut(
+                  Icons.drive_file_move, "Drive", "https://drive.google.com/"),
+              _buildShortcut(
+                  Icons.video_library, "YouTube", "https://www.youtube.com/"),
             ],
           ),
           const SizedBox(height: 20),
-          const Text("To-Do List", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const Text("To-Do List",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: TextField(
               decoration: InputDecoration(
                 hintText: "Add a task...",
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                 suffixIcon: const Icon(Icons.add),
               ),
             ),
@@ -314,7 +329,6 @@ class BrowserHomepage extends StatelessWidget {
     );
   }
 }
-
 
 class WebViewPage extends StatelessWidget {
   final String url;

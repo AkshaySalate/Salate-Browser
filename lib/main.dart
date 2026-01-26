@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:salate_browser/pages/home_page.dart'; // Import BrowserHomePage
-import 'package:salate_browser/pages/extension_manager.dart'; // Import ExtensionManager
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:salate_browser/utils/theme_manager.dart';
 import 'package:salate_browser/pages/splash_screen.dart';
 
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized(); // Ensures async operations can run before runApp()
+  WidgetsFlutterBinding
+      .ensureInitialized(); // Ensures async operations can run before runApp()
   bool isDarkMode = await loadTheme(); // Load last saved theme
   runApp(SalateBrowser(isDarkMode: isDarkMode));
 }
@@ -16,7 +14,7 @@ class SalateBrowser extends StatefulWidget {
   const SalateBrowser({super.key, required this.isDarkMode});
 
   @override
-  _SalateBrowserState createState() => _SalateBrowserState();
+  State<SalateBrowser> createState() => _SalateBrowserState();
 }
 
 class _SalateBrowserState extends State<SalateBrowser> {
@@ -42,9 +40,9 @@ class _SalateBrowserState extends State<SalateBrowser> {
       title: 'MySalate',
       theme: _isDarkMode
           ? ThemeData.dark().copyWith(
-        primaryColor: const Color(0xFF212121),
-        scaffoldBackgroundColor: const Color(0xFF181818),
-      )
+              primaryColor: const Color(0xFF212121),
+              scaffoldBackgroundColor: const Color(0xFF181818),
+            )
           : ThemeData.light(),
       home: SplashScreen(
         onThemeToggle: _toggleTheme,
