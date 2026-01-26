@@ -991,13 +991,22 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                   _webViewController = controller;
                   _desktopModeManager.setWebViewController(controller);
                 },
-                onLoadStop: (controller, url) {
-                  if (url != null &&
-                      !_history.any((item) => item.url == url.toString())) {
-                    final historyItem = HistoryItem(
-                        url: url.toString(), timestamp: DateTime.now());
-                    setState(() => _history.add(historyItem));
-                    HistoryManager.saveHistory(_history);
+                onLoadStop: (controller, url) async {
+                  if (url != null) {
+                    // Fix: Update the tab's URL so we return to this page, not the previous one
+                    setState(() {
+                      _tabs[_currentTabIndex].url = url.toString();
+                      _tabs[_currentTabIndex].title = _extractTitleFromUrl(
+                          url.toString()); // Optional: update title too
+
+                      if (!_history.any((item) => item.url == url.toString())) {
+                        final historyItem = HistoryItem(
+                            url: url.toString(), timestamp: DateTime.now());
+                        _history.add(historyItem);
+                        HistoryManager.saveHistory(_history);
+                      }
+                    });
+                    TabsManager.saveTabs(_tabs); // Save state immediately
                   }
                 },
               ),
