@@ -1167,12 +1167,8 @@ class BrowserHomePageState extends State<BrowserHomePage> {
     final double screenHeight = screenSize.height;
 
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
-    final Color bgColor =
-        isDark ? const Color(0xFF0B1D3A) : const Color(0xFFE6F1FF);
     final Color primaryColor =
         isDark ? const Color(0xFF60A5FA) : const Color(0xFF1E3A8A);
-    final Color primaryColor2 =
-        isDark ? const Color(0xFF1E3A8A) : const Color(0xFF60A5FA);
 
     return GestureDetector(
       onTap: () {
@@ -1305,7 +1301,7 @@ class BrowserHomePageState extends State<BrowserHomePage> {
     final uri = Uri.tryParse(url);
     if (uri == null) return '';
     // Use Google's service which is robust
-    return 'https://www.google.com/s2/favicons?sz=64&domain_url=${uri.scheme}://${uri.host}';
+    return 'https://www.google.com/s2/favicons?sz=64&domain=${uri.host}';
   }
 
   String _extractTitleFromUrl(String url) {
@@ -1325,6 +1321,8 @@ class BrowserHomePageState extends State<BrowserHomePage> {
             if (title != null) {
               _tabs[_currentTabIndex].title = title;
             }
+            _tabs[_currentTabIndex].faviconUrl =
+                _generateFaviconUrl(url.toString());
           });
           await TabsManager.saveTabs(_tabs);
         }
