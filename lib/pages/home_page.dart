@@ -985,19 +985,76 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                 ),
               )
             : InAppWebView(
+                key: ValueKey(
+                    'webview_$_currentTabIndex'), // FORCE REBUILD ON TAB SWITCH
                 initialUrlRequest: URLRequest(
                     url: WebUri.uri(Uri.parse(_tabs[_currentTabIndex].url))),
                 onWebViewCreated: (controller) {
                   _webViewController = controller;
                   _desktopModeManager.setWebViewController(controller);
                 },
-                onLoadStop: (controller, url) {
-                  if (url != null &&
-                      !_history.any((item) => item.url == url.toString())) {
-                    final historyItem = HistoryItem(
-                        url: url.toString(), timestamp: DateTime.now());
-                    setState(() => _history.add(historyItem));
-                    HistoryManager.saveHistory(_history);
+                onProgressChanged: (controller, progress) async {
+                  if (progress == 100) {
+                    // Backup mechanism to save state
+                    try {
+                      final url = await controller.getUrl();
+                      if (url != null) {
+                        setState(() {
+                          _tabs[_currentTabIndex].url = url.toString();
+                        });
+                        TabsManager.saveTabs(_tabs);
+                      }
+                    } catch (e) {
+                      print("Error in onProgressChanged: $e");
+                    }
+                  }
+                },
+                onUpdateVisitedHistory:
+                    (controller, url, androidIsReload) async {
+                  if (url != null) {
+                    print("DEBUG: onUpdateVisitedHistory: $url");
+                    try {
+                      setState(() {
+                        _tabs[_currentTabIndex].url = url.toString();
+                        _tabs[_currentTabIndex].title =
+                            _extractTitleFromUrl(url.toString());
+
+                        // History logic separate from Tab State logic
+                        if (!_history
+                            .any((item) => item.url == url.toString())) {
+                          final historyItem = HistoryItem(
+                              url: url.toString(), timestamp: DateTime.now());
+                          _history.add(historyItem);
+                          HistoryManager.saveHistory(_history);
+                        }
+                      });
+                      TabsManager.saveTabs(_tabs);
+                    } catch (e) {
+                      print("Error updating visited history: $e");
+                    }
+                  }
+                },
+                onLoadStop: (controller, url) async {
+                  if (url != null) {
+                    print("DEBUG: onLoadStop: $url");
+                    try {
+                      setState(() {
+                        _tabs[_currentTabIndex].url = url.toString();
+                        _tabs[_currentTabIndex].title =
+                            _extractTitleFromUrl(url.toString());
+
+                        if (!_history
+                            .any((item) => item.url == url.toString())) {
+                          final historyItem = HistoryItem(
+                              url: url.toString(), timestamp: DateTime.now());
+                          _history.add(historyItem);
+                          HistoryManager.saveHistory(_history);
+                        }
+                      });
+                      TabsManager.saveTabs(_tabs);
+                    } catch (e) {
+                      print("Error in onLoadStop: $e");
+                    }
                   }
                 },
               ),
@@ -1248,7 +1305,29 @@ class BrowserHomePageState extends State<BrowserHomePage> {
     return uri != null ? uri.host.replaceAll("www.", "") : "Untitled";
   }
 
-  void _addNewTab() {
+  Future<void> _saveCurrentTabState() async {
+    try {
+      // Only if not on homepage
+      if (!_tabs[_currentTabIndex].isHomepage) {
+        final url = await _webViewController.getUrl();
+        if (url != null) {
+          final title = await _webViewController.getTitle();
+          setState(() {
+            _tabs[_currentTabIndex].url = url.toString();
+            if (title != null) {
+              _tabs[_currentTabIndex].title = title;
+            }
+          });
+          await TabsManager.saveTabs(_tabs);
+        }
+      }
+    } catch (e) {
+      debugPrint("Error saving tab state: $e");
+    }
+  }
+
+  void _addNewTab() async {
+    await _saveCurrentTabState(); // Save current before creating new
     setState(() {
       _tabs.add(TabModel(url: "https://google.com", isHomepage: true));
       _tabs.sort(_tabSort);
@@ -1260,7 +1339,10 @@ class BrowserHomePageState extends State<BrowserHomePage> {
     TabsManager.saveTabs(_tabs);
   }
 
-  void _showAllTabs() {
+  void _showAllTabs() async {
+    await _saveCurrentTabState(); // Save current before switching context
+    if (!mounted) return;
+
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -1372,7 +1454,10 @@ class BrowserHomePageState extends State<BrowserHomePage> {
     );
   }
 
-  void _goToHomePage() {
+  void _goToHomePage() async {
+    await _saveCurrentTabState(); // Save current before going home? Actually we overwrite it.
+    // If we go home, we effectively replace the current URL with Home.
+    // So we don't need to save the *previous* URL as the *current* state of this tab.
     setState(() {
       _tabs[_currentTabIndex] =
           TabModel(url: "https://google.com", isHomepage: true);
@@ -1381,7 +1466,8 @@ class BrowserHomePageState extends State<BrowserHomePage> {
         urlRequest: URLRequest(url: WebUri("https://google.com")));
   }
 
-  void _toggleDesktopMode() {
+  void _toggleDesktopMode() async {
+    await _saveCurrentTabState();
     setState(() {
       _desktopModeManager.toggleDesktopMode();
     });
