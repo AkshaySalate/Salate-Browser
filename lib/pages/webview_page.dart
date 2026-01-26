@@ -1,6 +1,4 @@
 // pages/webview_page.dart
-import 'dart:convert';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:salate_browser/models/tab_model.dart';
@@ -29,7 +27,8 @@ class _WebViewPageState extends State<WebViewPage> {
         title: Text(widget.tab.title ?? 'WebView Page'),
       ),
       body: InAppWebView(
-        initialUrlRequest: URLRequest(url: WebUri(Uri.parse(widget.tab.url) as String)),
+        initialUrlRequest:
+            URLRequest(url: WebUri(Uri.parse(widget.tab.url) as String)),
         onWebViewCreated: (controller) {
           _webViewController = controller;
         },
@@ -55,7 +54,8 @@ class _WebViewPageState extends State<WebViewPage> {
       String? pageTitle = await _webViewController.getTitle();
 
       String domain = Uri.parse(currentUrl).host;
-      String faviconUrl = 'https://www.google.com/s2/favicons?sz=64&domain_url=https://$domain';
+      String faviconUrl =
+          'https://www.google.com/s2/favicons?sz=64&domain_url=https://$domain';
       debugPrint("Favicon URL: $faviconUrl");
 
       setState(() {

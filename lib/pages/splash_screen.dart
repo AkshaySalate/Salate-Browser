@@ -14,7 +14,7 @@ class SplashScreen extends StatefulWidget {
   });
 
   @override
-  _SplashScreenState createState() => _SplashScreenState();
+  State<SplashScreen> createState() => _SplashScreenState();
 }
 
 class _SplashScreenState extends State<SplashScreen>
@@ -53,7 +53,6 @@ class _SplashScreenState extends State<SplashScreen>
       vsync: this,
       duration: Duration(milliseconds: 1200),
     )..repeat();
-
   }
 
   void _navigateToHome() {
@@ -136,12 +135,19 @@ class _SplashScreenState extends State<SplashScreen>
                             mainAxisSize: MainAxisSize.min,
                             children: List.generate(3, (index) {
                               final delay = index * 0.2;
-                              final value = (_dotsController.value - delay) % 1.0;
-                              final scale = 0.7 + 0.3 * (1.0 - (value * 2 - 1).abs().clamp(0.0, 1.0));
+                              final value =
+                                  (_dotsController.value - delay) % 1.0;
+                              final scale = 0.7 +
+                                  0.3 *
+                                      (1.0 -
+                                          (value * 2 - 1)
+                                              .abs()
+                                              .clamp(0.0, 1.0));
                               return Transform.scale(
                                 scale: scale,
                                 child: Container(
-                                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                                  margin:
+                                      const EdgeInsets.symmetric(horizontal: 4),
                                   width: 10,
                                   height: 10,
                                   decoration: BoxDecoration(
@@ -154,7 +160,6 @@ class _SplashScreenState extends State<SplashScreen>
                           );
                         },
                       ),
-
                       SizedBox(height: screenHeight * 0.025),
                       if (showContinueButton)
                         TextButton(

@@ -1,5 +1,4 @@
 // all_tabs_page.dart – Enhanced Tab Manager UI with Tab Groups, Screenshots, Favicons
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:salate_browser/models/tab_model.dart';
 
@@ -177,7 +176,6 @@ class _AllTabsPageState extends State<AllTabsPage> {
             ),
           ],
         ),
-
         onTap: () => widget.onTabSelected(index),
       ),
     );
