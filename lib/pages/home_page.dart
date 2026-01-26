@@ -213,6 +213,9 @@ class BrowserHomePageState extends State<BrowserHomePage> {
         _tabs.addAll(savedTabs);
         _tabs.sort(_tabSort); // Ensure pinned tabs stay on top
         _currentTabIndex = 0;
+        // Sync desktop mode for the first tab
+        _desktopModeManager
+            .setDesktopMode(_tabs[_currentTabIndex].isDesktopMode);
       });
     }
   }
@@ -987,6 +990,7 @@ class BrowserHomePageState extends State<BrowserHomePage> {
             : InAppWebView(
                 key: ValueKey(
                     'webview_$_currentTabIndex'), // FORCE REBUILD ON TAB SWITCH
+                initialSettings: _desktopModeManager.getSettings(),
                 initialUrlRequest: URLRequest(
                     url: WebUri.uri(Uri.parse(_tabs[_currentTabIndex].url))),
                 onWebViewCreated: (controller) {
@@ -1061,6 +1065,8 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                     } catch (e) {
                       print("Error in onLoadStop: $e");
                     }
+                    // Inject JS for desktop mode if enabled
+                    await _desktopModeManager.injectViewportLogic();
                   }
                 },
               ),
@@ -1340,6 +1346,8 @@ class BrowserHomePageState extends State<BrowserHomePage> {
       _currentTabIndex = _tabs.length - 1;
     });
     // Load the new tab's URL (Google)
+    // Load the new tab's URL (Google)
+    _desktopModeManager.setDesktopMode(false); // New tabs are mobile by default
     _webViewController.loadUrl(
         urlRequest: URLRequest(url: WebUri("https://google.com")));
     TabsManager.saveTabs(_tabs);
@@ -1359,6 +1367,10 @@ class BrowserHomePageState extends State<BrowserHomePage> {
             Navigator.pop(context);
             // VITAL FIX: Load the URL of the selected tab
             final url = _tabs[_currentTabIndex].url;
+            // Apply desktop mode setting for this tab
+            _desktopModeManager
+                .setDesktopMode(_tabs[_currentTabIndex].isDesktopMode);
+
             if (url.isNotEmpty) {
               _webViewController.loadUrl(
                   urlRequest: URLRequest(url: WebUri(url)));
@@ -1474,9 +1486,14 @@ class BrowserHomePageState extends State<BrowserHomePage> {
 
   void _toggleDesktopMode() async {
     await _saveCurrentTabState();
+    final newMode = !_desktopModeManager.isDesktopMode;
+    await _desktopModeManager.setDesktopMode(newMode);
+
     setState(() {
-      _desktopModeManager.toggleDesktopMode();
+      _tabs[_currentTabIndex].isDesktopMode = newMode;
     });
+
+    await TabsManager.saveTabs(_tabs);
   }
 }
 

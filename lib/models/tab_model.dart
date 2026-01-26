@@ -6,6 +6,7 @@ class TabModel {
   String? faviconUrl;
   String? group;
   bool isPinned;
+  bool isDesktopMode;
 
   TabModel({
     required this.url,
@@ -14,6 +15,7 @@ class TabModel {
     this.faviconUrl,
     this.group,
     this.isPinned = false,
+    this.isDesktopMode = false,
   });
 
   Map<String, dynamic> toJson() {
@@ -24,6 +26,7 @@ class TabModel {
       'faviconUrl': faviconUrl,
       'group': group,
       'isPinned': isPinned,
+      'isDesktopMode': isDesktopMode,
     };
   }
 
@@ -35,6 +38,7 @@ class TabModel {
       faviconUrl: json['faviconUrl'],
       group: json['group'],
       isPinned: json['isPinned'] ?? false,
+      isDesktopMode: json['isDesktopMode'] ?? false,
     );
   }
 }
