@@ -1018,6 +1018,9 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                         _tabs[_currentTabIndex].url = url.toString();
                         _tabs[_currentTabIndex].title =
                             _extractTitleFromUrl(url.toString());
+                        _tabs[_currentTabIndex].faviconUrl =
+                            _generateFaviconUrl(
+                                url.toString()); // Fix: Update Favicon
 
                         // History logic separate from Tab State logic
                         if (!_history
@@ -1042,6 +1045,9 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                         _tabs[_currentTabIndex].url = url.toString();
                         _tabs[_currentTabIndex].title =
                             _extractTitleFromUrl(url.toString());
+                        _tabs[_currentTabIndex].faviconUrl =
+                            _generateFaviconUrl(
+                                url.toString()); // Fix: Update Favicon
 
                         if (!_history
                             .any((item) => item.url == url.toString())) {
@@ -1161,12 +1167,8 @@ class BrowserHomePageState extends State<BrowserHomePage> {
     final double screenHeight = screenSize.height;
 
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
-    final Color bgColor =
-        isDark ? const Color(0xFF0B1D3A) : const Color(0xFFE6F1FF);
     final Color primaryColor =
         isDark ? const Color(0xFF60A5FA) : const Color(0xFF1E3A8A);
-    final Color primaryColor2 =
-        isDark ? const Color(0xFF1E3A8A) : const Color(0xFF60A5FA);
 
     return GestureDetector(
       onTap: () {
@@ -1297,7 +1299,9 @@ class BrowserHomePageState extends State<BrowserHomePage> {
 
   String _generateFaviconUrl(String url) {
     final uri = Uri.tryParse(url);
-    return uri != null ? 'https://${uri.host}/favicon.ico' : '';
+    if (uri == null) return '';
+    // Use Google's service which is robust
+    return 'https://www.google.com/s2/favicons?sz=64&domain=${uri.host}';
   }
 
   String _extractTitleFromUrl(String url) {
@@ -1317,6 +1321,8 @@ class BrowserHomePageState extends State<BrowserHomePage> {
             if (title != null) {
               _tabs[_currentTabIndex].title = title;
             }
+            _tabs[_currentTabIndex].faviconUrl =
+                _generateFaviconUrl(url.toString());
           });
           await TabsManager.saveTabs(_tabs);
         }
