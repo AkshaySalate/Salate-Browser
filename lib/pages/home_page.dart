@@ -991,6 +991,24 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                   _webViewController = controller;
                   _desktopModeManager.setWebViewController(controller);
                 },
+                onUpdateVisitedHistory:
+                    (controller, url, androidIsReload) async {
+                  if (url != null) {
+                    setState(() {
+                      _tabs[_currentTabIndex].url = url.toString();
+                      _tabs[_currentTabIndex].title = _extractTitleFromUrl(
+                          url.toString()); // Update title too
+
+                      if (!_history.any((item) => item.url == url.toString())) {
+                        final historyItem = HistoryItem(
+                            url: url.toString(), timestamp: DateTime.now());
+                        _history.add(historyItem);
+                        HistoryManager.saveHistory(_history);
+                      }
+                    });
+                    await TabsManager.saveTabs(_tabs); // Save persisted state
+                  }
+                },
                 onLoadStop: (controller, url) async {
                   if (url != null) {
                     // Fix: Update the tab's URL so we return to this page, not the previous one
