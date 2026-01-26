@@ -124,9 +124,15 @@ class _AllTabsPageState extends State<AllTabsPage> {
       key: key,
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       child: ListTile(
-        leading: tab.faviconUrl != null
-            ? Image.network(tab.faviconUrl!, width: 32, height: 32)
-            : const Icon(Icons.web),
+        leading: (tab.faviconUrl != null && tab.faviconUrl!.isNotEmpty)
+            ? Image.network(
+                tab.faviconUrl!,
+                width: 32,
+                height: 32,
+                errorBuilder: (context, error, stackTrace) =>
+                    const Icon(Icons.web, size: 32),
+              )
+            : const Icon(Icons.web, size: 32),
         title: Text(
           tab.title ?? tab.url,
           maxLines: 1,

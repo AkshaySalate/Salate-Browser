@@ -1018,6 +1018,9 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                         _tabs[_currentTabIndex].url = url.toString();
                         _tabs[_currentTabIndex].title =
                             _extractTitleFromUrl(url.toString());
+                        _tabs[_currentTabIndex].faviconUrl =
+                            _generateFaviconUrl(
+                                url.toString()); // Fix: Update Favicon
 
                         // History logic separate from Tab State logic
                         if (!_history
@@ -1042,6 +1045,9 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                         _tabs[_currentTabIndex].url = url.toString();
                         _tabs[_currentTabIndex].title =
                             _extractTitleFromUrl(url.toString());
+                        _tabs[_currentTabIndex].faviconUrl =
+                            _generateFaviconUrl(
+                                url.toString()); // Fix: Update Favicon
 
                         if (!_history
                             .any((item) => item.url == url.toString())) {
@@ -1297,7 +1303,9 @@ class BrowserHomePageState extends State<BrowserHomePage> {
 
   String _generateFaviconUrl(String url) {
     final uri = Uri.tryParse(url);
-    return uri != null ? 'https://${uri.host}/favicon.ico' : '';
+    if (uri == null) return '';
+    // Use Google's service which is robust
+    return 'https://www.google.com/s2/favicons?sz=64&domain_url=${uri.scheme}://${uri.host}';
   }
 
   String _extractTitleFromUrl(String url) {
