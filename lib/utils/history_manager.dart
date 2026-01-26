@@ -8,8 +8,15 @@ class HistoryManager {
 
   static Future<void> saveHistory(List<HistoryItem> history) async {
     final prefs = await SharedPreferences.getInstance();
-    final historyJson = jsonEncode(history.map((item) => item.toJson()).toList());
+    final historyJson =
+        jsonEncode(history.map((item) => item.toJson()).toList());
     await prefs.setString(_key, historyJson);
+  }
+
+  static Future<void> addHistoryItem(HistoryItem item) async {
+    final List<HistoryItem> currentHistory = await loadHistory();
+    currentHistory.add(item);
+    await saveHistory(currentHistory);
   }
 
   static Future<List<HistoryItem>> loadHistory() async {

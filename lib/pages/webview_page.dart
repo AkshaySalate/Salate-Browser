@@ -18,7 +18,6 @@ class WebViewPage extends StatefulWidget {
 
 class _WebViewPageState extends State<WebViewPage> {
   late InAppWebViewController _webViewController;
-  final List<HistoryItem> history = [];
 
   @override
   Widget build(BuildContext context) {
@@ -38,8 +37,7 @@ class _WebViewPageState extends State<WebViewPage> {
               url: url.toString(),
               timestamp: DateTime.now(),
             );
-            setState(() => history.add(historyItem));
-            HistoryManager.saveHistory(history);
+            await HistoryManager.addHistoryItem(historyItem);
 
             // Fetch metadata
             await _updateTabMetadata(url.toString());
