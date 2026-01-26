@@ -359,70 +359,72 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           SizedBox(height: screenHeight * 0.01),
-                          // Top Row with Clock and Name Input
-                          Row(
-                            children: [
-                              SizedBox(
-                                width: clockSize,
-                                height: clockSize,
-                                child: WavyClockWidget(),
-                              ),
-                              SizedBox(width: screenWidth * 0.03),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Container(
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: screenWidth * 0.03,
-                                      ),
-                                      child: TextField(
-                                        controller: _nameController,
-                                        style: TextStyle(
-                                          color: textColor,
-                                          fontSize: fieldFontSize,
-                                          fontWeight: FontWeight.w500,
+                          // Top Row with Clock and Name Input - Hide when typing
+                          if (keyboardHeight == 0)
+                            Row(
+                              children: [
+                                SizedBox(
+                                  width: clockSize,
+                                  height: clockSize,
+                                  child: WavyClockWidget(),
+                                ),
+                                SizedBox(width: screenWidth * 0.03),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Container(
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal: screenWidth * 0.03,
                                         ),
-                                        decoration: InputDecoration(
-                                          hintText: "Your Name",
-                                          hintStyle: TextStyle(
-                                            color: textColor
-                                                .withAlpha((0.6 * 255).toInt()),
-                                            fontSize: fieldFontSize,
-                                          ),
-                                          border: InputBorder.none,
-                                          icon: Icon(Icons.person_outline,
-                                              color: primaryColor,
-                                              size: iconSize),
-                                        ),
-                                        onChanged: (val) {
-                                          _saveUserName(val);
-                                        },
-                                      ),
-                                    ),
-                                    SizedBox(height: screenHeight * 0.01),
-                                    Row(
-                                      children: [
-                                        Icon(Icons.calendar_today_outlined,
-                                            size: iconSize - 1,
-                                            color: primaryColor),
-                                        SizedBox(width: screenWidth * 0.025),
-                                        Text(
-                                          DateFormat('EEE, MMM d, y')
-                                              .format(DateTime.now()),
+                                        child: TextField(
+                                          controller: _nameController,
                                           style: TextStyle(
-                                            color: primaryColor,
-                                            fontSize: dateFontSize,
+                                            color: textColor,
+                                            fontSize: fieldFontSize,
                                             fontWeight: FontWeight.w500,
                                           ),
+                                          decoration: InputDecoration(
+                                            hintText: "Your Name",
+                                            hintStyle: TextStyle(
+                                              color: textColor.withAlpha(
+                                                  (0.6 * 255).toInt()),
+                                              fontSize: fieldFontSize,
+                                            ),
+                                            border: InputBorder.none,
+                                            icon: Icon(Icons.person_outline,
+                                                color: primaryColor,
+                                                size: iconSize),
+                                          ),
+                                          onChanged: (val) {
+                                            _saveUserName(val);
+                                          },
                                         ),
-                                      ],
-                                    ),
-                                  ],
+                                      ),
+                                      SizedBox(height: screenHeight * 0.01),
+                                      Row(
+                                        children: [
+                                          Icon(Icons.calendar_today_outlined,
+                                              size: iconSize - 1,
+                                              color: primaryColor),
+                                          SizedBox(width: screenWidth * 0.025),
+                                          Text(
+                                            DateFormat('EEE, MMM d, y')
+                                                .format(DateTime.now()),
+                                            style: TextStyle(
+                                              color: primaryColor,
+                                              fontSize: dateFontSize,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
+                              ],
+                            ),
                           SizedBox(height: screenHeight * 0.025),
                           // Search Bar
                           Row(
@@ -482,495 +484,511 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                             ],
                           ),
                           SizedBox(height: screenHeight * 0.02),
-                          // Weather Card
-                          ClipRRect(
-                            borderRadius:
-                                BorderRadius.circular(screenWidth * 0.05),
-                            child: Container(
-                              width: double.infinity,
-                              decoration: BoxDecoration(
-                                color:
-                                    cardColor.withAlpha((0.85 * 255).toInt()),
-                              ),
-                              child: Stack(
-                                children: [
-                                  // 🌧️ Rainy background
-                                  if (_weatherCondition
-                                          .toLowerCase()
-                                          .contains("rain") ||
-                                      _weatherCondition
-                                          .toLowerCase()
-                                          .contains("drizzle") ||
-                                      _weatherCondition
-                                          .toLowerCase()
-                                          .contains("showers"))
-                                    Positioned.fill(
-                                      // Ensures it fills the exact same area
-                                      child: Image.asset(
-                                        "assets/weather/rainy_bg.jpg",
-                                        fit: BoxFit.cover,
-                                      ),
-                                    ),
-
-                                  // 🌧️ Optional Rain overlay on top of background
-                                  if (_weatherCondition
-                                      .toLowerCase()
-                                      .contains("rain"))
-                                    Positioned.fill(
-                                      child: Opacity(
-                                        opacity: 1.0,
+                          // Weather Card - Hide when keyboard is open
+                          if (keyboardHeight == 0)
+                            ClipRRect(
+                              borderRadius:
+                                  BorderRadius.circular(screenWidth * 0.05),
+                              child: Container(
+                                width: double.infinity,
+                                decoration: BoxDecoration(
+                                  color:
+                                      cardColor.withAlpha((0.85 * 255).toInt()),
+                                ),
+                                child: Stack(
+                                  children: [
+                                    // 🌧️ Rainy background
+                                    if (_weatherCondition
+                                            .toLowerCase()
+                                            .contains("rain") ||
+                                        _weatherCondition
+                                            .toLowerCase()
+                                            .contains("drizzle") ||
+                                        _weatherCondition
+                                            .toLowerCase()
+                                            .contains("showers"))
+                                      Positioned.fill(
+                                        // Ensures it fills the exact same area
                                         child: Image.asset(
-                                          "assets/weather/rain_overlay.gif",
+                                          "assets/weather/rainy_bg.jpg",
                                           fit: BoxFit.cover,
                                         ),
                                       ),
-                                    ),
 
-                                  if (_weatherCondition
-                                          .toLowerCase()
-                                          .contains("clear") ||
-                                      _weatherCondition
-                                          .toLowerCase()
-                                          .contains("sunny"))
-                                    Positioned.fill(
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(
-                                            screenWidth * 0.05),
-                                        child:
-                                            _sunnyController.value.isInitialized
-                                                ? Opacity(
-                                                    opacity: 1.0,
-                                                    child: FittedBox(
-                                                      fit: BoxFit.cover,
-                                                      child: SizedBox(
-                                                        width: _sunnyController
-                                                            .value.size.width,
-                                                        height: _sunnyController
-                                                            .value.size.height,
-                                                        child: VideoPlayer(
-                                                            _sunnyController),
-                                                      ),
+                                    // 🌧️ Optional Rain overlay on top of background
+                                    if (_weatherCondition
+                                        .toLowerCase()
+                                        .contains("rain"))
+                                      Positioned.fill(
+                                        child: Opacity(
+                                          opacity: 1.0,
+                                          child: Image.asset(
+                                            "assets/weather/rain_overlay.gif",
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ),
+                                      ),
+
+                                    if (_weatherCondition
+                                            .toLowerCase()
+                                            .contains("clear") ||
+                                        _weatherCondition
+                                            .toLowerCase()
+                                            .contains("sunny"))
+                                      Positioned.fill(
+                                        child: ClipRRect(
+                                          borderRadius: BorderRadius.circular(
+                                              screenWidth * 0.05),
+                                          child: _sunnyController
+                                                  .value.isInitialized
+                                              ? Opacity(
+                                                  opacity: 1.0,
+                                                  child: FittedBox(
+                                                    fit: BoxFit.cover,
+                                                    child: SizedBox(
+                                                      width: _sunnyController
+                                                          .value.size.width,
+                                                      height: _sunnyController
+                                                          .value.size.height,
+                                                      child: VideoPlayer(
+                                                          _sunnyController),
                                                     ),
-                                                  )
-                                                : Container(), // Loading state
-                                      ),
-                                    ),
-
-                                  if (_weatherCondition
-                                          .toLowerCase()
-                                          .contains("cloudy") ||
-                                      _weatherCondition
-                                          .toLowerCase()
-                                          .contains("overcast"))
-                                    Positioned.fill(
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(
-                                            screenWidth * 0.05),
-                                        child: Stack(
-                                          fit: StackFit.expand,
-                                          children: [
-                                            Image.asset(
-                                              "assets/weather/cloudy_bg.jpg",
-                                              fit: BoxFit.cover,
-                                            ),
-                                          ],
+                                                  ),
+                                                )
+                                              : Container(), // Loading state
                                         ),
                                       ),
-                                    ),
 
-                                  if (_weatherCondition
-                                          .toLowerCase()
-                                          .contains("fog") ||
-                                      _weatherCondition
-                                          .toLowerCase()
-                                          .contains("haze") ||
-                                      _weatherCondition
-                                          .toLowerCase()
-                                          .contains("mist"))
-                                    Positioned.fill(
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(
-                                            screenWidth * 0.05),
-                                        child: Stack(
-                                          fit: StackFit.expand,
-                                          children: [
-                                            Image.asset(
-                                              "assets/weather/foggy_bg2.avif",
-                                              fit: BoxFit.cover,
-                                            ),
-                                            Opacity(
-                                              opacity: 0.2,
-                                              child: Image.asset(
-                                                "assets/weather/fog_overlay.gif",
+                                    if (_weatherCondition
+                                            .toLowerCase()
+                                            .contains("cloudy") ||
+                                        _weatherCondition
+                                            .toLowerCase()
+                                            .contains("overcast"))
+                                      Positioned.fill(
+                                        child: ClipRRect(
+                                          borderRadius: BorderRadius.circular(
+                                              screenWidth * 0.05),
+                                          child: Stack(
+                                            fit: StackFit.expand,
+                                            children: [
+                                              Image.asset(
+                                                "assets/weather/cloudy_bg.jpg",
                                                 fit: BoxFit.cover,
                                               ),
-                                            ),
-                                          ],
+                                            ],
+                                          ),
                                         ),
                                       ),
-                                    ),
 
-                                  if (_weatherCondition
-                                          .toLowerCase()
-                                          .contains("thunder") ||
-                                      _weatherCondition
-                                          .toLowerCase()
-                                          .contains("storm") ||
-                                      _weatherCondition
-                                          .toLowerCase()
-                                          .contains("lightning") ||
-                                      _weatherCondition
-                                          .toLowerCase()
-                                          .contains("thunderstorm"))
-                                    Positioned.fill(
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(
-                                            screenWidth * 0.05),
-                                        child: Stack(
-                                          fit: StackFit.expand,
-                                          children: [
-                                            Image.asset(
-                                              "assets/weather/thunderstorm_bg3.jpg",
-                                              fit: BoxFit.cover,
-                                            ),
-                                            Opacity(
-                                              opacity: 0.2, // Adjust as needed
-                                              child: Image.asset(
-                                                "assets/weather/thunder_overlay3.gif",
+                                    if (_weatherCondition
+                                            .toLowerCase()
+                                            .contains("fog") ||
+                                        _weatherCondition
+                                            .toLowerCase()
+                                            .contains("haze") ||
+                                        _weatherCondition
+                                            .toLowerCase()
+                                            .contains("mist"))
+                                      Positioned.fill(
+                                        child: ClipRRect(
+                                          borderRadius: BorderRadius.circular(
+                                              screenWidth * 0.05),
+                                          child: Stack(
+                                            fit: StackFit.expand,
+                                            children: [
+                                              Image.asset(
+                                                "assets/weather/foggy_bg2.avif",
                                                 fit: BoxFit.cover,
                                               ),
-                                            ),
-                                          ],
+                                              Opacity(
+                                                opacity: 0.2,
+                                                child: Image.asset(
+                                                  "assets/weather/fog_overlay.gif",
+                                                  fit: BoxFit.cover,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       ),
-                                    ),
 
-                                  // 🌤️ Your actual weather card content
-                                  Container(
-                                    padding: EdgeInsets.all(screenWidth * 0.05),
-                                    decoration: BoxDecoration(
-                                      color: cardColor.withOpacity(0.15),
-                                      borderRadius: BorderRadius.circular(
-                                          screenWidth * 0.05),
-                                    ),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        // Weather Text with Icon
-                                        Row(
-                                          children: [
-                                            if (_weatherIconUrl != null &&
-                                                _weatherIconUrl!.isNotEmpty)
-                                              Padding(
-                                                padding: EdgeInsets.only(
-                                                    right: screenWidth * 0.02),
-                                                child: Image.network(
-                                                  _weatherIconUrl!,
-                                                  width: screenWidth * 0.07,
-                                                  height: screenWidth * 0.07,
-                                                  errorBuilder: (context, error,
-                                                          stackTrace) =>
-                                                      Icon(
-                                                    Icons.cloud,
+                                    if (_weatherCondition
+                                            .toLowerCase()
+                                            .contains("thunder") ||
+                                        _weatherCondition
+                                            .toLowerCase()
+                                            .contains("storm") ||
+                                        _weatherCondition
+                                            .toLowerCase()
+                                            .contains("lightning") ||
+                                        _weatherCondition
+                                            .toLowerCase()
+                                            .contains("thunderstorm"))
+                                      Positioned.fill(
+                                        child: ClipRRect(
+                                          borderRadius: BorderRadius.circular(
+                                              screenWidth * 0.05),
+                                          child: Stack(
+                                            fit: StackFit.expand,
+                                            children: [
+                                              Image.asset(
+                                                "assets/weather/thunderstorm_bg3.jpg",
+                                                fit: BoxFit.cover,
+                                              ),
+                                              Opacity(
+                                                opacity:
+                                                    0.2, // Adjust as needed
+                                                child: Image.asset(
+                                                  "assets/weather/thunder_overlay3.gif",
+                                                  fit: BoxFit.cover,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+
+                                    // 🌤️ Your actual weather card content
+                                    Container(
+                                      padding:
+                                          EdgeInsets.all(screenWidth * 0.05),
+                                      decoration: BoxDecoration(
+                                        color: cardColor.withOpacity(0.15),
+                                        borderRadius: BorderRadius.circular(
+                                            screenWidth * 0.05),
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          // Weather Text with Icon
+                                          Row(
+                                            children: [
+                                              if (_weatherIconUrl != null &&
+                                                  _weatherIconUrl!.isNotEmpty)
+                                                Padding(
+                                                  padding: EdgeInsets.only(
+                                                      right:
+                                                          screenWidth * 0.02),
+                                                  child: Image.network(
+                                                    _weatherIconUrl!,
+                                                    width: screenWidth * 0.07,
+                                                    height: screenWidth * 0.07,
+                                                    errorBuilder: (context,
+                                                            error,
+                                                            stackTrace) =>
+                                                        Icon(
+                                                      Icons.cloud,
+                                                      size: screenWidth * 0.06,
+                                                      color: minuteColor,
+                                                    ),
+                                                  ),
+                                                )
+                                              else
+                                                Padding(
+                                                  padding: EdgeInsets.only(
+                                                      right:
+                                                          screenWidth * 0.02),
+                                                  child: Icon(
+                                                    Icons.wb_sunny_outlined,
                                                     size: screenWidth * 0.06,
-                                                    color: minuteColor,
                                                   ),
                                                 ),
-                                              )
-                                            else
-                                              Padding(
-                                                padding: EdgeInsets.only(
-                                                    right: screenWidth * 0.02),
-                                                child: Icon(
-                                                  Icons.wb_sunny_outlined,
-                                                  size: screenWidth * 0.06,
-                                                ),
-                                              ),
-                                            SizedBox(
-                                                width: screenWidth * 0.025),
-                                            Expanded(
-                                              child: AnimatedSwitcher(
-                                                duration: const Duration(
-                                                    milliseconds: 600),
-                                                transitionBuilder:
-                                                    (Widget child,
-                                                        Animation<double>
-                                                            animation) {
-                                                  final inAnimation =
-                                                      Tween<Offset>(
-                                                    begin:
-                                                        const Offset(0.0, 1.0),
-                                                    end: Offset.zero,
-                                                  ).animate(animation);
+                                              SizedBox(
+                                                  width: screenWidth * 0.025),
+                                              Expanded(
+                                                child: AnimatedSwitcher(
+                                                  duration: const Duration(
+                                                      milliseconds: 600),
+                                                  transitionBuilder:
+                                                      (Widget child,
+                                                          Animation<double>
+                                                              animation) {
+                                                    final inAnimation =
+                                                        Tween<Offset>(
+                                                      begin: const Offset(
+                                                          0.0, 1.0),
+                                                      end: Offset.zero,
+                                                    ).animate(animation);
 
-                                                  final outAnimation =
-                                                      Tween<Offset>(
-                                                    begin: Offset.zero,
-                                                    end:
-                                                        const Offset(0.0, -1.0),
-                                                  ).animate(animation);
+                                                    final outAnimation =
+                                                        Tween<Offset>(
+                                                      begin: Offset.zero,
+                                                      end: const Offset(
+                                                          0.0, -1.0),
+                                                    ).animate(animation);
 
-                                                  return SlideTransition(
-                                                    position: child.key ==
-                                                            ValueKey(
-                                                                _currentDisplayText)
-                                                        ? inAnimation
-                                                        : outAnimation,
-                                                    child: FadeTransition(
-                                                        opacity: animation,
-                                                        child: child),
-                                                  );
-                                                },
-                                                child: Text(
-                                                  _currentDisplayText,
-                                                  key: ValueKey<String>(
-                                                      _currentDisplayText),
-                                                  style: TextStyle(
-                                                    fontSize:
-                                                        screenWidth * 0.05,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: Colors.white,
+                                                    return SlideTransition(
+                                                      position: child.key ==
+                                                              ValueKey(
+                                                                  _currentDisplayText)
+                                                          ? inAnimation
+                                                          : outAnimation,
+                                                      child: FadeTransition(
+                                                          opacity: animation,
+                                                          child: child),
+                                                    );
+                                                  },
+                                                  child: Text(
+                                                    _currentDisplayText,
+                                                    key: ValueKey<String>(
+                                                        _currentDisplayText),
+                                                    style: TextStyle(
+                                                      fontSize:
+                                                          screenWidth * 0.05,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      color: Colors.white,
+                                                    ),
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
                                                   ),
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
                                                 ),
                                               ),
-                                            ),
-                                          ],
-                                        ),
-                                        SizedBox(height: screenHeight * 0.02),
-                                        // Humidity Indicator
-                                        Row(
-                                          children: [
-                                            Expanded(
-                                              child: Container(
-                                                padding: EdgeInsets.symmetric(
-                                                  horizontal:
-                                                      MediaQuery.of(context)
-                                                              .size
-                                                              .width *
-                                                          0.04,
-                                                  vertical:
-                                                      MediaQuery.of(context)
-                                                              .size
-                                                              .height *
-                                                          0.013,
-                                                ),
-                                                decoration: BoxDecoration(
-                                                  color: Color(0xFF4285F4),
-                                                  borderRadius:
-                                                      BorderRadius.circular(30),
-                                                ),
-                                                child: Row(
-                                                  children: [
-                                                    Text(
-                                                      "Humidity ${(_humidity ?? 69).toInt()}%",
-                                                      style: TextStyle(
-                                                        color: Colors.white,
-                                                        fontSize: MediaQuery.of(
-                                                                    context)
+                                            ],
+                                          ),
+                                          SizedBox(height: screenHeight * 0.02),
+                                          // Humidity Indicator
+                                          Row(
+                                            children: [
+                                              Expanded(
+                                                child: Container(
+                                                  padding: EdgeInsets.symmetric(
+                                                    horizontal:
+                                                        MediaQuery.of(context)
                                                                 .size
                                                                 .width *
-                                                            0.045,
-                                                        fontWeight:
-                                                            FontWeight.w500,
-                                                      ),
-                                                    ),
-                                                    const Spacer(),
-                                                    Container(
-                                                      width:
-                                                          MediaQuery.of(context)
-                                                                  .size
-                                                                  .width *
-                                                              0.25,
-                                                      height:
-                                                          MediaQuery.of(context)
-                                                                  .size
-                                                                  .height *
-                                                              0.005,
-                                                      decoration: BoxDecoration(
-                                                        color: Colors.white
-                                                            .withAlpha(
-                                                                (0.3 * 255)
-                                                                    .toInt()),
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(2),
-                                                      ),
-                                                      child:
-                                                          FractionallySizedBox(
-                                                        alignment: Alignment
-                                                            .centerLeft,
-                                                        widthFactor:
-                                                            (_humidity ?? 69) /
-                                                                100,
-                                                        child: Container(
-                                                          decoration:
-                                                              BoxDecoration(
-                                                            color: Colors.white,
-                                                            borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        2),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ),
-                                            SizedBox(
-                                                width: MediaQuery.of(context)
-                                                        .size
-                                                        .width *
-                                                    0.03),
-                                            Container(
-                                              width: MediaQuery.of(context)
-                                                      .size
-                                                      .width *
-                                                  0.12,
-                                              height: MediaQuery.of(context)
-                                                      .size
-                                                      .width *
-                                                  0.12,
-                                              decoration: const BoxDecoration(
-                                                color: Color(0xFF4285F4),
-                                                shape: BoxShape.circle,
-                                              ),
-                                              child: Icon(
-                                                Icons.water_drop,
-                                                color: Colors.white,
-                                                size: MediaQuery.of(context)
-                                                        .size
-                                                        .width *
-                                                    0.06,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 12),
-                                        // Temperature and Location
-                                        Row(
-                                          children: [
-                                            Expanded(
-                                              child: Container(
-                                                padding: EdgeInsets.symmetric(
-                                                  horizontal:
-                                                      MediaQuery.of(context)
-                                                              .size
-                                                              .width *
-                                                          0.04,
-                                                  vertical:
-                                                      MediaQuery.of(context)
-                                                              .size
-                                                              .height *
-                                                          0.015,
-                                                ),
-                                                decoration: BoxDecoration(
-                                                  color: Colors.white,
-                                                  borderRadius:
-                                                      BorderRadius.circular(30),
-                                                  border: Border.all(
-                                                      color:
-                                                          Colors.grey.shade200),
-                                                ),
-                                                child: Row(
-                                                  children: [
-                                                    Icon(
-                                                      Icons.thermostat,
-                                                      color: Color(0xFF4285F4),
-                                                      size:
-                                                          MediaQuery.of(context)
-                                                                  .size
-                                                                  .width *
-                                                              0.05,
-                                                    ),
-                                                    SizedBox(
-                                                        width:
-                                                            screenWidth * 0.02),
-                                                    Expanded(
-                                                      child: Text(
-                                                        "Feels ${_temperature?.toStringAsFixed(1) ?? '--'}°C",
+                                                            0.04,
+                                                    vertical:
+                                                        MediaQuery.of(context)
+                                                                .size
+                                                                .height *
+                                                            0.013,
+                                                  ),
+                                                  decoration: BoxDecoration(
+                                                    color: Color(0xFF4285F4),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            30),
+                                                  ),
+                                                  child: Row(
+                                                    children: [
+                                                      Text(
+                                                        "Humidity ${(_humidity ?? 69).toInt()}%",
                                                         style: TextStyle(
+                                                          color: Colors.white,
                                                           fontSize: MediaQuery.of(
                                                                       context)
                                                                   .size
                                                                   .width *
-                                                              0.038,
+                                                              0.045,
                                                           fontWeight:
                                                               FontWeight.w500,
-                                                          color:
-                                                              Color(0xFF1F2937),
                                                         ),
-                                                        overflow: TextOverflow
-                                                            .ellipsis,
                                                       ),
-                                                    ),
-                                                  ],
+                                                      const Spacer(),
+                                                      Container(
+                                                        width: MediaQuery.of(
+                                                                    context)
+                                                                .size
+                                                                .width *
+                                                            0.25,
+                                                        height: MediaQuery.of(
+                                                                    context)
+                                                                .size
+                                                                .height *
+                                                            0.005,
+                                                        decoration:
+                                                            BoxDecoration(
+                                                          color: Colors.white
+                                                              .withAlpha(
+                                                                  (0.3 * 255)
+                                                                      .toInt()),
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(2),
+                                                        ),
+                                                        child:
+                                                            FractionallySizedBox(
+                                                          alignment: Alignment
+                                                              .centerLeft,
+                                                          widthFactor:
+                                                              (_humidity ??
+                                                                      69) /
+                                                                  100,
+                                                          child: Container(
+                                                            decoration:
+                                                                BoxDecoration(
+                                                              color:
+                                                                  Colors.white,
+                                                              borderRadius:
+                                                                  BorderRadius
+                                                                      .circular(
+                                                                          2),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
                                                 ),
                                               ),
-                                            ),
-                                            SizedBox(width: screenWidth * 0.03),
-                                            Expanded(
-                                              child: Container(
-                                                padding: EdgeInsets.symmetric(
-                                                  horizontal:
-                                                      screenWidth * 0.04,
-                                                  vertical:
-                                                      screenHeight * 0.015,
+                                              SizedBox(
+                                                  width: MediaQuery.of(context)
+                                                          .size
+                                                          .width *
+                                                      0.03),
+                                              Container(
+                                                width: MediaQuery.of(context)
+                                                        .size
+                                                        .width *
+                                                    0.12,
+                                                height: MediaQuery.of(context)
+                                                        .size
+                                                        .width *
+                                                    0.12,
+                                                decoration: const BoxDecoration(
+                                                  color: Color(0xFF4285F4),
+                                                  shape: BoxShape.circle,
                                                 ),
-                                                decoration: BoxDecoration(
-                                                  color:
-                                                      const Color(0xFF4285F4),
-                                                  borderRadius:
-                                                      BorderRadius.circular(30),
-                                                ),
-                                                child: Row(
-                                                  children: [
-                                                    Icon(
-                                                      Icons.location_on,
-                                                      color: Colors.white,
-                                                      size: screenWidth * 0.05,
-                                                    ),
-                                                    SizedBox(
-                                                        width:
-                                                            screenWidth * 0.02),
-                                                    Expanded(
-                                                      child: Text(
-                                                        _locationName ?? "--",
-                                                        style: TextStyle(
-                                                          fontSize:
-                                                              screenWidth *
-                                                                  0.04,
-                                                          fontWeight:
-                                                              FontWeight.w500,
-                                                          color: Colors.white,
-                                                        ),
-                                                        overflow: TextOverflow
-                                                            .ellipsis,
-                                                      ),
-                                                    ),
-                                                  ],
+                                                child: Icon(
+                                                  Icons.water_drop,
+                                                  color: Colors.white,
+                                                  size: MediaQuery.of(context)
+                                                          .size
+                                                          .width *
+                                                      0.06,
                                                 ),
                                               ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
+                                            ],
+                                          ),
+                                          const SizedBox(height: 12),
+                                          // Temperature and Location
+                                          Row(
+                                            children: [
+                                              Expanded(
+                                                child: Container(
+                                                  padding: EdgeInsets.symmetric(
+                                                    horizontal:
+                                                        MediaQuery.of(context)
+                                                                .size
+                                                                .width *
+                                                            0.04,
+                                                    vertical:
+                                                        MediaQuery.of(context)
+                                                                .size
+                                                                .height *
+                                                            0.015,
+                                                  ),
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.white,
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            30),
+                                                    border: Border.all(
+                                                        color: Colors
+                                                            .grey.shade200),
+                                                  ),
+                                                  child: Row(
+                                                    children: [
+                                                      Icon(
+                                                        Icons.thermostat,
+                                                        color:
+                                                            Color(0xFF4285F4),
+                                                        size: MediaQuery.of(
+                                                                    context)
+                                                                .size
+                                                                .width *
+                                                            0.05,
+                                                      ),
+                                                      SizedBox(
+                                                          width: screenWidth *
+                                                              0.02),
+                                                      Expanded(
+                                                        child: Text(
+                                                          "Feels ${_temperature?.toStringAsFixed(1) ?? '--'}°C",
+                                                          style: TextStyle(
+                                                            fontSize: MediaQuery.of(
+                                                                        context)
+                                                                    .size
+                                                                    .width *
+                                                                0.038,
+                                                            fontWeight:
+                                                                FontWeight.w500,
+                                                            color: Color(
+                                                                0xFF1F2937),
+                                                          ),
+                                                          overflow: TextOverflow
+                                                              .ellipsis,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                              SizedBox(
+                                                  width: screenWidth * 0.03),
+                                              Expanded(
+                                                child: Container(
+                                                  padding: EdgeInsets.symmetric(
+                                                    horizontal:
+                                                        screenWidth * 0.04,
+                                                    vertical:
+                                                        screenHeight * 0.015,
+                                                  ),
+                                                  decoration: BoxDecoration(
+                                                    color:
+                                                        const Color(0xFF4285F4),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            30),
+                                                  ),
+                                                  child: Row(
+                                                    children: [
+                                                      Icon(
+                                                        Icons.location_on,
+                                                        color: Colors.white,
+                                                        size:
+                                                            screenWidth * 0.05,
+                                                      ),
+                                                      SizedBox(
+                                                          width: screenWidth *
+                                                              0.02),
+                                                      Expanded(
+                                                        child: Text(
+                                                          _locationName ?? "--",
+                                                          style: TextStyle(
+                                                            fontSize:
+                                                                screenWidth *
+                                                                    0.04,
+                                                            fontWeight:
+                                                                FontWeight.w500,
+                                                            color: Colors.white,
+                                                          ),
+                                                          overflow: TextOverflow
+                                                              .ellipsis,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
                           SizedBox(height: screenHeight * 0.02),
 
                           // Unified Premium Search Dashboard
                           _buildSearchDashboard(screenWidth, screenHeight),
 
-                          const Spacer(),
+                          if (keyboardHeight == 0) const Spacer(),
                         ],
                       ),
                     ),
