@@ -74,7 +74,9 @@ class _ExtensionLoaderState extends State<ExtensionLoader> {
               });
               final prefs = await SharedPreferences.getInstance();
               await prefs.setString('extensions', jsonEncode(extensions));
-              Navigator.pop(context);
+              if (context.mounted) {
+                Navigator.pop(context);
+              }
             },
             child: Text('Add'),
           )
@@ -115,8 +117,8 @@ class _ExtensionLoaderState extends State<ExtensionLoader> {
         },
       ),
       floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.play_arrow),
         onPressed: _injectExtensions,
+        child: Icon(Icons.play_arrow),
       ),
     );
   }

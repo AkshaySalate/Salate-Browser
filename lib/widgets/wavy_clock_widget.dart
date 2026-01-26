@@ -11,9 +11,12 @@ class WavyClockWidget extends StatefulWidget {
   State<WavyClockWidget> createState() => _WavyClockWidgetState();
 }
 
-class _WavyClockWidgetState extends State<WavyClockWidget> with TickerProviderStateMixin {
-  late AnimationController? _secondController; // Animation controller for seconds
-  late AnimationController? _waveController;   // Animation controller for wave animation
+class _WavyClockWidgetState extends State<WavyClockWidget>
+    with TickerProviderStateMixin {
+  late AnimationController?
+      _secondController; // Animation controller for seconds
+  late AnimationController?
+      _waveController; // Animation controller for wave animation
 
   @override
   void initState() {
@@ -45,13 +48,16 @@ class _WavyClockWidgetState extends State<WavyClockWidget> with TickerProviderSt
     }
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final Color bgColor = isDark ? const Color(0xFF0B1D3A) : const Color(0xFFE6F1FF);
-    final Color primaryColor = isDark ? const Color(0xFF1E3A8A) : const Color(0xFF60A5FA);
-    final Color waveColor = isDark ? const Color(0xFF60A5FA) : const Color(0xFF60A5FA);
+    final Color bgColor =
+        isDark ? const Color(0xFF0B1D3A) : const Color(0xFFE6F1FF);
+    final Color waveColor =
+        isDark ? const Color(0xFF60A5FA) : const Color(0xFF60A5FA);
     //final Color waveColor = isDark ? const Color(0xFF172554) : const Color(0xFF60A5FA);
     final Color hourColor = isDark ? Colors.white : Colors.purple;
-    final Color minuteColor = isDark ? const Color(0xFF60A5FA) : Colors.deepOrange;
-    final Color secondDotColor = isDark ? const Color(0xFF60A5FA) : Colors.purple;
+    final Color minuteColor =
+        isDark ? const Color(0xFF60A5FA) : Colors.deepOrange;
+    final Color secondDotColor =
+        isDark ? const Color(0xFF60A5FA) : Colors.purple;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -111,19 +117,26 @@ class WavyClockPainter extends CustomPainter {
     final innerRadius = baseRadius * 0.75;
 
     // Create multiple wave layers for water-like effect
-    _drawWaveLayer(canvas, center, baseRadius, waveAnimationValue, waveColor.withAlpha((0.3 * 255).toInt()), 1.0);
-    _drawWaveLayer(canvas, center, baseRadius * 0.95, waveAnimationValue + 0.3, waveColor.withAlpha((0.5 * 255).toInt()), 0.8);
-    _drawWaveLayer(canvas, center, baseRadius * 0.9, waveAnimationValue + 0.6, waveColor.withAlpha((0.7 * 255).toInt()), 0.6);
+    _drawWaveLayer(canvas, center, baseRadius, waveAnimationValue,
+        waveColor.withAlpha((0.3 * 255).toInt()), 1.0);
+    _drawWaveLayer(canvas, center, baseRadius * 0.95, waveAnimationValue + 0.3,
+        waveColor.withAlpha((0.5 * 255).toInt()), 0.8);
+    _drawWaveLayer(canvas, center, baseRadius * 0.9, waveAnimationValue + 0.6,
+        waveColor.withAlpha((0.7 * 255).toInt()), 0.6);
 
     // Inner circle (main background)
     final backgroundPaint = Paint()
       ..shader = RadialGradient(
-        colors: [backgroundColor, backgroundColor.withAlpha((0.8 * 255).toInt()),],
+        colors: [
+          backgroundColor,
+          backgroundColor.withAlpha((0.8 * 255).toInt()),
+        ],
       ).createShader(Rect.fromCircle(center: center, radius: innerRadius));
     canvas.drawCircle(center, innerRadius, backgroundPaint);
 
     // Hour and Minute Hands
-    final hourAngle = (datetime.hour % 12 + datetime.minute / 60) * 30 * pi / 180;
+    final hourAngle =
+        (datetime.hour % 12 + datetime.minute / 60) * 30 * pi / 180;
     final minuteAngle = datetime.minute * 6 * pi / 180;
 
     final hourHandPaint = Paint()
@@ -164,13 +177,19 @@ class WavyClockPainter extends CustomPainter {
       center.dx + secondLength * cos(secondAngle - pi / 2),
       center.dy + secondLength * sin(secondAngle - pi / 2),
     );
-    canvas.drawCircle(secondOffset, size.width * 0.02, Paint()..color = secondDotColor);
+    canvas.drawCircle(
+        secondOffset, size.width * 0.02, Paint()..color = secondDotColor);
 
     // Center Dot
-    canvas.drawCircle(center, size.width * 0.015, Paint()..color = Colors.black.withAlpha((0.6 * 255).toInt()),);
+    canvas.drawCircle(
+      center,
+      size.width * 0.015,
+      Paint()..color = Colors.black.withAlpha((0.6 * 255).toInt()),
+    );
   }
 
-  void _drawWaveLayer(Canvas canvas, Offset center, double baseRadius, double animationPhase, Color color, double intensity) {
+  void _drawWaveLayer(Canvas canvas, Offset center, double baseRadius,
+      double animationPhase, Color color, double intensity) {
     final wavePaint = Paint()
       ..color = color
       ..style = PaintingStyle.fill;
@@ -180,8 +199,10 @@ class WavyClockPainter extends CustomPainter {
     final step = 2 * pi / waves;
 
     // Create water-like shrinking and expanding effect
-    final breathingEffect = sin(animationPhase * 2 * pi) * 0.15; // Overall size pulsing
-    final rippleEffect = sin(animationPhase * 4 * pi) * 0.05;    // Faster ripple effect
+    final breathingEffect =
+        sin(animationPhase * 2 * pi) * 0.15; // Overall size pulsing
+    final rippleEffect =
+        sin(animationPhase * 4 * pi) * 0.05; // Faster ripple effect
 
     for (int i = 0; i <= waves; i++) {
       final angle = i * step;
@@ -193,7 +214,8 @@ class WavyClockPainter extends CustomPainter {
 
       // Combine all effects
       final totalWaveEffect = (wave1 + wave2 + wave3) * 3;
-      final radiusModification = breathingEffect + rippleEffect + totalWaveEffect * 0.02;
+      final radiusModification =
+          breathingEffect + rippleEffect + totalWaveEffect * 0.02;
 
       final r = baseRadius * (1 + radiusModification);
       final x = center.dx + r * cos(angle);

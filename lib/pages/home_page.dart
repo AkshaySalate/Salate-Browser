@@ -96,15 +96,6 @@ class BrowserHomePageState extends State<BrowserHomePage> {
 
   static const platform = MethodChannel('com.salate.browser/role');
 
-  Future<void> _requestDefaultBrowser() async {
-    try {
-      await platform.invokeMethod('requestDefaultBrowser');
-      debugPrint("RoleManager request sent");
-    } on PlatformException catch (e) {
-      debugPrint("Failed to request default browser: ${e.message}");
-    }
-  }
-
   @override
   void initState() {
     super.initState();
@@ -242,16 +233,11 @@ class BrowserHomePageState extends State<BrowserHomePage> {
         isDark ? const Color(0xFF0B1D3A) : const Color(0xFFE6F1FF);
     final Color primaryColor =
         isDark ? const Color(0xFF60A5FA) : const Color(0xFF1E3A8A);
-    final Color primaryColor2 =
-        isDark ? const Color(0xFF1E3A8A) : const Color(0xFF60A5FA);
     final Color cardColor = isDark ? const Color(0xFF172554) : Colors.white;
     final Color textColor = isDark ? Colors.white : Colors.black;
 
-    final Color hourColor = isDark ? Colors.white : Colors.purple;
     final Color minuteColor =
         isDark ? const Color(0xFF60A5FA) : Colors.deepOrange;
-    final Color secondDotColor =
-        isDark ? const Color(0xFF60A5FA) : Colors.purple;
 
     final double padding = screenWidth * 0.05;
     final double fieldFontSize = screenWidth * 0.04; // Scales with screen
@@ -462,7 +448,7 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                       child: Container(
                         width: double.infinity,
                         decoration: BoxDecoration(
-                          color: cardColor.withOpacity(0.85),
+                          color: cardColor.withAlpha((0.85 * 255).toInt()),
                         ),
                         child: Stack(
                           children: [
