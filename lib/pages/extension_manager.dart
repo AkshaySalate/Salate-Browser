@@ -14,7 +14,6 @@ class ExtensionManager extends StatefulWidget {
 class _ExtensionManagerState extends State<ExtensionManager> {
   final List<Map<String, dynamic>> extensions = [
     {'name': 'AdBlocker', 'enabled': true, 'version': '1.0'},
-    {'name': 'Dark Mode', 'enabled': false, 'version': '1.2'},
   ];
 
   bool _isDarkMode = false;
