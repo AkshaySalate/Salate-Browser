@@ -297,15 +297,25 @@ class BrowserHomePageState extends State<BrowserHomePage> {
 
   Future<void> _loadWeatherData() async {
     try {
+      final prefs = await SharedPreferences.getInstance();
       // Request permission
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied ||
           permission == LocationPermission.deniedForever) {
-        permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied ||
-            permission == LocationPermission.deniedForever) {
-          throw Exception(
-              "User denied permissions to access the device's location.");
+        final lastPrompt = prefs.getString('location_permission_prompt_date');
+        final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+
+        if (lastPrompt != today) {
+          permission = await Geolocator.requestPermission();
+          await prefs.setString('location_permission_prompt_date', today);
+          if (permission == LocationPermission.denied ||
+              permission == LocationPermission.deniedForever) {
+            throw Exception(
+                "User denied permissions to access the device's location.");
+          }
+        } else {
+          debugPrint("Location permission already prompted today. Skipping.");
+          return;
         }
       }
 
