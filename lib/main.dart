@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:salate_browser/pages/splash_screen.dart';
+import 'package:app_links/app_links.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding
@@ -19,11 +21,54 @@ class SalateBrowser extends StatefulWidget {
 
 class _SalateBrowserState extends State<SalateBrowser> {
   late bool _isDarkMode;
+  late AppLinks _appLinks;
+  StreamSubscription<Uri>? _linkSubscription;
+  String? _initialUrl;
 
   @override
   void initState() {
     super.initState();
     _isDarkMode = widget.isDarkMode; // Initialize with saved theme state
+    _initDeepLinks();
+  }
+
+  Future<void> _initDeepLinks() async {
+    _appLinks = AppLinks();
+
+    // Check initial link
+    try {
+      final initialLink = await _appLinks.getInitialLink();
+      if (initialLink != null) {
+        setState(() {
+          _initialUrl = initialLink.toString();
+        });
+      }
+    } catch (e) {
+      debugPrint("Error getting initial link: $e");
+    }
+
+    // Listen to incoming links
+    _linkSubscription = _appLinks.uriLinkStream.listen((uri) {
+      _handleIncomingLink(uri);
+    });
+  }
+
+  void _handleIncomingLink(Uri uri) {
+    String url = uri.toString();
+    // If BrowserHomePage is already active, we want to tell it to open this link.
+    // For now, let's store it and we'll use a GlobalKey to notify it.
+    _initialUrl = url;
+    if (mounted) {
+      // We can use a broadcast or GlobalKey. Let's try to pass it down.
+      // Re-triggering build to pass new URL if still in splash or just handled by the page.
+      setState(() {});
+    }
+  }
+
+  @override
+  void dispose() {
+    _linkSubscription?.cancel();
+    super.dispose();
   }
 
   void _toggleTheme(bool isDarkMode) {
@@ -47,6 +92,7 @@ class _SalateBrowserState extends State<SalateBrowser> {
       home: SplashScreen(
         onThemeToggle: _toggleTheme,
         isDarkMode: _isDarkMode, // Pass current theme state
+        initialUrl: _initialUrl,
       ),
     );
   }
