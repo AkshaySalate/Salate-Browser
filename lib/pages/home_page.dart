@@ -18,6 +18,7 @@ import 'package:salate_browser/models/search_category_model.dart';
 import 'package:salate_browser/utils/search_engine_manager.dart';
 import 'package:salate_browser/utils/weather_service.dart';
 import 'package:salate_browser/widgets/wavy_clock_widget.dart';
+import 'package:salate_browser/pages/settings_page.dart';
 import 'package:video_player/video_player.dart';
 import 'package:flutter/services.dart';
 
@@ -44,6 +45,8 @@ class BrowserHomePageState extends State<BrowserHomePage> {
   late InAppWebViewController _webViewController;
   String? _userName;
   final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _urlController =
+      TextEditingController(); // [NEW] Control AppBar text
   double? _humidity;
   double? _temperature;
   String? _weatherIconUrl;
@@ -110,6 +113,7 @@ class BrowserHomePageState extends State<BrowserHomePage> {
     _loadHistory();
     _loadTabs();
     _loadWeatherData();
+    _checkDefaultBrowser(); // [NEW] Check logic
     // Show welcome text first
     _currentDisplayText = "Welcome to Salate Browser";
     _showWelcome = false;
@@ -138,6 +142,44 @@ class BrowserHomePageState extends State<BrowserHomePage> {
             _sunnyController.setVolume(0); // Mute
             _sunnyController.play();
           });
+  }
+
+  // [NEW] Logic to check default browser annually
+  Future<void> _checkDefaultBrowser() async {
+    final prefs = await SharedPreferences.getInstance();
+    final lastPromptStr = prefs.getString('last_default_browser_prompt');
+    DateTime? lastPrompt;
+    if (lastPromptStr != null) {
+      lastPrompt = DateTime.tryParse(lastPromptStr);
+    }
+
+    // Default to 'old enough' if never prompted, so we prompt on first run (or you can set it to now to skip first run)
+    // User requirement: "make it ask only once a year".
+    // I'll interpret this as: prompt if it's been > 365 days.
+    final now = DateTime.now();
+    bool shouldPrompt = false;
+
+    if (lastPrompt == null) {
+      shouldPrompt = true;
+    } else {
+      final difference = now.difference(lastPrompt).inDays;
+      if (difference >= 365) {
+        shouldPrompt = true;
+      }
+    }
+
+    if (shouldPrompt) {
+      // Invoke the platform channel
+      try {
+        // Just triggering the request. The OS handles the specific UI.
+        await platform.invokeMethod('requestDefaultBrowser');
+        // Update stored time
+        await prefs.setString(
+            'last_default_browser_prompt', now.toIso8601String());
+      } catch (e) {
+        debugPrint("Failed to request default browser: $e");
+      }
+    }
   }
 
   @override
@@ -293,6 +335,7 @@ class BrowserHomePageState extends State<BrowserHomePage> {
             SizedBox(width: screenWidth * 0.02),
             Expanded(
               child: TextField(
+                controller: _urlController, // [NEW] Bind controller
                 decoration: InputDecoration(
                   hintText: 'Search or enter URL',
                   border: InputBorder.none,
@@ -323,14 +366,12 @@ class BrowserHomePageState extends State<BrowserHomePage> {
             onSelected: (value) {
               if (value == 'history') _showHistory();
               if (value == 'extensions') {
-                // Pass the onThemeToggle and isDarkMode when navigating to ExtensionManager
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (_) => ExtensionManager(
                       onThemeToggle: widget.onThemeToggle,
-                      isDarkMode:
-                          widget.isDarkMode, // Pass the current theme state
+                      isDarkMode: widget.isDarkMode,
                     ),
                   ),
                 );
@@ -338,11 +379,23 @@ class BrowserHomePageState extends State<BrowserHomePage> {
               if (value == 'desktop_mode') {
                 _toggleDesktopMode();
               }
+              if (value == 'settings') {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => SettingsPage(
+                      isDarkMode: widget.isDarkMode,
+                      onThemeToggle: widget.onThemeToggle,
+                    ),
+                  ),
+                );
+              }
             },
             itemBuilder: (context) => const [
               PopupMenuItem(value: 'history', child: Text('History')),
               PopupMenuItem(value: 'extensions', child: Text('Extensions')),
               PopupMenuItem(value: 'desktop_mode', child: Text('Desktop Mode')),
+              PopupMenuItem(value: 'settings', child: Text('Settings')),
             ],
           ),
         ],
@@ -353,14 +406,15 @@ class BrowserHomePageState extends State<BrowserHomePage> {
             ? Column(
                 children: [
                   Expanded(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: padding),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SizedBox(height: screenHeight * 0.01),
-                          // Top Row with Clock and Name Input - Hide when typing
-                          if (keyboardHeight == 0)
+                    child: SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(horizontal: padding),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SizedBox(height: screenHeight * 0.01),
+                            // Top Row with Clock and Name Input - Always Visible
                             Row(
                               children: [
                                 SizedBox(
@@ -388,8 +442,8 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                                           decoration: InputDecoration(
                                             hintText: "Your Name",
                                             hintStyle: TextStyle(
-                                              color: textColor.withAlpha(
-                                                  (0.6 * 255).toInt()),
+                                              color: textColor.withValues(
+                                                  alpha: 0.6), // Lint fix
                                               fontSize: fieldFontSize,
                                             ),
                                             border: InputBorder.none,
@@ -425,75 +479,74 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                                 ),
                               ],
                             ),
-                          SizedBox(height: screenHeight * 0.025),
-                          // Search Bar
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Container(
-                                  padding: EdgeInsets.symmetric(
-                                      horizontal: screenWidth * 0.04,
-                                      vertical: screenHeight * 0.0005),
-                                  decoration: BoxDecoration(
-                                    color: cardColor,
-                                    borderRadius: BorderRadius.circular(
-                                        screenWidth * 0.1),
-                                  ),
-                                  child: TextField(
-                                    controller: _bodySearchController,
-                                    style:
-                                        TextStyle(fontSize: screenWidth * 0.04),
-                                    decoration: InputDecoration(
-                                      hintText: "Search or type URL",
-                                      hintStyle: TextStyle(
-                                          fontSize: screenWidth * 0.04),
-                                      border: InputBorder.none,
-                                      icon: Icon(Icons.search,
-                                          size: iconSize + 3,
-                                          color: primaryColor),
-                                    ),
-                                    onSubmitted: (query) =>
-                                        _handleNavigation(query),
-                                  ),
-                                ),
-                              ),
-                              SizedBox(width: screenWidth * 0.025),
-                              ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: primaryColor,
-                                  shape: RoundedRectangleBorder(
+                            SizedBox(height: screenHeight * 0.025),
+                            // Search Bar
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Container(
+                                    padding: EdgeInsets.symmetric(
+                                        horizontal: screenWidth * 0.04,
+                                        vertical: screenHeight * 0.0005),
+                                    decoration: BoxDecoration(
+                                      color: cardColor,
                                       borderRadius: BorderRadius.circular(
-                                          screenWidth * 0.1)),
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: screenWidth * 0.06,
-                                    vertical: screenHeight * 0.017,
+                                          screenWidth * 0.1),
+                                    ),
+                                    child: TextField(
+                                      controller: _bodySearchController,
+                                      style: TextStyle(
+                                          fontSize: screenWidth * 0.04),
+                                      decoration: InputDecoration(
+                                        hintText: "Search or type URL",
+                                        hintStyle: TextStyle(
+                                            fontSize: screenWidth * 0.04),
+                                        border: InputBorder.none,
+                                        icon: Icon(Icons.search,
+                                            size: iconSize + 3,
+                                            color: primaryColor),
+                                      ),
+                                      onSubmitted: (query) =>
+                                          _handleNavigation(query),
+                                    ),
                                   ),
                                 ),
-                                onPressed: () {
-                                  final query =
-                                      _bodySearchController.text.trim();
-                                  if (query.isNotEmpty) {
-                                    _handleNavigation(query);
-                                  }
-                                },
-                                child: Text("Search",
-                                    style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: screenWidth * 0.04)),
-                              )
-                            ],
-                          ),
-                          SizedBox(height: screenHeight * 0.02),
-                          // Weather Card - Hide when keyboard is open
-                          if (keyboardHeight == 0)
+                                SizedBox(width: screenWidth * 0.025),
+                                ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: primaryColor,
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(
+                                            screenWidth * 0.1)),
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: screenWidth * 0.06,
+                                      vertical: screenHeight * 0.017,
+                                    ),
+                                  ),
+                                  onPressed: () {
+                                    final query =
+                                        _bodySearchController.text.trim();
+                                    if (query.isNotEmpty) {
+                                      _handleNavigation(query);
+                                    }
+                                  },
+                                  child: Text("Search",
+                                      style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: screenWidth * 0.04)),
+                                )
+                              ],
+                            ),
+                            SizedBox(height: screenHeight * 0.02),
+                            // Weather Card - Always visible
                             ClipRRect(
                               borderRadius:
                                   BorderRadius.circular(screenWidth * 0.05),
                               child: Container(
                                 width: double.infinity,
                                 decoration: BoxDecoration(
-                                  color:
-                                      cardColor.withAlpha((0.85 * 255).toInt()),
+                                  color: cardColor.withValues(
+                                      alpha: 0.85), // Lint fix
                                 ),
                                 child: Stack(
                                   children: [
@@ -654,7 +707,8 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                                       padding:
                                           EdgeInsets.all(screenWidth * 0.05),
                                       decoration: BoxDecoration(
-                                        color: cardColor.withOpacity(0.15),
+                                        color: cardColor.withValues(
+                                            alpha: 0.15), // Lint fix
                                         borderRadius: BorderRadius.circular(
                                             screenWidth * 0.05),
                                       ),
@@ -802,9 +856,9 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                                                         decoration:
                                                             BoxDecoration(
                                                           color: Colors.white
-                                                              .withAlpha(
-                                                                  (0.3 * 255)
-                                                                      .toInt()),
+                                                              .withValues(
+                                                                  alpha:
+                                                                      0.3), // Lint fix
                                                           borderRadius:
                                                               BorderRadius
                                                                   .circular(2),
@@ -983,13 +1037,15 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                                 ),
                               ),
                             ),
-                          SizedBox(height: screenHeight * 0.02),
+                            SizedBox(height: screenHeight * 0.02),
 
-                          // Unified Premium Search Dashboard
-                          _buildSearchDashboard(screenWidth, screenHeight),
+                            // Unified Premium Search Dashboard
+                            _buildSearchDashboard(screenWidth, screenHeight),
 
-                          if (keyboardHeight == 0) const Spacer(),
-                        ],
+                            if (keyboardHeight == 0)
+                              SizedBox(height: screenHeight * 0.05),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -1041,14 +1097,15 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                         TabsManager.saveTabs(_tabs);
                       }
                     } catch (e) {
-                      print("Error in onProgressChanged: $e");
+                      debugPrint("Error in onProgressChanged: $e"); // Lint fix
                     }
                   }
                 },
                 onUpdateVisitedHistory:
                     (controller, url, androidIsReload) async {
                   if (url != null) {
-                    print("DEBUG: onUpdateVisitedHistory: $url");
+                    debugPrint(
+                        "DEBUG: onUpdateVisitedHistory: $url"); // Lint fix
                     try {
                       setState(() {
                         _tabs[_currentTabIndex].url = url.toString();
@@ -1069,13 +1126,14 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                       });
                       TabsManager.saveTabs(_tabs);
                     } catch (e) {
-                      print("Error updating visited history: $e");
+                      debugPrint(
+                          "Error updating visited history: $e"); // Lint fix
                     }
                   }
                 },
                 onLoadStop: (controller, url) async {
                   if (url != null) {
-                    print("DEBUG: onLoadStop: $url");
+                    debugPrint("DEBUG: onLoadStop: $url"); // Lint fix
                     try {
                       setState(() {
                         _tabs[_currentTabIndex].url = url.toString();
@@ -1095,7 +1153,7 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                       });
                       TabsManager.saveTabs(_tabs);
                     } catch (e) {
-                      print("Error in onLoadStop: $e");
+                      debugPrint("Error in onLoadStop: $e"); // Lint fix
                     }
                     // Inject JS for desktop mode if enabled
                     await _desktopModeManager.injectViewportLogic();
@@ -1457,7 +1515,7 @@ class BrowserHomePageState extends State<BrowserHomePage> {
         }
       },
       child: CircleAvatar(
-        backgroundColor: color.withAlpha((0.15 * 255).toInt()),
+        backgroundColor: color.withValues(alpha: 0.15), // Lint fix
         radius: screenWidth * 0.06,
         child: Icon(icon, color: color, size: screenWidth * 0.055),
       ),
@@ -1483,7 +1541,7 @@ class BrowserHomePageState extends State<BrowserHomePage> {
         mainAxisSize: MainAxisSize.min,
         children: [
           CircleAvatar(
-            backgroundColor: primaryColor.withAlpha((0.1 * 255).toInt()),
+            backgroundColor: primaryColor.withValues(alpha: 0.1), // Lint fix
             radius: screenWidth * 0.075, // ~28 on standard width
             child: Icon(
               icon,
@@ -1538,7 +1596,7 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                       backgroundColor: Theme.of(context)
                           .colorScheme
                           .primary
-                          .withOpacity(0.1),
+                          .withValues(alpha: 0.1), // Lint fix
                       radius: 28,
                       child: Icon(ai['icon'],
                           size: 24,
@@ -1588,6 +1646,8 @@ class BrowserHomePageState extends State<BrowserHomePage> {
         isPinned: _tabs[_currentTabIndex].isPinned,
         group: _tabs[_currentTabIndex].group,
       );
+      _urlController.text =
+          url.toString(); // [NEW] Optimistically update local text
       _tabs.sort(_tabSort);
       // Update the index in case sorting changed positions (though unlikely for current tab if we only modify it)
       // But if we just modified the text, it stays put.
@@ -1673,6 +1733,7 @@ class BrowserHomePageState extends State<BrowserHomePage> {
             if (url.isNotEmpty) {
               _webViewController.loadUrl(
                   urlRequest: URLRequest(url: WebUri(url)));
+              _urlController.text = url; // [NEW] Sync text on restore
             }
           },
           onTabRemoved: (index) {
@@ -1696,6 +1757,7 @@ class BrowserHomePageState extends State<BrowserHomePage> {
             final url = _tabs[_currentTabIndex].url;
             _webViewController.loadUrl(
                 urlRequest: URLRequest(url: WebUri(url)));
+            _urlController.text = url; // [NEW] Sync text on restore
           },
           onAddNewTab: _addNewTab,
           onReorderTabs: (newTabs) {
@@ -1778,6 +1840,10 @@ class BrowserHomePageState extends State<BrowserHomePage> {
     setState(() {
       _tabs[_currentTabIndex] =
           TabModel(url: "https://google.com", isHomepage: true);
+
+      // [NEW] Clear inputs
+      _urlController.clear();
+      _bodySearchController.clear();
     });
     _webViewController.loadUrl(
         urlRequest: URLRequest(url: WebUri("https://google.com")));
@@ -1817,11 +1883,11 @@ class ScaleButton extends StatefulWidget {
   final VoidCallback onTap;
   final Widget child;
 
-  const ScaleButton({Key? key, required this.onTap, required this.child})
-      : super(key: key);
+  const ScaleButton({super.key, required this.onTap, required this.child});
 
   @override
-  _ScaleButtonState createState() => _ScaleButtonState();
+  State<ScaleButton> createState() =>
+      _ScaleButtonState(); // Lint fix: Return specific state type
 }
 
 class _ScaleButtonState extends State<ScaleButton>
