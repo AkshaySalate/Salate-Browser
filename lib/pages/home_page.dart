@@ -21,13 +21,21 @@ import 'package:salate_browser/widgets/wavy_clock_widget.dart';
 import 'package:salate_browser/pages/settings_page.dart';
 import 'package:video_player/video_player.dart';
 import 'package:flutter/services.dart';
+import 'package:mime/mime.dart';
+import 'package:salate_browser/pages/file_viewers.dart';
+import 'package:app_links/app_links.dart';
 
 class BrowserHomePage extends StatefulWidget {
   final Function(bool) onThemeToggle;
   final bool isDarkMode;
+  final String? initialUrl;
 
-  const BrowserHomePage(
-      {super.key, required this.onThemeToggle, required this.isDarkMode});
+  const BrowserHomePage({
+    super.key,
+    required this.onThemeToggle,
+    required this.isDarkMode,
+    this.initialUrl,
+  });
 
   @override
   BrowserHomePageState createState() => BrowserHomePageState();
@@ -147,6 +155,99 @@ class BrowserHomePageState extends State<BrowserHomePage> {
             _sunnyController.setVolume(0); // Mute
             _sunnyController.play();
           });
+
+    _initAppLinks();
+
+    // Load tabs first, then handle initial link if any
+    _loadTabs().then((_) {
+      if (widget.initialUrl != null) {
+        _handleIncomingLink(widget.initialUrl!);
+      }
+    });
+  }
+
+  void _initAppLinks() {
+    AppLinks().uriLinkStream.listen((uri) {
+      debugPrint("DEBUG: Received deep link stream: $uri");
+      _handleIncomingLink(uri.toString());
+    });
+  }
+
+  void _handleIncomingLink(String url) {
+    debugPrint("DEBUG: Handling incoming link: $url");
+    if (_isFile(url)) {
+      _openFileViewer(url);
+    } else {
+      // Add a new tab for the link
+      _addNewTabWithUrl(url);
+    }
+  }
+
+  void _addNewTabWithUrl(String url) {
+    setState(() {
+      final newTab = TabModel(url: url, isHomepage: false);
+      _tabs.add(newTab);
+      _currentTabIndex = _tabs.length - 1;
+      _urlController.text = url;
+      _isUrlReadOnly = true;
+    });
+    TabsManager.saveTabs(_tabs);
+    debugPrint(
+        "DEBUG: Switched to new tab at index $_currentTabIndex for URL: $url");
+  }
+
+  bool _isFile(String url) {
+    final mimeType = lookupMimeType(url);
+    if (mimeType != null) {
+      if (mimeType.startsWith('video/') ||
+          mimeType.startsWith('image/') ||
+          mimeType == 'application/pdf') {
+        return true;
+      }
+    }
+    final lowerUrl = url.toLowerCase();
+    return lowerUrl.endsWith('.pdf') ||
+        lowerUrl.endsWith('.mp4') ||
+        lowerUrl.endsWith('.webm') ||
+        lowerUrl.endsWith('.jpg') ||
+        lowerUrl.endsWith('.jpeg') ||
+        lowerUrl.endsWith('.png') ||
+        lowerUrl.endsWith('.gif') ||
+        lowerUrl.endsWith('.webp');
+  }
+
+  void _openFileViewer(String url) {
+    final mimeType = lookupMimeType(url);
+    if (mimeType != null) {
+      if (mimeType.startsWith('video/')) {
+        Navigator.push(context,
+            MaterialPageRoute(builder: (_) => VideoViewerPage(url: url)));
+        return;
+      } else if (mimeType.startsWith('image/')) {
+        Navigator.push(context,
+            MaterialPageRoute(builder: (_) => ImageViewerPage(url: url)));
+        return;
+      } else if (mimeType == 'application/pdf') {
+        Navigator.push(context,
+            MaterialPageRoute(builder: (_) => PdfViewerPage(url: url)));
+        return;
+      }
+    }
+    final lowerUrl = url.toLowerCase();
+    if (lowerUrl.endsWith('.pdf')) {
+      Navigator.push(
+          context, MaterialPageRoute(builder: (_) => PdfViewerPage(url: url)));
+    } else if (lowerUrl.endsWith('.mp4') || lowerUrl.endsWith('.webm')) {
+      Navigator.push(context,
+          MaterialPageRoute(builder: (_) => VideoViewerPage(url: url)));
+    } else if (lowerUrl.endsWith('.jpg') ||
+        lowerUrl.endsWith('.jpeg') ||
+        lowerUrl.endsWith('.png') ||
+        lowerUrl.endsWith('.gif') ||
+        lowerUrl.endsWith('.webp')) {
+      Navigator.push(context,
+          MaterialPageRoute(builder: (_) => ImageViewerPage(url: url)));
+    }
   }
 
   // [NEW] Logic to check default browser annually
@@ -283,17 +384,35 @@ class BrowserHomePageState extends State<BrowserHomePage> {
     setState(() {});
   }
 
-  void _loadTabs() async {
+  Future<void> _loadTabs() async {
     List<TabModel> savedTabs = await TabsManager.loadTabs();
     if (savedTabs.isNotEmpty) {
       setState(() {
-        _tabs.clear();
+        // [FIX] Don't clear if we already added a tab (e.g. initialUrl handled fast)
+        // Instead, merge or check if we only have the default placeholder
+        if (_tabs.length == 1 &&
+            _tabs[0].url == "about:blank" &&
+            _tabs[0].isHomepage) {
+          _tabs.clear();
+        }
+
         _tabs.addAll(savedTabs);
         _tabs.sort(_tabSort); // Ensure pinned tabs stay on top
-        _currentTabIndex = 0;
-        // Sync desktop mode for the first tab
-        _desktopModeManager
-            .setDesktopMode(_tabs[_currentTabIndex].isDesktopMode);
+
+        // If we merged, we might want to stay on the newly added tab if one exists
+        // Otherwise default to 0
+        if (_currentTabIndex >= _tabs.length) {
+          _currentTabIndex = 0;
+        }
+
+        // Sync desktop mode for the current tab
+        if (_tabs.isNotEmpty) {
+          _desktopModeManager
+              .setDesktopMode(_tabs[_currentTabIndex].isDesktopMode);
+          _urlController.text = _tabs[_currentTabIndex].isHomepage
+              ? ""
+              : _tabs[_currentTabIndex].url;
+        }
       });
     }
   }
@@ -540,6 +659,18 @@ class BrowserHomePageState extends State<BrowserHomePage> {
                             _desktopModeManager
                                 .setWebViewController(controller);
                           }
+                        },
+                        shouldOverrideUrlLoading:
+                            (controller, navigationAction) async {
+                          var uri = navigationAction.request.url;
+                          if (uri != null) {
+                            String url = uri.toString();
+                            if (_isFile(url)) {
+                              _openFileViewer(url);
+                              return NavigationActionPolicy.CANCEL;
+                            }
+                          }
+                          return NavigationActionPolicy.ALLOW;
                         },
                         onProgressChanged: (controller, progress) async {
                           if (progress == 100) {

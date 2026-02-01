@@ -6,11 +6,13 @@ import 'package:salate_browser/pages/home_page.dart';
 class SplashScreen extends StatefulWidget {
   final Function(bool) onThemeToggle;
   final bool isDarkMode;
+  final String? initialUrl;
 
   const SplashScreen({
     super.key,
     required this.onThemeToggle,
     required this.isDarkMode,
+    this.initialUrl,
   });
 
   @override
@@ -62,6 +64,7 @@ class _SplashScreenState extends State<SplashScreen>
         builder: (_) => BrowserHomePage(
           onThemeToggle: widget.onThemeToggle,
           isDarkMode: widget.isDarkMode,
+          initialUrl: widget.initialUrl,
         ),
       ),
     );
